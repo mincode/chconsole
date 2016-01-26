@@ -5,8 +5,8 @@ from modified_qtconsole.jupyter_widget import JupyterWidget
 from qtconsole import qtconsoleapp
 from qtconsole.qt import QtGui
 
-from control_split.modified_qtconsole.rich_jupyter_widget import RichJupyterWidget
-from control_split.split_control import SplitControl
+from ctrl_split.modified_qtconsole.rich_jupyter_widget import RichJupyterWidget
+from ctrl_split.split_control import SplitControl
 
 # def _create_control(self):
 #     """ Creates and connects the underlying text widget.
