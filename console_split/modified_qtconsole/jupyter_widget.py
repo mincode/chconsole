@@ -19,7 +19,7 @@ from qtconsole.qt import QtCore, QtGui
 from qtconsole import __version__
 from traitlets import Bool, Unicode
 from .frontend_widget import FrontendWidget
-from . import styles
+from qtconsole import styles
 
 #-----------------------------------------------------------------------------
 # Constants

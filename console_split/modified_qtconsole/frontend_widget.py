@@ -21,10 +21,10 @@ from ipython_genutils.importstring import import_item
 
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
 from traitlets import Any, Bool, Float, Instance, Unicode, DottedObjectName
-from .bracket_matcher import BracketMatcher
-from .call_tip_widget import CallTipWidget
+from qtconsole.bracket_matcher import BracketMatcher
+from qtconsole.call_tip_widget import CallTipWidget
 from .history_console_widget import HistoryConsoleWidget
-from .pygments_highlighter import PygmentsHighlighter
+from qtconsole.pygments_highlighter import PygmentsHighlighter
 
 _classic_prompt_re = re.compile(r'^([ \t]*>>> |^[ \t]*\.\.\. )')
 

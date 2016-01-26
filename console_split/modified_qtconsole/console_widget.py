@@ -18,11 +18,11 @@ from qtconsole.rich_text import HtmlExporter
 from qtconsole.util import MetaQObjectHasTraits, get_font
 from ipython_genutils.text import columnize
 from traitlets import Bool, Enum, Integer, Unicode
-from .ansi_code_processor import QtAnsiCodeProcessor
-from .completion_widget import CompletionWidget
-from .completion_html import CompletionHtml
-from .completion_plain import CompletionPlain
-from .kill_ring import QtKillRing
+from qtconsole.ansi_code_processor import QtAnsiCodeProcessor
+from qtconsole.completion_widget import CompletionWidget
+from qtconsole.completion_html import CompletionHtml
+from qtconsole.completion_plain import CompletionPlain
+from qtconsole.kill_ring import QtKillRing
 
 
 def is_letter_or_number(char):
@@ -218,28 +218,42 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             self._pager_scroll_events.append(QtCore.QEvent.NativeGesture)
 
         # Create the layout and underlying text widget.
-        layout = QtGui.QStackedLayout(self)
+        layout = QtGui.QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+
+        self._view = self._create_view()
         self._control = self._create_control()
-        if self.paging in ('hsplit', 'vsplit'):
-            self._splitter = QtGui.QSplitter()
-            if self.paging == 'hsplit':
-                self._splitter.setOrientation(QtCore.Qt.Horizontal)
-            else:
-                self._splitter.setOrientation(QtCore.Qt.Vertical)
-            self._splitter.addWidget(self._control)
-            layout.addWidget(self._splitter)
+        if self.paging in ('inside', 'hsplit', 'vsplit'):
+            self._page_control = self._create_page_control()
+
+        view_stack = QtGui.QWidget()
+        view_stack_layout = QtGui.QStackedLayout()
+        view_stack.setLayout(view_stack_layout)
+        view_stack_layout.addWidget(self._view)
+
+        control_stack = QtGui.QWidget()
+        control_stack_layout = QtGui.QStackedLayout()
+        control_stack.setLayout(control_stack_layout)
+        control_stack_layout.addWidget(self._control)
+
+        self._splitter = QtGui.QSplitter()
+        if self.paging == 'hsplit':
+            self._splitter.setOrientation(QtCore.Qt.Horizontal)
         else:
-            layout.addWidget(self._control)
+            self._splitter.setOrientation(QtCore.Qt.Vertical)
+
+        self._splitter.addWidget(view_stack)
+        self._splitter.addWidget(control_stack)
+
+        layout.addWidget(self._splitter)
 
         # Create the paging widget, if necessary.
         if self.paging in ('inside', 'hsplit', 'vsplit'):
             self._page_control = self._create_page_control()
-            if self._splitter:
-                self._page_control.hide()
-                self._splitter.addWidget(self._page_control)
+            if self.paging == 'inside':
+                control_stack_layout.addWidget(self._page_control)
             else:
-                layout.addWidget(self._page_control)
+                view_stack_layout.addWidget(self._page_control)
 
         # Initialize protected variables. Some variables contain useful state
         # information for subclasses; they should be considered read-only.
@@ -347,6 +361,12 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         # Accept drag and drop events here. Drops were already turned off
         # in self._control when that widget was created.
         self.setAcceptDrops(True)
+
+    def _create_view(self):
+        view = QtGui.QTextEdit()
+        view.setFrameShape(QtGui.QFrame.StyledPanel)
+        view.setReadOnly(True)
+        return view
 
     #---------------------------------------------------------------------------
     # Drag and drop support
