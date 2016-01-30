@@ -11,8 +11,9 @@ from qtconsole.qt import QtCore, QtGui
 from ipython_genutils.path import ensure_dir_exists
 from traitlets import Bool
 from qtconsole.svg import save_svg, svg_to_clipboard, svg_to_image
-from .jupyter_widget import JupyterWidget
-
+######################################################################
+from console_split.override.jupyter_widget import JupyterWidget
+######################################################################
 
 try:
     from IPython.lib.latextools import latex_to_png

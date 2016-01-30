@@ -61,8 +61,12 @@ from qtconsole.qt import QtCore, QtGui
 
 from traitlets.config.application import boolean_flag
 from traitlets.config.application import catch_config_error
+
+################################################################
 from console_split.modified_qtconsole.jupyter_widget import JupyterWidget
 from console_split.modified_qtconsole.rich_jupyter_widget import RichJupyterWidget
+################################################################
+
 from qtconsole import styles, __version__
 from qtconsole.mainwindow import MainWindow
 from qtconsole.client import QtKernelClient
@@ -269,7 +273,7 @@ class JupyterQtConsoleApp(JupyterApp, JupyterConsoleApp):
         if sys.platform != 'darwin' and self.hide_menubar:
             self.window.menuBar().setVisible(False)
 
-        self.window.setWindowTitle('Jupyter QtConsole')
+        self.window.setWindowTitle('Chat Console')
 
     def init_colors(self, widget):
         """Configure the coloring of the widget"""

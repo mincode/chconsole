@@ -5,7 +5,10 @@ from qtconsole.qt import QtGui
 
 from ipython_genutils.py3compat import unicode_type
 from traitlets import Bool
-from .console_widget import ConsoleWidget
+
+################################################################
+from console_split.override.console_widget import ConsoleWidget
+################################################################
 
 
 class HistoryConsoleWidget(ConsoleWidget):
