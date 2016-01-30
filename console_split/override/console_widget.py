@@ -192,6 +192,8 @@ _ConsoleWidgetBase.__init__ = console_widget_init
 class ConsoleWidget(_ConsoleWidgetBase):
     def __init__(self, *args, **kw):
         super(ConsoleWidget, self).__init__(*args, **kw)
+        #print('init overriden ConsoleWidget')
+
 
     def _set_paging(self, paging):
         """
@@ -243,10 +245,10 @@ class ConsoleWidget(_ConsoleWidgetBase):
                 self._page_control.viewport().resize(self._control.size())
 
                 if self.paging == 'inside':
-                    print('set control')
+                    #print('set control')
                     self.control_stack_layout.setCurrentWidget(self._page_control)
                 else:
-                    print('set view')
+                    #print('set view')
                     self.view_stack_layout.setCurrentWidget(self._page_control)
 
         elif html:
@@ -278,10 +280,10 @@ class ConsoleWidget(_ConsoleWidgetBase):
 
         elif key in (QtCore.Qt.Key_Q, QtCore.Qt.Key_Escape):
             if self.paging == 'inside':
-                print('reset control')
+                #print('reset control')
                 self.control_stack_layout.setCurrentWidget(self._control)
             else:
-                print('reset view')
+                #print('reset view')
                 self.view_stack_layout.setCurrentWidget(self._view)
             # re-enable buffer truncation after paging
             self._control.document().setMaximumBlockCount(self.buffer_size)

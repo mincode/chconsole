@@ -16,11 +16,12 @@ class JupyterWidget(_JupyterWidgetBase):
     def __init__(self, *args, **kw):
         super(JupyterWidget, self).__init__(*args, **kw)
         self.include_other_output = True
-        self.signaller = Signaller()
+        self.signaller = Signaller(self.ansi_codes)
         #Connect output slot
         self.signaller.connect_signal(self.insert_view)
         #self.set_default_style('linux')
         #self.set_default_style('nocolor')
+        #print('init overridden JupyterWidget')
 
     #------ Trait change handlers --------------------------------------------
 

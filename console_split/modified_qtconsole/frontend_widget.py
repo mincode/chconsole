@@ -228,6 +228,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
 
         # Whether or not a clear_output call is pending new output.
         self._pending_clearoutput = False
+        #print('init modified FrontedWidget')
 
     #---------------------------------------------------------------------------
     # 'ConsoleWidget' public interface

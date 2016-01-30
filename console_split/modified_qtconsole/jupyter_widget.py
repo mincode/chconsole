@@ -18,7 +18,11 @@ from qtconsole.qt import QtCore, QtGui
 
 from qtconsole import __version__
 from traitlets import Bool, Unicode
-from .frontend_widget import FrontendWidget
+
+####################################################################
+from console_split.override.frontend_widget import FrontendWidget
+####################################################################
+
 from qtconsole import styles
 
 #-----------------------------------------------------------------------------
@@ -128,6 +132,7 @@ class JupyterWidget(IPythonWidget):
             self.set_default_style()
 
         self._guiref_loaded = False
+        #print('init modified JupyterWidget')
 
     #---------------------------------------------------------------------------
     # 'BaseFrontendMixin' abstract interface

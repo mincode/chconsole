@@ -35,6 +35,7 @@ class HistoryConsoleWidget(ConsoleWidget):
         self._history_edits = {}
         self._history_index = 0
         self._history_prefix = ''
+        #print('init modified HistoryConsoleWidget')
 
     #---------------------------------------------------------------------------
     # 'ConsoleWidget' public interface

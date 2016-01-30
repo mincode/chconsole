@@ -8,7 +8,7 @@ from console_split.modified_qtconsole import qtconsoleapp
 #-----------------------------------------------------------------------------
 
 def main():
-    qtconsoleapp.JupyterQtConsoleApp.existing = 'tester'
+    #qtconsoleapp.JupyterQtConsoleApp.existing = 'tester'
     qtconsoleapp.main()
 
 if __name__ == '__main__':
