@@ -19,7 +19,10 @@ from qtconsole.qt import QtCore, QtGui
 from ipython_genutils import py3compat
 from ipython_genutils.importstring import import_item
 
-from qtconsole.base_frontend_mixin import BaseFrontendMixin
+##################################################################################
+from console_split.modified_qtconsole.base_frontend_mixin import BaseFrontendMixin
+##################################################################################
+
 from traitlets import Any, Bool, Float, Instance, Unicode, DottedObjectName
 from qtconsole.bracket_matcher import BracketMatcher
 from qtconsole.call_tip_widget import CallTipWidget
@@ -292,6 +295,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
 
         See parent class :meth:`execute` docstring for full details.
         """
+        #print('to execute: '+source)
         msg_id = self.kernel_client.execute(source, hidden)
         self._request_info['execute'][msg_id] = self._ExecutionRequest(msg_id, 'user')
         self._hidden = hidden

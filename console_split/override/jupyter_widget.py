@@ -48,6 +48,8 @@ class JupyterWidget(_JupyterWidgetBase):
 
     def _handle_execute_result(self, msg):
         """Handle an execute_result message"""
+        #print('execute result')
+        #print(msg)
         if self.include_output(msg):
             self.flush_clearoutput()
             content = msg['content']
@@ -81,6 +83,7 @@ class JupyterWidget(_JupyterWidgetBase):
         # For now, we don't display data from other frontends, but we
         # eventually will as this allows all frontends to monitor the display
         # data. But we need to figure out how to handle this in the GUI.
+        #print('display data')
         if self.include_output(msg):
             self.flush_clearoutput()
             data = msg['content']['data']

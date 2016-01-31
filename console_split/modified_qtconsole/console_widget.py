@@ -2,8 +2,6 @@
 
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-#
-# Modified by M. Minimair
 
 import os.path
 import re
@@ -21,9 +19,9 @@ from qtconsole.util import MetaQObjectHasTraits, get_font
 from ipython_genutils.text import columnize
 from traitlets import Bool, Enum, Integer, Unicode
 from qtconsole.ansi_code_processor import QtAnsiCodeProcessor
-from .completion_widget import CompletionWidget
-from .completion_html import CompletionHtml
-from .completion_plain import CompletionPlain
+from qtconsole.completion_widget import CompletionWidget
+from qtconsole.completion_html import CompletionHtml
+from qtconsole.completion_plain import CompletionPlain
 from qtconsole.kill_ring import QtKillRing
 
 
@@ -258,10 +256,10 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         self._continuation_prompt_html = None
         self._executing = False
         self._filter_resize = False
-        self._html_exporter = HtmlExporter(self._control.command_entry)
+        self._html_exporter = HtmlExporter(self._control)
         self._input_buffer_executing = ''
         self._input_buffer_pending = ''
-        self._kill_ring = QtKillRing(self._control.command_entry)
+        self._kill_ring = QtKillRing(self._control)
         self._prompt = ''
         self._prompt_html = None
         self._prompt_pos = 0

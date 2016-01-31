@@ -18,6 +18,7 @@ class FrontendWidget(_FrontendWidgetBase):
 
     def __init__(self, *args, **kw):
         super(FrontendWidget, self).__init__(*args, **kw)
+        #print('ansi: ' + str(self.ansi_codes))
         self.stream_signaller = Signaller(self.ansi_codes)
         #Connect output slot
         self.stream_signaller.connect_signal(self.insert_stream_view)
@@ -40,4 +41,5 @@ class FrontendWidget(_FrontendWidgetBase):
             self.flush_clearoutput()
             #self.append_stream(msg['content']['text'])
             to_append = msg['content']['text']
+            #print(msg)
             self.stream_signaller.emit_signal(TextSignal(to_append))

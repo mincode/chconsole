@@ -13,6 +13,7 @@ def _set_top_cursor(target, cursor):
     """ Scrolls the viewport so that the specified cursor is at the top of target.
     """
     scrollbar = target.verticalScrollBar()
+    #print('page step: ' + str(scrollbar.pageStep()))
     scrollbar.setValue(scrollbar.maximum())
     original_cursor = target.textCursor()
     target.setTextCursor(cursor)
@@ -56,6 +57,7 @@ def _(output, target):
         # adopted from qtconsole.console_widget._insert_plain_text(self, cursor, text, flush=False)
         cursor.beginEditBlock()
         if output.ansi_codes:
+            #print('do ansi')
             for substring in output.ansi_processor.split_string(text):
                 for act in output.ansi_processor.actions:
                     #print(act)
@@ -69,6 +71,7 @@ def _(output, target):
 
                     # Simulate a form feed by scrolling just past the last line.
                     elif act.action == 'scroll' and act.unit == 'page':
+                        #print('do page scroll')
                         cursor.insertText('\n')
                         cursor.endEditBlock()
                         _set_top_cursor(target, cursor)
