@@ -1,7 +1,4 @@
-from qtconsole.qt import QtCore
-
-from console_split.ui.signaller import Signaller
-from console_split.ui.signal_content import SignalContent, insert_signal_content, TextSignal
+from console_split.ui.signal_content import TextSignal
 
 from console_split.modified_qtconsole.frontend_widget import FrontendWidget
 _FrontendWidgetBase = FrontendWidget
@@ -10,8 +7,6 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
 class FrontendWidget(_FrontendWidgetBase):
-    stream_signaller = None
-
     #---------------------------------------------------------------------------
     # 'object' interface
     #---------------------------------------------------------------------------
@@ -19,15 +14,6 @@ class FrontendWidget(_FrontendWidgetBase):
     def __init__(self, *args, **kw):
         super(FrontendWidget, self).__init__(*args, **kw)
         #print('ansi: ' + str(self.ansi_codes))
-        self.stream_signaller = Signaller(self.ansi_codes)
-        #Connect output slot
-        self.stream_signaller.connect_signal(self.insert_stream_view)
-        #print('init overridden FrontendWidget')
-
-    @QtCore.Slot(SignalContent)
-    def insert_stream_view(self, output):
-        tabbed_output = type(output)(output.message.expandtabs(8))
-        insert_signal_content(tabbed_output, self._view)
 
     #---------------------------------------------------------------------------
     # 'BaseFrontendMixin' abstract interface
@@ -40,6 +26,8 @@ class FrontendWidget(_FrontendWidgetBase):
         if self.include_output(msg):
             self.flush_clearoutput()
             #self.append_stream(msg['content']['text'])
-            to_append = msg['content']['text']
+
+            # Streams require expanding tabs with 8 spaces
+            to_append = msg['content']['text'].expandtabs(8)
             #print(msg)
-            self.stream_signaller.emit_signal(TextSignal(to_append))
+            self.signaller.emit_signal(TextSignal(to_append, self.ansi_codes))

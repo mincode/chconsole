@@ -1,5 +1,17 @@
 frontend
 stream handler
 
+connected ansi code processor; however how does clear() work?
+    somehow adjusting the pageStep does not work in _create_control; too small; fixed by adjusting scrolling
+
+
+clear clears by one line too much?
+does not auto scroll when lines go below window
+
+need to encapsulate "control" to be used in view, allowing all signals to be processed properly
+    context menus, event filter and signals depend on whether it is read only or not
+
+first fix context menus
+
 clear_output
 and other handlers

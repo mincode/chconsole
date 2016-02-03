@@ -9,7 +9,8 @@ from qtconsole.completion_html import CompletionHtml
 from qtconsole.completion_plain import CompletionPlain
 from qtconsole.kill_ring import QtKillRing
 
-from console_split.ui.signal_content import SignalContent, insert_signal_content
+from console_split.ui.text_area import RichOutArea, RichPageArea, RichInArea
+from console_split.ui.signaller import Signaller
 
 from console_split.modified_qtconsole.console_widget import ConsoleWidget
 _ConsoleWidgetBase = ConsoleWidget
@@ -17,51 +18,12 @@ _ConsoleWidgetBase = ConsoleWidget
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-#------ Signal handlers ----------------------------------------------------
-def _adjust_scrollbars(text_edit):
-    """ Expands the vertical scrollbar beyond the range set by Qt.
-    """
-    # This code is adapted from _q_adjustScrollbars in qplaintextedit.cpp
-    # and qtextedit.cpp.
-    def _adjust_scrollbars_fun():
-        document = text_edit.document()
-        scrollbar = text_edit.verticalScrollBar()
-        viewport_height = text_edit.viewport().height()
-        if isinstance(text_edit, QtGui.QPlainTextEdit):
-            maximum = max(0, document.lineCount() - 1)
-            step = viewport_height / text_edit.fontMetrics().lineSpacing()
-        else:
-            # QTextEdit does not do line-based layout and blocks will not in
-            # general have the same height. Therefore it does not make sense to
-            # attempt to scroll in line height increments.
-            maximum = document.size().height()
-            step = viewport_height
-        diff = maximum - scrollbar.maximum()
-        scrollbar.setRange(0, maximum)
-        scrollbar.setPageStep(step)
-
-        # Compensate for undesirable scrolling that occurs automatically due to
-        # maximumBlockCount() text truncation.
-        if diff < 0 and document.blockCount() == document.maximumBlockCount():
-            scrollbar.setValue(scrollbar.value() + diff)
-    return _adjust_scrollbars_fun
-#--------------------------------------------------------------------------------------
-
-
-def _create_view():
-    view = QtGui.QTextEdit()
-    view.setFrameShape(QtGui.QFrame.StyledPanel)
+def _create_view(font_family, gui_completion, control):
+    #view = QtGui.QTextEdit()
+    view = RichOutArea(font_family, gui_completion=gui_completion, input_target=control)
+    #view.setFrameShape(QtGui.QFrame.StyledPanel)
     view.setReadOnly(True)
 
-    # Hijack the document size change signal to prevent Qt from adjusting
-    # the viewport's scrollbar. We are relying on an implementation detail
-    # of Q(Plain)TextEdit here, which is potentially dangerous, but without
-    # this functionality we cannot create a nice terminal interface.
-    layout = view.document().documentLayout()
-    layout.documentSizeChanged.disconnect()
-    layout.documentSizeChanged.connect(_adjust_scrollbars(view))
-
-    view.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
     return view
 
 
@@ -87,8 +49,8 @@ def console_widget_init(self, parent=None, **kw):
     layout = QtGui.QHBoxLayout(self)
     layout.setContentsMargins(0, 0, 0, 0)
 
-    self._view = _create_view()
     self._control = self._create_control()
+    self._view = _create_view(self.font_family, self.gui_completion, self)
 
     view_stack = QtGui.QWidget()
     self.view_stack_layout = QtGui.QStackedLayout()
@@ -112,6 +74,7 @@ def console_widget_init(self, parent=None, **kw):
     layout.addWidget(self._main_splitter)
 
     # Create the paging widget, if necessary.
+    # TODO: 'vsplit' should open an extra area on the side of the control/view areas
     if self.paging in ('inside', 'hsplit', 'vsplit'):
         self._page_control = self._create_page_control()
         if self.paging == 'inside':
@@ -231,10 +194,30 @@ _ConsoleWidgetBase.__init__ = console_widget_init
 
 
 class ConsoleWidget(_ConsoleWidgetBase):
+    signaller = None
+
     def __init__(self, *args, **kw):
         super(ConsoleWidget, self).__init__(*args, **kw)
+        self.signaller = Signaller()
+        #Connect output slot
+        self.signaller.connect_signal(self._view.insert_signal_content)
         #print('init overriden ConsoleWidget')
 
+    def _create_control(self):
+        """ Creates and connects the underlying text widget.
+        """
+        # Create the underlying control.
+        if self.kind == 'plain':
+            control = QtGui.QPlainTextEdit()
+        else:
+            control = RichInArea(self.font_family, self.gui_completion)
+
+        # Install event filters. The filter on the viewport is needed for
+        # mouse events.
+        control.installEventFilter(self)
+        control.viewport().installEventFilter(self)
+
+        return control
 
     def _set_paging(self, paging):
         """
@@ -362,7 +345,19 @@ class ConsoleWidget(_ConsoleWidgetBase):
             return True
         return False
 
-    @QtCore.Slot(SignalContent)
-    def insert_view(self, output):
-        #self.command_view.insertPlainText(output.content)
-        insert_signal_content(output, self._view)
+    def _create_page_control(self):
+        """ Creates and connects the underlying paging widget.
+        """
+        if self.custom_page_control:
+            control = self.custom_page_control()
+        elif self.kind == 'plain':
+            control = QtGui.QPlainTextEdit()
+        elif self.kind == 'rich':
+            control = RichPageArea(self.font_family, self._view)
+        control.installEventFilter(self)
+        viewport = control.viewport()
+        viewport.installEventFilter(self)
+        control.setReadOnly(True)
+        control.setUndoRedoEnabled(False)
+        control.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        return control
