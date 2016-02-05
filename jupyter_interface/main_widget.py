@@ -1,13 +1,17 @@
+from queue import Queue
 from traitlets.config.configurable import LoggingConfigurable
 from traitlets import Bool
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
 from qtconsole.util import MetaQObjectHasTraits
+from ui.main_content import MainContent
+from dispatch.relay import Relay
+from ui.source import Source
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class _PreMainWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QWidget), {})):
+class _BaseMainWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QWidget), {})):
     """ The base class for the main widget to be inserted into a tab of the Jupyter MainWindow object.
     """
 
@@ -18,7 +22,7 @@ class _PreMainWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui
     exit_requested = QtCore.Signal(object)
 
     confirm_restart = Bool(True, config=True,
-        help="Whether to ask for user confirmation when restarting kernel")
+                           help="Whether to ask for user confirmation when restarting kernel")
 
     ###############################################################################################################
 
@@ -33,10 +37,14 @@ class _PreMainWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui
         LoggingConfigurable.__init__(self, **kw)
 
 
-class MainWidget(_PreMainWidget, BaseFrontendMixin):
+class MainWidget(_BaseMainWidget, BaseFrontendMixin):
     """ The main widget to be inserted into a tab of the Jupyter MainWindow object.
         Isolates Jupyter code from this project's code.
     """
+
+    _msg_q = None  # Queue
+    _main_content= None  # QWidget
+    _relay = None  # Relay
 
     def __init__(self, parent=None, **kw):
         """
@@ -46,3 +54,31 @@ class MainWidget(_PreMainWidget, BaseFrontendMixin):
         :return:
         """
         super(MainWidget, self).__init__(parent, **kw)
+        self._msg_q = Queue()
+        self._main_content = MainContent()
+        # listen to messages from main content widget. main content widget has a 'please_execute' signal
+        self._main_content.please_execute.connect(self._execute)
+        # start relay thread to act on messages
+        self._relay = Relay(self._msg_q, self._main_content)
+        self._relay.start()
+        # set layout to be the main content widget
+        layout = QtGui.QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self._main_content)
+
+    def _dispatch(self, msg):
+        """
+        Store incoming message in a queue.
+        :param msg: Incoming message.
+        :return:
+        """
+        self._msg_q.put(msg)
+
+    @QtCore.Slot(Source)
+    def _execute(self, source):
+        """
+        Execute source.
+        :param source: Source object.
+        :return:
+        """
+        self.kernel_client.execute(source.code, source.hidden)
