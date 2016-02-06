@@ -11,6 +11,18 @@ from ui.source import Source
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
+def _resize_last(splitter, fraction=4):
+    sizes = splitter.sizes()
+    print(str(sizes))
+    total_height = sum(sizes)
+    num_widgets = len(sizes)
+    height_last = total_height // fraction
+    height_rest = (total_height * (fraction - 1)) // fraction
+    new_sizes = [height_rest for i in range(num_widgets - 1)]
+    new_sizes.append(height_last)
+    splitter.setSizes(new_sizes)
+
+
 class _BaseMainWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QWidget), {})):
     """ The base class for the main widget to be inserted into a tab of the Jupyter MainWindow object.
     """
