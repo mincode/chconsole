@@ -22,17 +22,29 @@ class Pager(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QTextEdi
        The pager appears to the right of the console.
     """)
 
-    _is_shown = Bool(False, help='True if pager is shown.')
-    _top_splitter = None  # QSplitter
-    _inside_stack_layout = None  # QStackLayout
-    _right_splitter = None  # QSplitter
+    _is_shown = Bool(False)
+    # True if the pager is supposed to be shown. Allows for correct application of the traitlets location
+    # change handler when the container widget is still being constructed and the pager is set to be shown,
+    # however, is not yet visible.
 
-    def __init__(self, top_splitter, inside_stack_layout, right_splitter, text='', parent=None, **kwargs):
+    _locations = {}  # Possible pager locations
+
+    def __init__(self, locations, text='', parent=None, **kwargs):
+        """
+        Initialize pager.
+        :param locations: Possible pager locations,
+                            Dictionary {location: {'target': QSplitter or QStackedLayout, 'index': Integer}},
+                            where location is Enum('top', 'inside', 'right') indicating the loation of the pager,
+                            target is the container where the pager is placed and index is its index in the
+                            container.
+        :param text: To initialize the pager with.
+        :param parent: Parent widget.
+        :param kwargs: Passed to LoggingConfigurable.
+        :return:
+        """
         QtGui.QTextEdit.__init__(self, text, parent)
         LoggingConfigurable.__init__(self, **kwargs)
-        self._top_splitter = top_splitter
-        self._inside_stack_layout = inside_stack_layout
-        self._right_splitter = right_splitter
+        self._locations = locations
         self._location_changed()
 
     # Traitlets handler
@@ -42,14 +54,11 @@ class Pager(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QTextEdi
         :param location: Location to set the pager
         :return:
         """
-        is_shown = self._is_shown
-        self.setParent(None)  # ensure page is not contained in any of its location widgets
-        if self.location == 'top':
-            self._top_splitter.insertWidget(0, self)
-        elif self.location == 'inside':
-            self._inside_stack_layout.insertWidget(0, self)
-        else:  # location == 'right'
-            self._right_splitter.insertWidget(1, self)
+        is_shown = self._is_shown or self.isVisible()
+        self.setParent(None)  # ensure page is not contained in any of its containers
+        target = self._locations[self.location]['target']
+        index = self._locations[self.location]['index']
+        target.insertWidget(index, self)
         if is_shown:
             self.show()
 
@@ -58,8 +67,9 @@ class Pager(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QTextEdi
         Hide the pager.
         :return:
         """
-        if self.location == 'inside':
-            self._inside_stack_layout.setCurrentWidget(self)
+        target = self._locations[self.location]['target']
+        if isinstance(target, QtGui.QStackedLayout):
+            target.setCurrentWidget(self)
         super(QtGui.QTextEdit, self).show()
         self._is_shown = True
 
@@ -68,7 +78,9 @@ class Pager(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QTextEdi
         Hide the pager.
         :return:
         """
-        if self.location == 'inside':
-            self._inside_stack_layout.setCurrentIndex(0)
+        target = self._locations[self.location]['target']
+        if isinstance(target, QtGui.QStackedLayout):
+            index = self._locations[self.location]['index']
+            target.setCurrentIndex((index+1) % target.count())
         super(QtGui.QTextEdit, self).hide()
         self._is_shown = False

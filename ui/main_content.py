@@ -9,6 +9,13 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
 def _resize_last(splitter, fraction=4):
+    """
+    Resize the splitter making the last widget in it 1/fraction the height of it, and the preceding
+    widgets share the remaining space equally.
+    :param splitter: QSplitter to be resized.
+    :param fraction: Integer.
+    :return:
+    """
     sizes = splitter.sizes()
     total_height = sum(sizes)
     num_widgets = len(sizes)
@@ -20,9 +27,9 @@ def _resize_last(splitter, fraction=4):
 
 
 class MainContent(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QSplitter), {})):
-    entry_size = Integer(5, config=True,
-                         help="""
-    One to this value is the proportion of the height of the whole console to the command entry field.
+    entry_proportion = Integer(5, config=True,
+                               help="""
+    1/entry_size is the height of the whole console to height of the command entry field.
     """)
 
     please_execute = QtCore.Signal(Source)
@@ -59,10 +66,13 @@ class MainContent(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QS
         self._console_area.addWidget(self._view)
         self._console_area.addWidget(self._entry)
 
-        self._pager = Pager(self._console_area, self._console_stack_layout, self, 'This is the pager!')
+        locations = {'top': {'target': self._console_area, 'index': 0},
+                     'inside': {'target': self._console_stack_layout, 'index': 1},
+                     'right': {'target': self, 'index': 1}}
+        self._pager = Pager(locations, 'This is the pager!')
         self._pager.show()
 
     # Qt events
     def showEvent(self, event):
         if not event.spontaneous():
-            _resize_last(self._console_area, self.entry_size)
+            _resize_last(self._console_area, self.entry_proportion)

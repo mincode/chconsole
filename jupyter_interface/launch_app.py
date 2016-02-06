@@ -1,4 +1,4 @@
-from jupyter_interface import qtconsoleapp
+from jupyter_interface.chat_console_app import ChatConsoleApp
 from jupyter_interface.main_widget import MainWidget
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -17,10 +17,10 @@ def _plain_changed(self, name, old, new):
 #-----------------------------------------------------------------------------
 
 def main():
-    #qtconsoleapp.JupyterQtConsoleApp.existing = 'tester'
-    qtconsoleapp.JupyterQtConsoleApp.widget_factory = MainWidget
-    qtconsoleapp.JupyterQtConsoleApp._plain_changed = _plain_changed
-    qtconsoleapp.main()
+    #ChatConsoleApp.existing = 'tester'
+    ChatConsoleApp.widget_factory = MainWidget
+    ChatConsoleApp._plain_changed = _plain_changed
+    ChatConsoleApp.launch_instance()
 
 if __name__ == '__main__':
     main()
