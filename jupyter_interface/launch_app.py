@@ -1,11 +1,12 @@
 import qtconsole.qtconsoleapp
 import jupyter_interface.expanded_main_window
 from jupyter_interface.chat_console_app import ChatConsoleApp
-from jupyter_interface.tab_widget import TabWidget
+from jupyter_interface.tab_widget import RichTabWidget, PlainTabWidget
 
 qtconsole.qtconsoleapp.MainWindow = jupyter_interface.expanded_main_window.ExpandedMainWindow
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
+
 
 # traitlets handler
 def _plain_changed(self, name, old, new):
@@ -17,10 +18,11 @@ def _plain_changed(self, name, old, new):
     :param new: True if new type of text edit is plain, and false if it is rich.
     :return:
     """
+
     if new:  # plain
-        self.widget_factory = TabWidget
+        self.widget_factory = PlainTabWidget
     else:  # rich
-        self.widget_factory = TabWidget
+        self.widget_factory = RichTabWidget
 
 #-----------------------------------------------------------------------------
 # Main entry point
@@ -29,7 +31,7 @@ def _plain_changed(self, name, old, new):
 def main():
     #Use if existing kernel: kernel-tester.json
     #ChatConsoleApp.existing = 'tester'
-    ChatConsoleApp.widget_factory = TabWidget
+    ChatConsoleApp.widget_factory = RichTabWidget
     ChatConsoleApp._plain_changed = _plain_changed
     ChatConsoleApp.launch_instance()
 
