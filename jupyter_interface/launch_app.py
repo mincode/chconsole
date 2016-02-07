@@ -1,24 +1,35 @@
+import qtconsole.qtconsoleapp
+import jupyter_interface.expanded_main_window
 from jupyter_interface.chat_console_app import ChatConsoleApp
-from jupyter_interface.main_widget import MainWidget
+from jupyter_interface.tab_widget import TabWidget
+
+qtconsole.qtconsoleapp.MainWindow = jupyter_interface.expanded_main_window.ExpandedMainWindow
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
-
+# traitlets handler
 def _plain_changed(self, name, old, new):
-    kind = 'plain' if new else 'rich'
-    self.config.ConsoleWidget.kind = kind
-    if new:
-        self.widget_factory = MainWidget
-    else:
-        self.widget_factory = MainWidget
+    """
+    Change type of text edit used.
+    :param self: ChatConsoleApp
+    :param name: dummy
+    :param old: dummy
+    :param new: True if new type of text edit is plain, and false if it is rich.
+    :return:
+    """
+    if new:  # plain
+        self.widget_factory = TabWidget
+    else:  # rich
+        self.widget_factory = TabWidget
 
 #-----------------------------------------------------------------------------
 # Main entry point
 #-----------------------------------------------------------------------------
 
 def main():
+    #Use if existing kernel: kernel-tester.json
     #ChatConsoleApp.existing = 'tester'
-    ChatConsoleApp.widget_factory = MainWidget
+    ChatConsoleApp.widget_factory = TabWidget
     ChatConsoleApp._plain_changed = _plain_changed
     ChatConsoleApp.launch_instance()
 

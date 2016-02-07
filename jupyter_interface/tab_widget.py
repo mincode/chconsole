@@ -4,7 +4,7 @@ from traitlets import Bool
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
 from qtconsole.util import MetaQObjectHasTraits
-from ui.main_content import MainContent
+from ui.tab_conent import TabContent
 from dispatch.relay import Relay
 from ui.source import Source
 
@@ -23,7 +23,7 @@ def _resize_last(splitter, fraction=4):
     splitter.setSizes(new_sizes)
 
 
-class _BaseMainWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QWidget), {})):
+class _BaseTabWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QWidget), {})):
     """ The base class for the main widget to be inserted into a tab of the Jupyter MainWindow object.
     """
 
@@ -49,13 +49,13 @@ class _BaseMainWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGu
         LoggingConfigurable.__init__(self, **kw)
 
 
-class MainWidget(_BaseMainWidget, BaseFrontendMixin):
+class TabWidget(_BaseTabWidget, BaseFrontendMixin):
     """ The main widget to be inserted into a tab of the Jupyter MainWindow object.
         Isolates Jupyter code from this project's code.
     """
 
     _msg_q = None  # Queue
-    _main_content= None  # QWidget
+    main_content= None  # QWidget
     _relay = None  # Relay
 
     def __init__(self, parent=None, **kw):
@@ -65,18 +65,18 @@ class MainWidget(_BaseMainWidget, BaseFrontendMixin):
         :param kw:
         :return:
         """
-        super(MainWidget, self).__init__(parent, **kw)
+        super(TabWidget, self).__init__(parent, **kw)
         self._msg_q = Queue()
-        self._main_content = MainContent()
+        self.main_content = TabContent()
         # listen to messages from main content widget. main content widget has a 'please_execute' signal
-        self._main_content.please_execute.connect(self._execute)
+        self.main_content.please_execute.connect(self._execute)
         # start relay thread to act on messages
-        self._relay = Relay(self._msg_q, self._main_content)
+        self._relay = Relay(self._msg_q, self.main_content)
         self._relay.start()
         # set layout to be the main content widget
         layout = QtGui.QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self._main_content)
+        layout.addWidget(self.main_content)
 
     def _dispatch(self, msg):
         """

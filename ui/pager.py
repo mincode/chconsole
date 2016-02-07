@@ -1,4 +1,4 @@
-from traitlets import Enum, Bool
+from traitlets import Bool, Unicode
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.qt import QtGui
@@ -10,17 +10,8 @@ class Pager(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QTextEdi
     """
     The pager of the console.
     """
-    location = Enum(['top', 'inside', 'right'], default_value='right', config=True,
-                     help="""
-    The type of paging to use. Valid values are:
-
-    'top'
-       The pager appears on top of the console.
-    'inside'
-       The pager covers the area showing the commands.
-    'right'
-       The pager appears to the right of the console.
-    """)
+    location = Unicode('')
+    # The type of paging to use.
 
     _is_shown = Bool(False)
     # True if the pager is supposed to be shown. Allows for correct application of the traitlets location
@@ -29,11 +20,11 @@ class Pager(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QTextEdi
 
     _locations = {}  # Possible pager locations
 
-    def __init__(self, locations, text='', parent=None, **kwargs):
+    def __init__(self, locations, initial_location, text='', parent=None, **kwargs):
         """
         Initialize pager.
         :param locations: Possible pager locations,
-                            Dictionary {location: {'target': QSplitter or QStackedLayout, 'index': Integer}},
+                            list of pairs (location, {'target': QSplitter or QStackedLayout, 'index': Integer}),
                             where location is Enum('top', 'inside', 'right') indicating the loation of the pager,
                             target is the container where the pager is placed and index is its index in the
                             container.
@@ -44,8 +35,8 @@ class Pager(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QTextEdi
         """
         QtGui.QTextEdit.__init__(self, text, parent)
         LoggingConfigurable.__init__(self, **kwargs)
-        self._locations = locations
-        self._location_changed()
+        self._locations = dict(locations)
+        self.location = initial_location
 
     # Traitlets handler
     def _location_changed(self, changed=None):
@@ -64,7 +55,7 @@ class Pager(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QTextEdi
 
     def show(self):
         """
-        Hide the pager.
+        Show the pager.
         :return:
         """
         target = self._locations[self.location]['target']

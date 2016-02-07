@@ -1,4 +1,4 @@
-from traitlets import Integer
+from traitlets import Integer, Unicode
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.qt import QtGui, QtCore
@@ -26,18 +26,21 @@ def _resize_last(splitter, fraction=4):
     splitter.setSizes(new_sizes)
 
 
-class MainContent(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QSplitter), {})):
+class TabContent(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QSplitter), {})):
     entry_proportion = Integer(5, config=True,
                                help="""
     1/entry_size is the height of the whole console to height of the command entry field.
     """)
 
+    default_pager_location = Unicode('right', config=True, help='Default location of the pager: right, inside or top')
+
     please_execute = QtCore.Signal(Source)
 
-    _view = None
-    _entry = None
+    _view = None  # Area of the console where chat messages, commands and outputs are shown
+    _entry = None  # Area of the console to enter commands and chat
 
-    _pager = None
+    pager = None  # Pager object
+    _pager_targets = {}  # Dictionary of target widgets where the pager can reside; see Pager
 
     _console_stack = None  # QWidget
     _console_stack_layout = None  # QStackedLayout
@@ -47,11 +50,11 @@ class MainContent(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QS
         QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
         LoggingConfigurable.__init__(self, **kwargs)
 
-        """
-        pager_top
-        pager_inside   pager_right
-        entry
-        """
+        # Layout overview:
+        # pager_top
+        # view  |      pager_right
+        #       | pager_inside
+        # entry |
 
         self._console_stack = QtGui.QWidget()
         self._console_stack_layout = QtGui.QStackedLayout()
@@ -66,11 +69,22 @@ class MainContent(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QS
         self._console_area.addWidget(self._view)
         self._console_area.addWidget(self._entry)
 
-        locations = {'top': {'target': self._console_area, 'index': 0},
-                     'inside': {'target': self._console_stack_layout, 'index': 1},
-                     'right': {'target': self, 'index': 1}}
-        self._pager = Pager(locations, 'This is the pager!')
-        self._pager.show()
+        self._pager_targets = [
+            ('right', {'target': self, 'index': 1}),
+            ('top', {'target': self._console_area, 'index': 0}),
+            ('inside', {'target': self._console_stack_layout, 'index': 1})
+        ]
+
+        self.pager = Pager(self._pager_targets, self.default_pager_location, 'This is the pager!')
+        self.pager.hide()
+
+    @property
+    def pager_locations(self):
+        """
+        Available pager locations.
+        :return: List of strings representing the available pager locations.
+        """
+        return [t[0] for t in self._pager_targets]
 
     # Qt events
     def showEvent(self, event):
