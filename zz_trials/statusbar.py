@@ -10,7 +10,6 @@ class Example(QtGui.QMainWindow):
 
         self.initUI()
 
-
     def initUI(self):
 
         text_edit = QtGui.QTextEdit()
@@ -18,6 +17,7 @@ class Example(QtGui.QMainWindow):
         text_edit.setLineWidth(2)
         # text_edit.setAutoFillBackground(True)
         edit_fg_color = text_edit.palette().color(QtGui.QPalette.WindowText)
+
         self.setCentralWidget(text_edit)
 
         exitAction = QtGui.QAction(QtGui.QIcon('exit24.png'), 'Exit', self)

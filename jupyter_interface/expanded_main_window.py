@@ -1,6 +1,8 @@
 import sys
 from qtconsole.qt import QtGui
 from qtconsole import mainwindow
+from ui.statusbar import StatusBar
+from ui.entry import code_active_color, chat_active_color
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -9,12 +11,34 @@ class ExpandedMainWindow(mainwindow.MainWindow):
     """
     Expansion of qtconsole.mainwindow.MainWindow
     """
+    status_bar = None
+    _entry_update_code = None  # handler connected with main_content to update the code flag of the entry field
+    _act_on_send = None  # handler connected with main_content to act on send clicked
+
     def __init__(self,
                  app,
                  confirm_exit=True,
                  new_frontend_factory=None, slave_frontend_factory=None):
         super(ExpandedMainWindow, self).__init__(app, confirm_exit, new_frontend_factory, slave_frontend_factory)
         self.pager_menu = None
+        self.status_bar = StatusBar(code_checked_color=code_active_color, chat_checked_color=chat_active_color)
+        self.setStatusBar(self.status_bar)
+        self.tab_widget.currentChanged.connect(self.connect_code_activity)
+
+    def connect_code_activity(self):
+        if self.active_frontend is None:
+            return
+        active = self.active_frontend
+        if self._entry_update_code:
+            self.status_bar.code_toggled.disconnect(self._entry_update_code)
+        self._entry_update_code = active.main_content.entry.update_code
+        self.status_bar.code_toggled.connect(self._entry_update_code)
+        self.status_bar.update_code(active.main_content.entry.code)
+
+        if self._act_on_send:
+            self.status_bar.send_clicked.disconnect(self._act_on_send)
+        self._act_on_send = active.main_content.on_send_clicked
+        self.status_bar.send_clicked.connect(self._act_on_send)
 
     def set_paging_active_frontend(self, paging):
         """

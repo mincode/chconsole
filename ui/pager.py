@@ -1,4 +1,4 @@
-from traitlets import Bool, Unicode
+from traitlets import Unicode
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.qt import QtGui
@@ -13,11 +13,6 @@ def pager_template(edit_class):
         """
         location = Unicode('')
         # The type of paging to use.
-
-        _is_shown = Bool(False)
-        # True if the pager is supposed to be shown. Allows for correct application of the traitlets location
-        # change handler when the container widget is still being constructed and the pager is set to be shown,
-        # however, is not yet visible.
 
         _locations = {}  # Possible pager locations
 
@@ -46,7 +41,7 @@ def pager_template(edit_class):
             :param location: Location to set the pager
             :return:
             """
-            is_shown = self._is_shown or self.isVisible()
+            is_shown = self.isVisible()
             self.setParent(None)  # ensure page is not contained in any of its containers
             target = self._locations[self.location]['target']
             index = self._locations[self.location]['index']
@@ -63,7 +58,6 @@ def pager_template(edit_class):
             if isinstance(target, QtGui.QStackedLayout):
                 target.setCurrentWidget(self)
             super(edit_class, self).show()
-            self._is_shown = True
 
         def hide(self):
             """
@@ -75,6 +69,5 @@ def pager_template(edit_class):
                 index = self._locations[self.location]['index']
                 target.setCurrentIndex((index+1) % target.count())
             super(edit_class, self).hide()
-            self._is_shown = False
 
     return Pager

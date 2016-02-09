@@ -54,12 +54,14 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
     ansi_codes = Bool(True, config=True,
         help="Whether to process ANSI escape codes."
     )
+# <done>
     buffer_size = Integer(500, config=True,
         help="""
         The maximum number of lines of text before truncation. Specifying a
         non-positive number disables text truncation (not recommended).
         """
     )
+# </done>
     execute_on_complete_input = Bool(True, config=True,
         help="""Whether to automatically execute on syntactically complete input.
         
@@ -82,6 +84,8 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
                                 `tab` and arrow keys.
                     """
     )
+
+# <done>
     # NOTE: this value can only be specified during initialization.
     kind = Enum(['plain', 'rich'], default_value='plain', config=True,
         help="""
@@ -109,6 +113,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         'none'
            The text is written directly to the console.
         """)
+# </done>
 
     font_family = Unicode(config=True,
         help="""The font family to use for the console.
@@ -146,13 +151,15 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
     # widget (Ctrl+n, Ctrl+a, etc). Enable this if you want this widget to take
     # priority (when it has focus) over, e.g., window-level menu shortcuts.
     override_shortcuts = Bool(False)
-    
+
+# <done>
     # ------ Custom Qt Widgets -------------------------------------------------
     
     # For other projects to easily override the Qt widgets used by the console
     # (e.g. Spyder)
     custom_control = None
     custom_page_control = None
+# </done>
 
     #------ Signals ------------------------------------------------------------
 
@@ -161,19 +168,22 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
     redo_available = QtCore.Signal(bool)
     undo_available = QtCore.Signal(bool)
 
+# <done>
     # Signal emitted when paging is needed and the paging style has been
     # specified as 'custom'.
     custom_page_requested = QtCore.Signal(object)
+# </done>
 
     # Signal emitted when the font is changed.
     font_changed = QtCore.Signal(QtGui.QFont)
 
     #------ Protected class variables ------------------------------------------
-
+# <done>
     # control handles
     _control = None
     _page_control = None
     _splitter = None
+# </done>
 
     # When the control key is down, these keys are mapped.
     _ctrl_down_remap = { QtCore.Qt.Key_B : QtCore.Qt.Key_Left,
@@ -217,6 +227,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         if hasattr(QtCore.QEvent, 'NativeGesture'):
             self._pager_scroll_events.append(QtCore.QEvent.NativeGesture)
 
+# <done>
         # Create the layout and underlying text widget.
         layout = QtGui.QStackedLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -240,6 +251,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
                 self._splitter.addWidget(self._page_control)
             else:
                 layout.addWidget(self._page_control)
+# </done>
 
         # Initialize protected variables. Some variables contain useful state
         # information for subclasses; they should be considered read-only.
@@ -268,6 +280,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         self._reading_callback = None
         self._tab_width = 8
 
+# <done>
         # List of strings pending to be appended as plain text in the widget.
         # The text is not immediately inserted when available to not
         # choke the Qt event loop with paint events for the widget in
@@ -282,6 +295,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         self._pending_text_flush_interval.setSingleShot(True)
         self._pending_text_flush_interval.timeout.connect(
                                             self._on_flush_pending_stream_timer)
+# </done>
 
         # Set a monospaced font.
         self.reset_font()
@@ -344,9 +358,11 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
                 triggered=self.reset_font)
         self.addAction(self.reset_font_size)
 
+# <done>
         # Accept drag and drop events here. Drops were already turned off
         # in self._control when that widget was created.
         self.setAcceptDrops(True)
+# </done>
 
     #---------------------------------------------------------------------------
     # Drag and drop support
@@ -1483,6 +1499,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
 
         return False
 
+# <done>
     def _on_flush_pending_stream_timer(self):
         """ Flush the pending stream output and change the
         prompt position appropriately.
@@ -1510,6 +1527,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         # Set the flush interval to equal the maximum time to update text.
         self._pending_text_flush_interval.setInterval(max(100,
                                                  (time.time()-t)*1000))
+# </done>
 
     def _format_as_columns(self, items, separator='  '):
         """ Transform a list of strings into a single string with columns.

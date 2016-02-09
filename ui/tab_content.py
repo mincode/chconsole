@@ -3,7 +3,10 @@ from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.qt import QtGui, QtCore
 from .source import Source
-from ui.pager import pager_template
+from .pager import pager_template
+from .entry import entry_template
+from .receiver import receiver_template
+from dispatch.out_item import OutItem
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -42,8 +45,8 @@ def tab_content_template(edit_class):
 
         please_execute = QtCore.Signal(Source)
 
-        _view = None  # Area of the console where chat messages, commands and outputs are shown
-        _entry = None  # Area of the console to enter commands and chat
+        receiver = None  # Area of the console where chat messages, commands and outputs are shown
+        entry = None  # Area of the console to enter commands and chat
 
         pager = None  # Pager object
         _pager_targets = {}  # Dictionary of target widgets where the pager can reside; see Pager
@@ -70,10 +73,10 @@ def tab_content_template(edit_class):
             self._console_area = QtGui.QSplitter(QtCore.Qt.Vertical)
             self._console_stack_layout.addWidget(self._console_area)
 
-            self._entry = edit_class()
-            self._view = edit_class()
-            self._console_area.addWidget(self._view)
-            self._console_area.addWidget(self._entry)
+            self.entry = entry_template(edit_class)()
+            self.receiver = receiver_template(edit_class)()
+            self._console_area.addWidget(self.receiver)
+            self._console_area.addWidget(self.entry)
 
             self._pager_targets = [
                 ('right', {'target': self, 'index': 1}),
@@ -96,5 +99,14 @@ def tab_content_template(edit_class):
         def showEvent(self, event):
             if not event.spontaneous():
                 _resize_last(self._console_area, self.entry_proportion)
+
+        # Qt slots
+        @QtCore.Slot()
+        def on_send_clicked(self):
+            self.please_execute.emit(self.entry.get_source())
+
+        @QtCore.Slot(OutItem)
+        def on_output(self, item):
+            self.receiver.post(item)
 
     return TabContent

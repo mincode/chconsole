@@ -78,6 +78,7 @@ def tab_widget_template(edit_class):
             self.main_content.please_execute.connect(self._execute)
             # start relay thread to act on messages
             self._relay = Relay(self._msg_q, self.main_content)
+            self._relay.please_output.connect(self.main_content.on_output)
             self._relay.start()
             # set layout to be the main content widget
             layout = QtGui.QHBoxLayout(self)
