@@ -11,6 +11,9 @@ class OutItem:
 
 
 class OutStream(OutItem):
+    """
+
+    """
     text = ''
 
     def __init__(self, text):
