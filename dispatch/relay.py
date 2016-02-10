@@ -1,24 +1,20 @@
 from qtconsole.qt import QtCore
-from .stoppable_thread import StoppableThread
 from .out_item import OutItem, OutStream
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class Relay(StoppableThread, QtCore.QObject):
+class Relay(QtCore.QThread):
     """
     Relay messages from the kernel.
     """
-    daemon = True  # Bool
-
     _msg_q = None  # Queue
     _main_content = None  # MainContent
 
     please_output = QtCore.Signal(OutItem)
 
-    def __init__(self, msg_q, main_content):
-        super(Relay, self).__init__()
-        QtCore.QObject.__init__(self)
+    def __init__(self, msg_q, main_content, parent=None):
+        super(Relay, self).__init__(parent)
         self._msg_q = msg_q
         self._main_content = main_content
 
@@ -27,20 +23,12 @@ class Relay(StoppableThread, QtCore.QObject):
         Run the thread processing messages.
         :return:
         """
-        while not self.stopped():
+        while self.isRunning():
             msg = self._msg_q.get()
-            if not self.stopped():
-                # process message
-                print(msg)
-                self._dispatch(msg)
+            # process message
+            print(msg)
+            self._dispatch(msg)
             self._msg_q.task_done()
-
-    def stop(self):
-        """
-        This can be called from the main thread to safely stop this thread.
-        """
-        self.stop_me()
-        self.join()
 
     def _dispatch(self, msg):
         """ Calls the frontend handler associated with the message type of the

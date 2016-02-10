@@ -58,7 +58,6 @@ def tab_content_template(edit_class):
         def __init__(self, **kwargs):
             QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
             LoggingConfigurable.__init__(self, **kwargs)
-
             # Layout overview:
             # pager_top
             # view  |      pager_right
@@ -84,7 +83,8 @@ def tab_content_template(edit_class):
                 ('inside', {'target': self._console_stack_layout, 'index': 1})
             ]
 
-            self.pager = pager_template(edit_class)(self._pager_targets, self.default_pager_location, 'This is the pager!')
+            self.pager = pager_template(edit_class)(self._pager_targets, self.default_pager_location,
+                                                    'This is the pager!')
             self.pager.hide()
 
         @property
@@ -103,6 +103,7 @@ def tab_content_template(edit_class):
         # Qt slots
         @QtCore.Slot()
         def on_send_clicked(self):
+            # print('Send clicked')
             self.please_execute.emit(self.entry.get_source())
 
         @QtCore.Slot(OutItem)

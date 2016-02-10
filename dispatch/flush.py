@@ -1,27 +1,27 @@
-import time
-from queue import Queue
 from qtconsole.qt import QtCore
-from .stoppable_thread import StoppableThread
+from .out_item import OutItem
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class BlockBuffer(StoppableThread):
+class Flush(QtCore.QThread):
     """
     Buffer of items that correspond to blocks for output.
     """
     _target = None  # Receiver
-    _default_interval = 0.1  # default sleep interval, in sec
-    _sleep_time = 0  # sleep time in sec.
+    _default_interval = 100  # default sleep interval, in msec
+    _sleep_time = 0  # sleep time in msec.
 
-    def __init__(self, target):
+    item_ready = QtCore.Signal(OutItem)
+
+    def __init__(self, target, parent=None):
         """
         Initialize.
         :param target: target object for output and timer parent;
                         has the method target.receive: OutItem->None that outputs one item as one block.
         :return:
         """
-        super(BlockBuffer, self).__init__()
+        super(Flush, self).__init__(parent)
         self._target = target
         self._sleep_time = self._default_interval
 
@@ -37,17 +37,17 @@ class BlockBuffer(StoppableThread):
         # enough time for the application to process other events then drawing output. The interval between flush
         # is chosen such that the time used for flushing is approximately equal to the time available for processing
         # other events.
-        time.sleep(self._sleep_time)
-        while not self.stopped():
-            print('run thread; timer inactive')
+        while self.isRunning():
+            self.msleep(self._sleep_time)
             max_blocks = self._target.document().maximumBlockCount()
             block_counter = max_blocks if max_blocks > 0 else 1
-            start = time.time()
+            self._target.receive_time = 0
             while block_counter > 0 and not self._target.output_q.empty():
+                # print('run thread; timer inactive; q not empty')
                 item = self._target.output_q.get()
                 block_counter -= 1
-                self._target.receive(item)
+                self.item_ready.emit(item)
                 self._target.output_q.task_done()
             # Set the flush interval to equal the maximum time to flush this time around
             # to give the system equal time to catch up with other events.
-            self._sleep_time = max(self._default_interval, (time.time() - start) * 1000)
+            self._sleep_time = max(self._default_interval, self._target.receive_time)
