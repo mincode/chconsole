@@ -69,6 +69,7 @@ def receiver_template(edit_class):
             _receive(item, self)
             self.receive_time += stamp.elapsed()
 
+        @QtCore.Slot(OutItem)
         def post(self, item):
             # _receive(item, self)
             # print('Enqueued: ' + item.text)

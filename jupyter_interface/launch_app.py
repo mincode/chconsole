@@ -1,7 +1,7 @@
 import qtconsole.qtconsoleapp
 import jupyter_interface.expanded_main_window
 from jupyter_interface.chat_console_app import ChatConsoleApp
-from jupyter_interface.tab_widget import RichTabWidget, PlainTabWidget
+from jupyter_interface.tab_main import RichTabMain, PlainTabMain
 
 qtconsole.qtconsoleapp.MainWindow = jupyter_interface.expanded_main_window.ExpandedMainWindow
 
@@ -20,9 +20,9 @@ def _plain_changed(self, name, old, new):
     """
 
     if new:  # plain
-        self.widget_factory = PlainTabWidget
+        self.widget_factory = PlainTabMain
     else:  # rich
-        self.widget_factory = RichTabWidget
+        self.widget_factory = RichTabMain
 
 #-----------------------------------------------------------------------------
 # Main entry point
@@ -31,7 +31,7 @@ def _plain_changed(self, name, old, new):
 def main():
     #Use if existing kernel: kernel-tester.json
     #ChatConsoleApp.existing = 'tester'
-    ChatConsoleApp.widget_factory = RichTabWidget
+    ChatConsoleApp.widget_factory = RichTabMain
     ChatConsoleApp._plain_changed = _plain_changed
     ChatConsoleApp.launch_instance()
 

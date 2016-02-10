@@ -2,7 +2,12 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
 class OutItem:
-    pass
+    head = True
+    # True if this is the beginning of a new item for output.
+    # False if this is a part of the item previously sent to output.
+
+    def split(self):
+        pass
 
 
 class OutStream(OutItem):

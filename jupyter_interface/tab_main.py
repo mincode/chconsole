@@ -49,20 +49,19 @@ class _BaseTabWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui
         LoggingConfigurable.__init__(self, **kw)
 
 
-def tab_widget_template(edit_class):
+def tab_main_template(edit_class):
     """
-    Template for TabWidget.
+    Template for TabMain.
     :param edit_class: QTGui.QTextEdit or QtGui.QPlainTextEdit
     :return: Instantiated class.
     """
-    class TabWidget(_BaseTabWidget, BaseFrontendMixin):
+    class TabMain(_BaseTabWidget, BaseFrontendMixin):
         """ The main widget to be inserted into a tab of the Jupyter MainWindow object.
             Isolates Jupyter code from this project's code.
         """
 
         _msg_q = None  # Queue
         main_content = None  # QWidget
-        _relay = None  # Relay
 
         def __init__(self, parent=None, **kw):
             """
@@ -71,16 +70,10 @@ def tab_widget_template(edit_class):
             :param kw:
             :return:
             """
-            super(TabWidget, self).__init__(parent, **kw)
+            super(TabMain, self).__init__(parent, **kw)
             self._msg_q = Queue()
-            self.main_content = tab_content_template(edit_class)()
-            # listen to messages from main content widget. main content widget has a 'please_execute' signal
-            self.main_content.please_execute.connect(self._execute)
-            # start relay thread to act on messages
-            self._relay = Relay(self._msg_q, self.main_content, self)
-            self._relay.please_output.connect(self.main_content.on_output)
-            self._relay.start()
-            # set layout to be the main content widget
+            self.main_content = tab_content_template(edit_class)(self._msg_q, self._execute)
+
             layout = QtGui.QHBoxLayout(self)
             layout.setContentsMargins(0, 0, 0, 0)
             layout.addWidget(self.main_content)
@@ -93,7 +86,6 @@ def tab_widget_template(edit_class):
             """
             self._msg_q.put(msg)
 
-        @QtCore.Slot(Source)
         def _execute(self, source):
             """
             Execute source.
@@ -102,7 +94,7 @@ def tab_widget_template(edit_class):
             """
             self.kernel_client.execute(source.code, source.hidden)
 
-    return TabWidget
+    return TabMain
 
-RichTabWidget = tab_widget_template(QtGui.QTextEdit)
-PlainTabWidget = tab_widget_template(QtGui.QPlainTextEdit)
+RichTabMain = tab_main_template(QtGui.QTextEdit)
+PlainTabMain = tab_main_template(QtGui.QPlainTextEdit)

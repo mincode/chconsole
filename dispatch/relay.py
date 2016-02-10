@@ -9,14 +9,12 @@ class Relay(QtCore.QThread):
     Relay messages from the kernel.
     """
     _msg_q = None  # Queue
-    _main_content = None  # MainContent
 
     please_output = QtCore.Signal(OutItem)
 
-    def __init__(self, msg_q, main_content, parent=None):
+    def __init__(self, msg_q, parent=None):
         super(Relay, self).__init__(parent)
         self._msg_q = msg_q
-        self._main_content = main_content
 
     def run(self):
         """

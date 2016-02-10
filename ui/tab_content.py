@@ -7,6 +7,7 @@ from .pager import pager_template
 from .entry import entry_template
 from .receiver import receiver_template
 from dispatch.out_item import OutItem
+from dispatch.relay import Relay
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -43,8 +44,6 @@ def tab_content_template(edit_class):
 
         default_pager_location = Unicode('right', config=True, help='Default location of the pager: right, inside or top')
 
-        please_execute = QtCore.Signal(Source)
-
         receiver = None  # Area of the console where chat messages, commands and outputs are shown
         entry = None  # Area of the console to enter commands and chat
 
@@ -55,7 +54,10 @@ def tab_content_template(edit_class):
         _console_stack_layout = None  # QStackedLayout
         _console_area = None  # QSplitter
 
-        def __init__(self, **kwargs):
+        _relay = None  # Relay
+        _execute = None  # function to execute source
+
+        def __init__(self, msg_q, execute, **kwargs):
             QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
             LoggingConfigurable.__init__(self, **kwargs)
             # Layout overview:
@@ -87,6 +89,13 @@ def tab_content_template(edit_class):
                                                     'This is the pager!')
             self.pager.hide()
 
+            # start relay thread to act on messages
+            self._relay = Relay(msg_q, self)
+            self._relay.please_output.connect(self.receiver.post)
+            self._relay.start()
+
+            self._execute = execute
+
         @property
         def pager_locations(self):
             """
@@ -104,10 +113,6 @@ def tab_content_template(edit_class):
         @QtCore.Slot()
         def on_send_clicked(self):
             # print('Send clicked')
-            self.please_execute.emit(self.entry.get_source())
-
-        @QtCore.Slot(OutItem)
-        def on_output(self, item):
-            self.receiver.post(item)
+            self._execute(self.entry.get_source())
 
     return TabContent
