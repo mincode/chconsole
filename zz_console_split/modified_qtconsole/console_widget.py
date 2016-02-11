@@ -1619,6 +1619,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         else:
             return None
 
+# <done>
     def _get_last_lines(self, text, num_lines, return_count=False):
         """ Return last specified number of lines of text (like `tail -n`).
         If return_count is True, returns a tuple of clipped text and the
@@ -1641,6 +1642,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             return text[pos:], i
         else:
             return text[pos:]
+# </done>
 
     def _get_last_lines_from_list(self, text_list, num_lines):
         """ Return the list of text clipped to last specified lines.

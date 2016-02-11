@@ -1,12 +1,12 @@
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-def _split_lines(text, num_lines):
+def _split_lines(num_lines, text):
     """
     Split text into initial piece of given number of lines and the rest. The last line in text does not need to be
     terminated with '\n'. An empty text counts as one line.
-    :param text: string to be split.
     :param num_lines: number of lines for the initial piece.
+    :param text: string to be split.
     :return: count of number of lines in the initial piece, string of initial piece, rest string.
     """
     num_lines = 0 if num_lines < 0 else num_lines
@@ -49,6 +49,13 @@ class OutItem:
         return count, first_item, rest_item
 
 
+class ClearOutput(OutItem):
+    wait = False  # Wait to clear the output until new output is available
+
+    def __init__(self, wait=False, head=True, empty=False):
+        super(ClearOutput, self).__init__(head=head, empty=empty)
+
+
 class OutText(OutItem):
     text = ''
 
@@ -64,12 +71,37 @@ class OutText(OutItem):
                     where head property of rest is false in rest. The rest has head False and empty is set if
                     it is empty.
         """
-        count, first_text, rest_text = _split_lines(self.text, num_lines)
+        count, first_text, rest_text = _split_lines(num_lines, self.text)
         first = type(self)(first_text, head=self.head, empty=self.empty)
         rest = type(self)(rest_text, head=False, empty=(len(rest_text) == 0))
         return count, first, rest
 
 
-class OutStream(OutText):
-    def _init__(self, text, head=True):
-        super(OutStream, self).__init__(text, head)
+class Stream(OutText):
+    name = 'stdout'  # name of the stream
+
+    def __init__(self, text, name='stdout', head=True, empty=False):
+        super(Stream, self).__init__(text, head, empty)
+        self.name = name
+
+
+class Input(OutText):
+    execution_count = 0  # int
+    local = True  # whether the input came from the local client
+
+    def __init__(self, text, execution_count=0, local=True, head=True, empty=False):
+        super(Input, self).__init__(text, head, empty)
+        self.execution_count = execution_count
+        self.local = local
+
+    @property
+    def code(self):
+        return self.text
+
+    def split(self, num_lines):
+        count, first, rest = super(Input, self).split(num_lines)
+        first.execution_count = self.execution_count
+        first.local = self.local
+        rest.execution_count = self.execution_count
+        rest.local = self.local
+        return count, first, rest

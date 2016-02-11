@@ -462,6 +462,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
             if expression in self._callback_dict:
                 self._callback_dict.pop(expression)(user_exp[expression])
 
+# <done>
     def _handle_execute_reply(self, msg):
         """ Handles replies for code execution.
         """
@@ -499,6 +500,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
             self._request_info['execute'].pop(msg_id)
         else:
             super(FrontendWidget, self)._handle_execute_reply(msg)
+# </done>
 
     def _handle_input_request(self, msg):
         """ Handle requests for raw_input.
@@ -727,6 +729,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         self._append_plain_text(text, before_prompt=True)
         self._control.moveCursor(QtGui.QTextCursor.End)
 
+# <done>
     def flush_clearoutput(self):
         """If a clearoutput is pending, execute it."""
         if self._pending_clearoutput:
@@ -740,6 +743,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         cursor.movePosition(cursor.StartOfLine, cursor.KeepAnchor)
         cursor.insertText('')
         cursor.endEditBlock()
+# </done>
 
     #---------------------------------------------------------------------------
     # 'FrontendWidget' protected interface

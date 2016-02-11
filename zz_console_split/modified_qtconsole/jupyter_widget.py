@@ -31,7 +31,10 @@ from qtconsole import styles
 
 # Default strings to build and display input and output prompts (and separators
 # in between)
+
+# <done>
 default_in_prompt = 'In [<span class="in-prompt-number">%i</span>]: '
+# </done>
 default_out_prompt = 'Out[<span class="out-prompt-number">%i</span>]: '
 default_input_sep = '\n'
 default_output_sep = ''
@@ -93,7 +96,10 @@ class JupyterWidget(IPythonWidget):
         """)
 
     # Prompts.
+
+# <done>
     in_prompt = Unicode(default_in_prompt, config=True)
+# </done>
     out_prompt = Unicode(default_out_prompt, config=True)
     input_sep = Unicode(default_input_sep, config=True)
     output_sep = Unicode(default_output_sep, config=True)
@@ -229,13 +235,14 @@ class JupyterWidget(IPythonWidget):
         cursor.insertText(content['code'])
         self._highlighter.rehighlightBlock(cursor.block())
         cursor.endEditBlock()
-        
+
+# <done>
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""
         self.log.debug("execute_input: %s", msg.get('content', ''))
         if self.include_output(msg):
             self._append_custom(self._insert_other_input, msg['content'], before_prompt=True)
-
+# </done>
     
     def _handle_execute_result(self, msg):
         """Handle an execute_result message"""
@@ -454,6 +461,7 @@ class JupyterWidget(IPythonWidget):
                     msg = 'Opening editor with command "%s" failed.\n'
                     self._append_plain_text(msg % command)
 
+# <done>
     def _make_in_prompt(self, number):
         """ Given a prompt number, returns an HTML In prompt.
         """
@@ -464,6 +472,7 @@ class JupyterWidget(IPythonWidget):
             from xml.sax.saxutils import escape
             body = escape(self.in_prompt)
         return '<span class="in-prompt">%s</span>' % body
+# </done>
 
     def _make_continuation_prompt(self, prompt):
         """ Given a plain text version of an In prompt, returns an HTML

@@ -1,12 +1,10 @@
-from traitlets import Integer, Unicode, Enum
+from traitlets import Integer, Unicode, Bool
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.qt import QtGui, QtCore
-from .source import Source
 from .pager import pager_template
 from .entry import entry_template
 from .receiver import receiver_template
-from dispatch.out_item import OutItem
 from dispatch.relay import Relay
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -55,9 +53,12 @@ def tab_content_template(edit_class):
         _console_area = None  # QSplitter
 
         _relay = None  # Relay
-        _execute = None  # function to execute source
+        execute = None  # function to execute source
+        from_here = None  # function to determine whether an input message originates from this client
+        msg_q = None  # message queue; Queue
+        show_other = Bool(True, config=True, help='True if messages from other clients are to be included.')
 
-        def __init__(self, msg_q, execute, **kwargs):
+        def __init__(self, msg_q, execute, from_here, **kwargs):
             QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
             LoggingConfigurable.__init__(self, **kwargs)
             # Layout overview:
@@ -89,12 +90,13 @@ def tab_content_template(edit_class):
                                                     'This is the pager!')
             self.pager.hide()
 
+            self.execute = execute
+            self.from_here = from_here
+
             # start relay thread to act on messages
             self._relay = Relay(msg_q, self)
             self._relay.please_output.connect(self.receiver.post)
             self._relay.start()
-
-            self._execute = execute
 
         @property
         def pager_locations(self):
@@ -113,6 +115,6 @@ def tab_content_template(edit_class):
         @QtCore.Slot()
         def on_send_clicked(self):
             # print('Send clicked')
-            self._execute(self.entry.get_source())
+            self.execute(self.entry.get_source())
 
     return TabContent

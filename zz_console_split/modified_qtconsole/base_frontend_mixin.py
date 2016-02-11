@@ -164,6 +164,7 @@ class BaseFrontendMixin(object):
         if handler:
             handler(msg)
 
+# <done>
     def from_here(self, msg):
         """Return whether a message is from this session"""
         session_id = self._kernel_client.session.session
@@ -182,3 +183,5 @@ class BaseFrontendMixin(object):
             return True
         else:
             return from_here
+
+# </done>

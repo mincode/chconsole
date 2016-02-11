@@ -1,5 +1,5 @@
 from qtconsole.qt import QtCore
-from .out_item import OutItem
+from .out_item import OutItem, ClearOutput
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -39,6 +39,7 @@ class Flush(QtCore.QThread):
         # enough time for the application to process other events then drawing output. The interval between flush
         # is chosen such that the time used for flushing is approximately equal to the time available for processing
         # other events.
+        wait = None
         while self.isRunning():
             self.msleep(self._sleep_time)
             max_blocks = self._target.document().maximumBlockCount()
@@ -48,8 +49,14 @@ class Flush(QtCore.QThread):
             while lines_left > 0 and (self._carry_over or not self._target.output_q.empty()):
                 # print('run thread; timer inactive; q not empty')
                 item = self._carry_over if self._carry_over else self._target.output_q.get()
-                lines, item_first, item_rest = item.split(lines_left)
-                lines_left -= lines
+                if isinstance(item, ClearOutput) and item.wait:
+                    wait = item
+                else:
+                    lines, item_first, item_rest = item.split(lines_left)
+                    lines_left -= lines
+                if wait:
+                    self.item_ready.emit(wait)
+                    wait = None
                 self.item_ready.emit(item_first)
                 if not self._carry_over:
                     self._target.output_q.task_done()

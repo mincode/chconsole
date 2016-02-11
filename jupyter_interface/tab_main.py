@@ -72,7 +72,7 @@ def tab_main_template(edit_class):
             """
             super(TabMain, self).__init__(parent, **kw)
             self._msg_q = Queue()
-            self.main_content = tab_content_template(edit_class)(self._msg_q, self._execute)
+            self.main_content = tab_content_template(edit_class)(self._msg_q, self._execute, self.from_here)
 
             layout = QtGui.QHBoxLayout(self)
             layout.setContentsMargins(0, 0, 0, 0)
@@ -93,7 +93,43 @@ def tab_main_template(edit_class):
             :return:
             """
             self.kernel_client.execute(source.code, source.hidden)
-
+            #jupyter_client.client:
+            #execute(self, code, silent=False, store_history=True,
+            #        user_expressions=None, allow_stdin=None, stop_on_error=True):
+            # """Execute code in the kernel.
+            #
+            # Parameters
+            # ----------
+            # code : str
+            #     A string of code in the kernel's language.
+            #
+            # silent : bool, optional (default False)
+            #     If set, the kernel will execute the code as quietly possible, and
+            #     will force store_history to be False.
+            #
+            # store_history : bool, optional (default True)
+            #     If set, the kernel will store command history.  This is forced
+            #     to be False if silent is True.
+            #
+            # user_expressions : dict, optional
+            #     A dict mapping names to expressions to be evaluated in the user's
+            #     dict. The expression values are returned as strings formatted using
+            #     :func:`repr`.
+            #
+            # allow_stdin : bool, optional (default self.allow_stdin)
+            #     Flag for whether the kernel can send stdin requests to frontends.
+            #
+            #     Some frontends (e.g. the Notebook) do not support stdin requests.
+            #     If raw_input is called from code executed from such a frontend, a
+            #     StdinNotImplementedError will be raised.
+            #
+            # stop_on_error: bool, optional (default True)
+            #     Flag whether to abort the execution queue, if an exception is encountered.
+            #
+            # Returns
+            # -------
+            # The msg_id of the message sent.
+            # """
     return TabMain
 
 RichTabMain = tab_main_template(QtGui.QTextEdit)
