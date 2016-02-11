@@ -11,6 +11,7 @@ class Flush(QtCore.QThread):
     _target = None  # Receiver
     _default_interval = 100  # default sleep interval, in msec
     _sleep_time = 0  # sleep time in msec.
+    _carry_over = None  # item left to output from previous flush
 
     item_ready = QtCore.Signal(OutItem)
 
@@ -24,6 +25,7 @@ class Flush(QtCore.QThread):
         super(Flush, self).__init__(parent)
         self._target = target
         self._sleep_time = self._default_interval
+        self._carry_over = None
 
     def run(self):
         """
@@ -40,14 +42,18 @@ class Flush(QtCore.QThread):
         while self.isRunning():
             self.msleep(self._sleep_time)
             max_blocks = self._target.document().maximumBlockCount()
-            block_counter = max_blocks if max_blocks > 0 else 1
+            lines_left = max_blocks if max_blocks > 0 else 1
+            # if no max_blocks, then flush line by line with short brakes after each line
             self._target.receive_time = 0
-            while block_counter > 0 and not self._target.output_q.empty():
+            while lines_left > 0 and (self._carry_over or not self._target.output_q.empty()):
                 # print('run thread; timer inactive; q not empty')
-                item = self._target.output_q.get()
-                block_counter -= 1
-                self.item_ready.emit(item)
-                self._target.output_q.task_done()
+                item = self._carry_over if self._carry_over else self._target.output_q.get()
+                lines, item_first, item_rest = item.split(lines_left)
+                lines_left -= lines
+                self.item_ready.emit(item_first)
+                if not self._carry_over:
+                    self._target.output_q.task_done()
+                self._carry_over = None if item_rest.empty else item_rest
             # Set the flush interval to equal the maximum time to flush this time around
             # to give the system equal time to catch up with other events.
             self._sleep_time = max(self._default_interval, self._target.receive_time)
