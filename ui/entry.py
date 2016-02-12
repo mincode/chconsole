@@ -1,8 +1,9 @@
 from qtconsole.qt import QtGui, QtCore
+from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool
 from traitlets.config.configurable import LoggingConfigurable
-from qtconsole.util import MetaQObjectHasTraits
-from .source import Source
+
+from dispatch.source import Source
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -22,7 +23,7 @@ def entry_template(edit_class):
         Text edit that has two modes, code and chat mode,
         accepting code to be executed or arbitrary text (chat messages).
         """
-        code = Bool(True)  # True if document contains code to be executed
+        code = Bool(True)  # True if document contains code to be executed; rather than a chat message
 
         def __init__(self, code=True, text='', parent=None, **kwargs):
             """
@@ -52,7 +53,8 @@ def entry_template(edit_class):
             """
             self.code = code
 
-        def get_source(self):
+        @property
+        def source(self):
             """
             Get the source from the document edited.
             :return: Source object.

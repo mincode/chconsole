@@ -1,12 +1,10 @@
-from queue import Queue
 from traitlets.config.configurable import LoggingConfigurable
 from traitlets import Bool
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
 from qtconsole.util import MetaQObjectHasTraits
 from ui.tab_content import tab_content_template
-from dispatch.relay import Relay
-from ui.source import Source
+from dispatch.message import Message
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -60,8 +58,9 @@ def tab_main_template(edit_class):
             Isolates Jupyter code from this project's code.
         """
 
-        _msg_q = None  # Queue
         main_content = None  # QWidget
+
+        message_arrived = QtCore.Signal(Message)  # signal to send a message that has arrived from the kernel
 
         def __init__(self, parent=None, **kw):
             """
@@ -71,8 +70,9 @@ def tab_main_template(edit_class):
             :return:
             """
             super(TabMain, self).__init__(parent, **kw)
-            self._msg_q = Queue()
-            self.main_content = tab_content_template(edit_class)(self._msg_q, self._execute, self.from_here)
+            self.main_content = tab_content_template(edit_class)()
+            self.main_content.please_execute.connect(self._execute)
+            self.message_arrived.connect(self.main_content.dispatch)
 
             layout = QtGui.QHBoxLayout(self)
             layout.setContentsMargins(0, 0, 0, 0)
@@ -84,7 +84,7 @@ def tab_main_template(edit_class):
             :param msg: Incoming message.
             :return:
             """
-            self._msg_q.put(msg)
+            self.message_arrived.emit(Message(msg, self.from_here(msg)))
 
         def _execute(self, source):
             """
@@ -92,7 +92,7 @@ def tab_main_template(edit_class):
             :param source: Source object.
             :return:
             """
-            self.kernel_client.execute(source.code, source.hidden)
+            self.kernel_client.execute(source.code, silent=source.hidden)
             #jupyter_client.client:
             #execute(self, code, silent=False, store_history=True,
             #        user_expressions=None, allow_stdin=None, stop_on_error=True):

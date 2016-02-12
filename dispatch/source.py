@@ -12,4 +12,3 @@ class Source:
     def __init__(self, code, hidden=False):
         self.code = code
         self.hidden = hidden
-

@@ -1,55 +1,72 @@
-from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
-from qtconsole.util import MetaQObjectHasTraits
 from .out_item import OutItem, Stream, Input, ClearOutput
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject), {})):
+class Relay(QtCore.QThread):
     """
     Relay messages from the kernel.
     """
+    _msg_q = None  # Queue
+    _parent = None  # parent QWidget
     please_output = QtCore.Signal(OutItem)
 
-    def __init__(self, parent=None, **kwargs):
-        QtCore.QObject.__init__(self, parent)
-        LoggingConfigurable.__init__(self, **kwargs)
+    def __init__(self, msg_q, parent):
+        super(Relay, self).__init__(parent)
+        self._msg_q = msg_q
+        self._parent = parent
 
-    def dispatch(self, msg):
-        # print('dispatch: ' + msg.type)
-        handler = getattr(self, '_handle_' + msg.type, None)
-        if handler and msg.show_me:
+    def run(self):
+        """
+        Run the thread processing messages.
+        :return:
+        """
+        while self.isRunning():
+            msg = self._msg_q.get()
+            # process message
+            print('msg_type: ' + msg['header']['msg_type'])
+            print(msg)
+            self._dispatch(msg)
+            self._msg_q.task_done()
+
+    def _dispatch(self, msg):
+        """ Calls the frontend handler associated with the message type of the
+            given message.
+        """
+        # from qtconsole.base_frontend_mixin
+        msg_type = msg['header']['msg_type']
+        # print('dispatch: ' + msg_type)
+        handler = getattr(self, '_handle_' + msg_type, None)
+        if handler:
             handler(msg)
 
     def _handle_stream(self, msg):
-        content = msg.content
+        content = msg['content']
         self.please_output.emit(Stream(content['text'], name=content['name']))
 
     def _handle_kernel_info_reply(self, msg):
-        self.please_output.emit(Stream(msg.content['banner'], clearable=False))
-        help_links = msg.content['help_links']
+        self.please_output.emit(Stream(msg['content']['banner']))
+        help_links = msg['content']['help_links']
         if help_links:
-            self.please_output.emit(Stream('\nHelp Links', clearable=False))
+            self.please_output.emit(Stream('\nHelp Links'))
             for helper in help_links:
-                self.please_output.emit(Stream('\n' + helper['text'] + ': ' + helper['url'], clearable=False))
-            self.please_output.emit(Stream('\n', clearable=False))
+                self.please_output.emit(Stream('\n' + helper['text'] + ': ' + helper['url']))
+            self.please_output.emit(Stream('\n'))
 
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""
-        content = msg.content
-        self.log.debug("execute_input: %s", content)
+        self._parent.log.debug("execute_input: %s", msg.get('content', ''))
 
-        self.please_output.emit(Input(content['code'], execution_count=content['execution_count']))
+        content = msg['content']
+        if self._parent.show_other or self._parent.from_here(msg):
+            self.please_output.emit(Input(content['code'], execution_count=content['execution_count']))
 
+    #frontend_widget
     def _handle_clear_output(self, msg):
-        # {'header': {'msg_type': 'clear_output'}, 'content': {'wait': False}}
-        #
-        # {'header': {'msg_type': 'clear_output'}, 'content': {'wait': False}}
-        # {'header': {'msg_type': 'stream'}, 'content': {'name': 'stdout', 'text': 'XYZ'}}
-        content = msg.content
-        # print('wait: ' + str(content['wait']))
-        self.please_output.emit(ClearOutput(wait=content['wait']))
+        content = msg['content']
+        if self._parent.show_other or self._parent.from_here(msg):
+            self.please_output.emit(ClearOutput(wait=content.wait))
 
 # frontend_widget
 #     def _handle_execute_reply(self, msg):
@@ -91,3 +108,5 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
 #         else:
 #             # does not exist
 #             super(FrontendWidget, self)._handle_execute_reply(msg)
+
+

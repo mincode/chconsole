@@ -1,11 +1,14 @@
+from qtconsole.qt import QtGui, QtCore
+from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Integer, Unicode, Bool
 from traitlets.config.configurable import LoggingConfigurable
-from qtconsole.util import MetaQObjectHasTraits
-from qtconsole.qt import QtGui, QtCore
-from .pager import pager_template
-from .entry import entry_template
-from .receiver import receiver_template
+
+from dispatch.message import Message
 from dispatch.relay import Relay
+from dispatch.source import Source
+from .entry import entry_template
+from .pager import pager_template
+from .receiver import receiver_template
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -53,12 +56,13 @@ def tab_content_template(edit_class):
         _console_area = None  # QSplitter
 
         _relay = None  # Relay
-        execute = None  # function to execute source
-        from_here = None  # function to determine whether an input message originates from this client
-        msg_q = None  # message queue; Queue
+
         show_other = Bool(True, config=True, help='True if messages from other clients are to be included.')
 
-        def __init__(self, msg_q, execute, from_here, **kwargs):
+        message_arrived = QtCore.Signal(Message)  # to signal a message from the kernel
+        please_execute = QtCore.Signal(Source)  # source to be executed
+
+        def __init__(self, **kwargs):
             QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
             LoggingConfigurable.__init__(self, **kwargs)
             # Layout overview:
@@ -90,13 +94,9 @@ def tab_content_template(edit_class):
                                                     'This is the pager!')
             self.pager.hide()
 
-            self.execute = execute
-            self.from_here = from_here
-
-            # start relay thread to act on messages
-            self._relay = Relay(msg_q, self)
+            self._relay = Relay(self)
             self._relay.please_output.connect(self.receiver.post)
-            self._relay.start()
+            self.message_arrived.connect(self._relay.dispatch)
 
         @property
         def pager_locations(self):
@@ -114,7 +114,25 @@ def tab_content_template(edit_class):
         # Qt slots
         @QtCore.Slot()
         def on_send_clicked(self):
+            """
+            After the user clicks send, emit the source to be executed.
+            :return:
+            """
             # print('Send clicked')
-            self.execute(self.entry.get_source())
+            self.please_execute.emit(self.entry.source)
+
+        @QtCore.Slot()
+        def on_frontend_clicked(self):
+            """
+            After the user clicks message to frontend, emit the source to be sent to the receiver.
+            :return:
+            """
+            # print('Send clicked')
+            self.dispatch(Message(eval(self.entry.source.code), from_here=True))
+
+        @QtCore.Slot(Message)
+        def dispatch(self, msg):
+            msg.show_other = self.show_other
+            self.message_arrived.emit(msg)
 
     return TabContent

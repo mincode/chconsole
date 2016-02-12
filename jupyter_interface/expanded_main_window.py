@@ -14,6 +14,7 @@ class ExpandedMainWindow(mainwindow.MainWindow):
     status_bar = None
     _entry_update_code = None  # handler connected with main_content to update the code flag of the entry field
     _act_on_send = None  # handler connected with main_content to act on send clicked
+    _act_on_frontend = None  # handler connected with main_content to act on message to frontend
 
     def __init__(self,
                  app,
@@ -32,6 +33,7 @@ class ExpandedMainWindow(mainwindow.MainWindow):
         if self._entry_update_code:
             self.status_bar.code_toggled.disconnect(self._entry_update_code)
         self._entry_update_code = active.main_content.entry.update_code
+
         self.status_bar.code_toggled.connect(self._entry_update_code)
         self.status_bar.update_code(active.main_content.entry.code)
 
@@ -39,6 +41,11 @@ class ExpandedMainWindow(mainwindow.MainWindow):
             self.status_bar.send_clicked.disconnect(self._act_on_send)
         self._act_on_send = active.main_content.on_send_clicked
         self.status_bar.send_clicked.connect(self._act_on_send)
+
+        if self._act_on_frontend:
+            self.status_bar.send_clicked.disconnect(self._act_on_frontend)
+        self._act_on_frontend = active.main_content.on_frontend_clicked
+        self.status_bar.frontend_clicked.connect(self._act_on_frontend)
 
     def set_paging_active_frontend(self, paging):
         """

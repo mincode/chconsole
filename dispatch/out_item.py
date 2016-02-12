@@ -54,13 +54,14 @@ class ClearOutput(OutItem):
 
     def __init__(self, wait=False, head=True, empty=False):
         super(ClearOutput, self).__init__(head=head, empty=empty)
+        self.wait = wait
 
 
 class OutText(OutItem):
     text = ''
 
-    def __init__(self, text, head=True, empty=False):
-        super(OutText, self).__init__(head, empty)
+    def __init__(self, text='', head=True, empty=False):
+        super(OutText, self).__init__(head=head, empty=empty)
         self.text = text
 
     def split(self, num_lines):
@@ -79,20 +80,20 @@ class OutText(OutItem):
 
 class Stream(OutText):
     name = 'stdout'  # name of the stream
+    clearable = True  # True if text can be cleared by ClearOutput
 
-    def __init__(self, text, name='stdout', head=True, empty=False):
-        super(Stream, self).__init__(text, head, empty)
+    def __init__(self, text='', name='stdout', clearable=True, head=True, empty=False):
+        super(Stream, self).__init__(text=text, head=head, empty=empty)
         self.name = name
+        self.clearable = clearable
 
 
 class Input(OutText):
     execution_count = 0  # int
-    local = True  # whether the input came from the local client
 
-    def __init__(self, text, execution_count=0, local=True, head=True, empty=False):
-        super(Input, self).__init__(text, head, empty)
+    def __init__(self, text='', execution_count=0, head=True, empty=False):
+        super(Input, self).__init__(text=text, head=head, empty=empty)
         self.execution_count = execution_count
-        self.local = local
 
     @property
     def code(self):
@@ -101,7 +102,19 @@ class Input(OutText):
     def split(self, num_lines):
         count, first, rest = super(Input, self).split(num_lines)
         first.execution_count = self.execution_count
-        first.local = self.local
         rest.execution_count = self.execution_count
-        rest.local = self.local
         return count, first, rest
+
+
+class InputRequest(OutText):
+    password = False  # whether the request is for a password; if True the input should not be echoed
+
+    def __init__(self, text='', password=False, head=True, empty=False):
+        super(InputRequest, self).__init__(text=text, head=head, empty=empty)
+        self.password = password
+
+    @property
+    def prompt(self):
+        return self.text
+
+    # input request splits into stream out + input request
