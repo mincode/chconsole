@@ -59,10 +59,12 @@ class ClearOutput(OutItem):
 
 class OutText(OutItem):
     text = ''
+    ansi_codes = True  # whether text has ansi_codes
 
-    def __init__(self, text='', head=True, empty=False):
+    def __init__(self, text='', head=True, empty=False, ansi_codes=True):
         super(OutText, self).__init__(head=head, empty=empty)
         self.text = text
+        self.ansi_codes = ansi_codes
 
     def split(self, num_lines):
         """
@@ -82,18 +84,20 @@ class Stream(OutText):
     name = 'stdout'  # name of the stream
     clearable = True  # True if text can be cleared by ClearOutput
 
-    def __init__(self, text='', name='stdout', clearable=True, head=True, empty=False):
+    def __init__(self, text='', name='stdout', clearable=True, head=True, empty=False, ansi_codes=True):
         super(Stream, self).__init__(text=text, head=head, empty=empty)
         self.name = name
         self.clearable = clearable
+        self.ansi_codes = ansi_codes
 
 
 class Input(OutText):
     execution_count = 0  # int
 
-    def __init__(self, text='', execution_count=0, head=True, empty=False):
+    def __init__(self, text='', execution_count=0, head=True, empty=False, ansi_codes=True):
         super(Input, self).__init__(text=text, head=head, empty=empty)
         self.execution_count = execution_count
+        self.ansi_codes = ansi_codes
 
     @property
     def code(self):
@@ -109,9 +113,10 @@ class Input(OutText):
 class InputRequest(OutText):
     password = False  # whether the request is for a password; if True the input should not be echoed
 
-    def __init__(self, text='', password=False, head=True, empty=False):
+    def __init__(self, text='', password=False, head=True, empty=False, ansi_codes=True):
         super(InputRequest, self).__init__(text=text, head=head, empty=empty)
         self.password = password
+        self.ansi_codes = ansi_codes
 
     @property
     def prompt(self):

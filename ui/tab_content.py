@@ -42,6 +42,7 @@ def tab_content_template(edit_class):
                                    help="""
         1/entry_size is the height of the whole console to height of the command entry field.
         """)
+        ansi_codes = Bool(True, config=True, help="Whether to process ANSI escape codes.")
 
         default_pager_location = Unicode('right', config=True, help='Default location of the pager: right, inside or top')
 
@@ -133,6 +134,7 @@ def tab_content_template(edit_class):
         @QtCore.Slot(Message)
         def dispatch(self, msg):
             msg.show_other = self.show_other
+            msg.ansi_codes = self.ansi_codes
             self.message_arrived.emit(msg)
 
     return TabContent

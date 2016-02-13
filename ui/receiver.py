@@ -1,9 +1,11 @@
+import sys
 from queue import Queue
 from functools import singledispatch
 from traitlets import Integer, Unicode
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore, QtGui
-from qtconsole.util import MetaQObjectHasTraits
+from qtconsole.util import MetaQObjectHasTraits, get_font
+from qtconsole.ansi_code_processor import QtAnsiCodeProcessor
 from dispatch.out_item import OutItem, Stream, Input, ClearOutput
 from dispatch.flush import Flush
 
@@ -11,6 +13,18 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
 default_in_prompt = 'In [<span class="in-prompt-number">%i</span>]: '
+
+
+# adopted from qtconsole.console_widget
+def _set_top_cursor(receiver, cursor):
+    """ Scrolls the viewport so that the specified cursor is at the top.
+    """
+    scrollbar = receiver.verticalScrollBar()
+    scrollbar.setValue(scrollbar.maximum())
+    original_cursor = receiver.textCursor()
+    receiver.setTextCursor(cursor)
+    receiver.ensureCursorVisible()
+    receiver.setTextCursor(original_cursor)
 
 
 def _make_in_prompt(prompt_template, number=None):
@@ -41,7 +55,7 @@ def _receive(item, receiver):
 def _(item, receiver):
     if receiver.data_stream_end:
         receiver.setTextCursor(receiver.data_stream_end)
-    receiver.insertPlainText(item.text)
+    receiver.insert_ansi_text(item.text, item.ansi_codes)
     cursor = receiver.textCursor()
     if item.clearable:
         if item.text[-1] == '\n':
@@ -57,7 +71,7 @@ def _(item, receiver):
     receiver.data_stream_end = None
     receiver.insertPlainText('\n')
     receiver.insertHtml(_make_in_prompt(receiver.in_prompt, item.execution_count))
-    receiver.insertPlainText(item.code)
+    receiver.insert_ansi_text(item.code, item.ansi_codes)
     if item.code[-1] != '\n':
         receiver.insertPlainText('\n')
 
@@ -94,6 +108,41 @@ def receiver_template(edit_class):
         receive_time = 0
 
         data_stream_end = None  # QTextCursor, end of the last output line of stream or data
+        _ansi_processor = None  # QtAnsiCodeProcessor
+
+        font_family = Unicode(config=True,
+            help="""The font family to use for the console.
+            On OSX this defaults to Monaco, on Windows the default is
+            Consolas with fallback of Courier, and on other platforms
+            the default is Monospace.
+            """)
+        def _font_family_default(self):
+            if sys.platform == 'win32':
+                # Consolas ships with Vista/Win7, fallback to Courier if needed
+                return 'Consolas'
+            elif sys.platform == 'darwin':
+                # OSX always has Monaco, no need for a fallback
+                return 'Monaco'
+            else:
+                # Monospace should always exist, no need for a fallback
+                return 'Monospace'
+
+        font_size = Integer(config=True,
+            help="""The font size. If unconfigured, Qt will be entrusted
+            with the size of the font.
+            """)
+
+        width = Integer(81, config=True,
+            help="""The width of the console at start time in number
+            of characters (will double with `hsplit` paging)
+            """)
+
+        height = Integer(25, config=True,
+            help="""The height of the console at start time in number
+            of characters (will double with `vsplit` paging)
+            """)
+
+        tab_width = 8
 
         def __init__(self, text='', parent=None, **kwargs):
             """
@@ -104,12 +153,142 @@ def receiver_template(edit_class):
             """
             edit_class.__init__(self, text, parent)
             LoggingConfigurable.__init__(self, **kwargs)
+            self._ansi_processor = QtAnsiCodeProcessor()
+            # Set a monospaced font.
+            self.reset_font()
+
             self.document().setMaximumBlockCount(self.max_blocks)
             self.output_q = Queue()
             self.timing_guard = QtCore.QSemaphore()
             self._flush = Flush(self, self)
             self._flush.item_ready.connect(self.on_item_ready)
             self._flush.start()
+
+
+        # adopted from qtconsole.console_widget
+        def sizeHint(self):
+            """ Reimplemented to suggest a size that is 80 characters wide and
+                25 lines high.
+            """
+            font_metrics = QtGui.QFontMetrics(self.font)
+            margin = (self.frameWidth() +
+                      self.document().documentMargin()) * 2
+            style = self.style()
+            # splitwidth = style.pixelMetric(QtGui.QStyle.PM_SplitterWidth)
+
+            # Note 1: Despite my best efforts to take the various margins into
+            # account, the width is still coming out a bit too small, so we include
+            # a fudge factor of one character here.
+            # Note 2: QFontMetrics.maxWidth is not used here or anywhere else due
+            # to a Qt bug on certain Mac OS systems where it returns 0.
+            width = font_metrics.width(' ') * self.width + margin
+            width += style.pixelMetric(QtGui.QStyle.PM_ScrollBarExtent)
+            # if self.paging == 'hsplit':
+            #     width = width * 2 + splitwidth
+
+            height = font_metrics.height() * self.height + margin
+            # if self.paging == 'vsplit':
+            #     height = height * 2 + splitwidth
+
+            return QtCore.QSize(width, height)
+
+        def _get_font(self):
+            """ The base font being used by the ConsoleWidget.
+            """
+            return self.document().defaultFont()
+
+        def _set_font(self, font):
+            """ Sets the base font for the ConsoleWidget to the specified QFont.
+            """
+            font_metrics = QtGui.QFontMetrics(font)
+            self.setTabStopWidth(self.tab_width * font_metrics.width(' '))
+
+            # self._completion_widget.setFont(font)
+            self.document().setDefaultFont(font)
+            # if self._page_control:
+            #     self._page_control.document().setDefaultFont(font)
+
+            # self.font_changed.emit(font)
+
+        font = property(_get_font, _set_font)
+
+        def reset_font(self):
+            """ Sets the font to the default fixed-width font for this platform.
+            """
+            if sys.platform == 'win32':
+                # Consolas ships with Vista/Win7, fallback to Courier if needed
+                fallback = 'Courier'
+            elif sys.platform == 'darwin':
+                # OSX always has Monaco
+                fallback = 'Monaco'
+            else:
+                # Monospace should always exist
+                fallback = 'Monospace'
+            font = get_font(self.font_family, fallback)
+            if self.font_size:
+                font.setPointSize(self.font_size)
+            else:
+                font.setPointSize(QtGui.qApp.font().pointSize())
+            font.setStyleHint(QtGui.QFont.TypeWriter)
+            self._set_font(font)
+
+        # adopted from qtconsole.console_widget
+        def insert_ansi_text(self, text, ansi_codes=True, cursor=None):
+            cursor = cursor if cursor else self.textCursor()
+            cursor.beginEditBlock()
+            if ansi_codes:
+                for substring in self._ansi_processor.split_string(text):
+                    for act in self._ansi_processor.actions:
+
+                        # Unlike real terminal emulators, we don't distinguish
+                        # between the screen and the scrollback buffer. A screen
+                        # erase request clears everything.
+                        if act.action == 'erase' and act.area == 'screen':
+                            cursor.select(QtGui.QTextCursor.Document)
+                            cursor.removeSelectedText()
+
+                        # Simulate a form feed by scrolling just past the last line.
+                        elif act.action == 'scroll' and act.unit == 'page':
+                            cursor.insertText('\n')
+                            cursor.endEditBlock()
+                            _set_top_cursor(self, cursor)
+                            cursor.joinPreviousEditBlock()
+                            cursor.deletePreviousChar()
+
+                        elif act.action == 'carriage-return':
+                            cursor.movePosition(
+                                cursor.StartOfLine, cursor.KeepAnchor)
+
+                        elif act.action == 'beep':
+                            QtGui.qApp.beep()
+
+                        elif act.action == 'backspace':
+                            if not cursor.atBlockStart():
+                                cursor.movePosition(
+                                    cursor.PreviousCharacter, cursor.KeepAnchor)
+
+                        elif act.action == 'newline':
+                            cursor.movePosition(cursor.EndOfLine)
+
+                    ansi_format = self._ansi_processor.get_format()
+
+                    selection = cursor.selectedText()
+                    if len(selection) == 0:
+                        cursor.insertText(substring, ansi_format)
+                    elif substring is not None:
+                        # BS and CR are treated as a change in print
+                        # position, rather than a backwards character
+                        # deletion for output equivalence with (I)Python
+                        # terminal.
+                        if len(substring) >= len(selection):
+                            cursor.insertText(substring, ansi_format)
+                        else:
+                            old_text = selection[len(substring):]
+                            cursor.insertText(substring + old_text, ansi_format)
+                            cursor.movePosition(cursor.PreviousCharacter, cursor.KeepAnchor, len(old_text))
+            else:
+                cursor.insertText(text)
+            cursor.endEditBlock()
 
         @QtCore.Slot(OutItem)
         def on_item_ready(self, item):

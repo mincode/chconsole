@@ -17,7 +17,8 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
         LoggingConfigurable.__init__(self, **kwargs)
 
     def dispatch(self, msg):
-        # print('dispatch: ' + msg.type)
+        print('dispatch: ' + msg.type)
+        print(msg.whole)
         handler = getattr(self, '_handle_' + msg.type, None)
         if handler and msg.show_me:
             handler(msg)

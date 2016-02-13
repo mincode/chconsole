@@ -51,10 +51,10 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
 
     #------ Configuration ------------------------------------------------------
 
+# <done>
     ansi_codes = Bool(True, config=True,
         help="Whether to process ANSI escape codes."
     )
-# <done>
     buffer_size = Integer(500, config=True,
         help="""
         The maximum number of lines of text before truncation. Specifying a
@@ -113,7 +113,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         'none'
            The text is written directly to the console.
         """)
-# </done>
 
     font_family = Unicode(config=True,
         help="""The font family to use for the console.
@@ -146,6 +145,8 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         help="""The height of the console at start time in number
         of characters (will double with `vsplit` paging)
         """)
+
+# </done>
 
     # Whether to override ShortcutEvents for the keybindings defined by this
     # widget (Ctrl+n, Ctrl+a, etc). Enable this if you want this widget to take
@@ -278,9 +279,11 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         self._prompt_sep = ''
         self._reading = False
         self._reading_callback = None
-        self._tab_width = 8
 
 # <done>
+
+        self._tab_width = 8
+
         # List of strings pending to be appended as plain text in the widget.
         # The text is not immediately inserted when available to not
         # choke the Qt event loop with paint events for the widget in
@@ -295,10 +298,10 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         self._pending_text_flush_interval.setSingleShot(True)
         self._pending_text_flush_interval.timeout.connect(
                                             self._on_flush_pending_stream_timer)
-# </done>
 
         # Set a monospaced font.
         self.reset_font()
+# </done>
 
         # Configure actions.
         action = QtGui.QAction('Print', None)
@@ -468,6 +471,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
 
         return super(ConsoleWidget, self).eventFilter(obj, event)
 
+# <done>
     #---------------------------------------------------------------------------
     # 'QWidget' interface
     #---------------------------------------------------------------------------
@@ -497,6 +501,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             height = height * 2 + splitwidth
 
         return QtCore.QSize(width, height)
+# </done>
 
     #---------------------------------------------------------------------------
     # 'ConsoleWidget' public interface
@@ -709,6 +714,8 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
 
     input_buffer = property(_get_input_buffer, _set_input_buffer)
 
+# <done>
+
     def _get_font(self):
         """ The base font being used by the ConsoleWidget.
         """
@@ -728,6 +735,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         self.font_changed.emit(font)
 
     font = property(_get_font, _set_font)
+# </done>
 
     def open_anchor(self, anchor):
         """ Open selected anchor in the default webbrowser
@@ -779,6 +787,8 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         """
         self._control.redo()
 
+# <done>
+
     def reset_font(self):
         """ Sets the font to the default fixed-width font for this platform.
         """
@@ -798,6 +808,8 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             font.setPointSize(QtGui.qApp.font().pointSize())
         font.setStyleHint(QtGui.QFont.TypeWriter)
         self._set_font(font)
+
+# </done>
 
     def change_font_size(self, delta):
         """Change the font size by the specified amount (in points).
@@ -2062,6 +2074,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         """
         self._control.setTextCursor(cursor)
 
+# <done>
     def _set_top_cursor(self, cursor):
         """ Scrolls the viewport so that the specified cursor is at the top.
         """
@@ -2071,6 +2084,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         self._control.setTextCursor(cursor)
         self._control.ensureCursorVisible()
         self._control.setTextCursor(original_cursor)
+# </done>
 
     def _show_prompt(self, prompt=None, html=False, newline=True):
         """ Writes a new prompt at the end of the buffer.
