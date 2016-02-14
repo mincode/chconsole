@@ -4,7 +4,8 @@ from qtconsole.qt import QtGui, QtCore
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
 from qtconsole.util import MetaQObjectHasTraits
 from ui.tab_content import tab_content_template
-from dispatch.message import Message
+from dispatch.message import KernelMessage
+from dispatch.source import Source
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -60,7 +61,7 @@ def tab_main_template(edit_class):
 
         main_content = None  # QWidget
 
-        message_arrived = QtCore.Signal(Message)  # signal to send a message that has arrived from the kernel
+        message_arrived = QtCore.Signal(KernelMessage)  # signal to send a message that has arrived from the kernel
 
         def __init__(self, parent=None, **kw):
             """
@@ -84,8 +85,9 @@ def tab_main_template(edit_class):
             :param msg: Incoming message.
             :return:
             """
-            self.message_arrived.emit(Message(msg, self.from_here(msg)))
+            self.message_arrived.emit(KernelMessage(msg, self.from_here(msg)))
 
+        @QtCore.Slot(Source)
         def _execute(self, source):
             """
             Execute source.

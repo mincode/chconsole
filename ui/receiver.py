@@ -1,13 +1,12 @@
-import sys
 from queue import Queue
 from functools import singledispatch
 from traitlets import Integer, Unicode
-from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore, QtGui
-from qtconsole.util import MetaQObjectHasTraits, get_font
+from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.ansi_code_processor import QtAnsiCodeProcessor
 from dispatch.out_item import OutItem, Stream, Input, ClearOutput
-from dispatch.flush import Flush
+from dispatch.outbuffer import OutBuffer
+from ui.text_config import TextConfig
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -90,7 +89,7 @@ def receiver_template(edit_class):
     :param edit_class: QTGui.QTextEdit or QtGui.QPlainTextEdit
     :return: Instantiated class.
     """
-    class Receiver(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, edit_class), {})):
+    class Receiver(MetaQObjectHasTraits('NewBase', (TextConfig, edit_class), {})):
         """
         Text edit that shows input and output.
         """
@@ -110,39 +109,15 @@ def receiver_template(edit_class):
         data_stream_end = None  # QTextCursor, end of the last output line of stream or data
         _ansi_processor = None  # QtAnsiCodeProcessor
 
-        font_family = Unicode(config=True,
-            help="""The font family to use for the console.
-            On OSX this defaults to Monaco, on Windows the default is
-            Consolas with fallback of Courier, and on other platforms
-            the default is Monospace.
-            """)
-        def _font_family_default(self):
-            if sys.platform == 'win32':
-                # Consolas ships with Vista/Win7, fallback to Courier if needed
-                return 'Consolas'
-            elif sys.platform == 'darwin':
-                # OSX always has Monaco, no need for a fallback
-                return 'Monaco'
-            else:
-                # Monospace should always exist, no need for a fallback
-                return 'Monospace'
-
-        font_size = Integer(config=True,
-            help="""The font size. If unconfigured, Qt will be entrusted
-            with the size of the font.
-            """)
-
         width = Integer(81, config=True,
-            help="""The width of the console at start time in number
-            of characters (will double with `hsplit` paging)
+            help="""The width of the command display at start time in number
+            of characters (will double with `right` paging)
             """)
 
         height = Integer(25, config=True,
-            help="""The height of the console at start time in number
-            of characters (will double with `vsplit` paging)
+            help="""The height of the commmand display at start time in number
+            of characters (will double with `top` paging)
             """)
-
-        tab_width = 8
 
         def __init__(self, text='', parent=None, **kwargs):
             """
@@ -152,7 +127,7 @@ def receiver_template(edit_class):
             :return:
             """
             edit_class.__init__(self, text, parent)
-            LoggingConfigurable.__init__(self, **kwargs)
+            TextConfig.__init__(self, **kwargs)
             self._ansi_processor = QtAnsiCodeProcessor()
             # Set a monospaced font.
             self.reset_font()
@@ -160,10 +135,9 @@ def receiver_template(edit_class):
             self.document().setMaximumBlockCount(self.max_blocks)
             self.output_q = Queue()
             self.timing_guard = QtCore.QSemaphore()
-            self._flush = Flush(self, self)
+            self._flush = OutBuffer(self, self)
             self._flush.item_ready.connect(self.on_item_ready)
             self._flush.start()
-
 
         # adopted from qtconsole.console_widget
         def sizeHint(self):
@@ -174,8 +148,8 @@ def receiver_template(edit_class):
             margin = (self.frameWidth() +
                       self.document().documentMargin()) * 2
             style = self.style()
-            # splitwidth = style.pixelMetric(QtGui.QStyle.PM_SplitterWidth)
 
+            # Remark from qtconsole.console:
             # Note 1: Despite my best efforts to take the various margins into
             # account, the width is still coming out a bit too small, so we include
             # a fudge factor of one character here.
@@ -183,54 +157,10 @@ def receiver_template(edit_class):
             # to a Qt bug on certain Mac OS systems where it returns 0.
             width = font_metrics.width(' ') * self.width + margin
             width += style.pixelMetric(QtGui.QStyle.PM_ScrollBarExtent)
-            # if self.paging == 'hsplit':
-            #     width = width * 2 + splitwidth
 
             height = font_metrics.height() * self.height + margin
-            # if self.paging == 'vsplit':
-            #     height = height * 2 + splitwidth
 
             return QtCore.QSize(width, height)
-
-        def _get_font(self):
-            """ The base font being used by the ConsoleWidget.
-            """
-            return self.document().defaultFont()
-
-        def _set_font(self, font):
-            """ Sets the base font for the ConsoleWidget to the specified QFont.
-            """
-            font_metrics = QtGui.QFontMetrics(font)
-            self.setTabStopWidth(self.tab_width * font_metrics.width(' '))
-
-            # self._completion_widget.setFont(font)
-            self.document().setDefaultFont(font)
-            # if self._page_control:
-            #     self._page_control.document().setDefaultFont(font)
-
-            # self.font_changed.emit(font)
-
-        font = property(_get_font, _set_font)
-
-        def reset_font(self):
-            """ Sets the font to the default fixed-width font for this platform.
-            """
-            if sys.platform == 'win32':
-                # Consolas ships with Vista/Win7, fallback to Courier if needed
-                fallback = 'Courier'
-            elif sys.platform == 'darwin':
-                # OSX always has Monaco
-                fallback = 'Monaco'
-            else:
-                # Monospace should always exist
-                fallback = 'Monospace'
-            font = get_font(self.font_family, fallback)
-            if self.font_size:
-                font.setPointSize(self.font_size)
-            else:
-                font.setPointSize(QtGui.qApp.font().pointSize())
-            font.setStyleHint(QtGui.QFont.TypeWriter)
-            self._set_font(font)
 
         # adopted from qtconsole.console_widget
         def insert_ansi_text(self, text, ansi_codes=True, cursor=None):

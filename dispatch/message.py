@@ -1,16 +1,30 @@
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class Message:
+class KernelMessage:
     whole = None  # dict, kernel message
     from_here = True  # whether the message is from the current client
+
+    def __init__(self, msg, from_here=True):
+        self.whole = msg
+        self.from_here = from_here
+
+    @property
+    def type(self):
+        return self.whole['header']['msg_type']
+
+    @property
+    def content(self):
+        return self.whole['content']
+
+
+class Message(KernelMessage):
     show_other = True  # whether the current client wants to show other clients' messages
     ansi_codes = True  # whether the current client should process ansi codes
 
-    def __init__(self, msg, from_here=True, show_other=True):
-        self.whole = msg
-        self.from_here = from_here
-        self.show_other = show_other
+    def __init__(self, msg):
+        self.whole = msg.whole
+        self.from_here = msg.from_here
 
     @property
     def show_me(self):

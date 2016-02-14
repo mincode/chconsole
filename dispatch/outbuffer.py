@@ -4,7 +4,7 @@ from .out_item import OutItem, ClearOutput, InputRequest
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class Flush(QtCore.QThread):
+class OutBuffer(QtCore.QThread):
     """
     Buffer of items that correspond to blocks for output.
     """
@@ -23,7 +23,7 @@ class Flush(QtCore.QThread):
         :param parent: parent object; recommended for efficiency of QThread.
         :return:
         """
-        super(Flush, self).__init__(parent)
+        super(OutBuffer, self).__init__(parent)
         self._target = target
         self._sleep_time = self.default_sleep
 

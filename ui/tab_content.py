@@ -3,7 +3,7 @@ from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Integer, Unicode, Bool
 from traitlets.config.configurable import LoggingConfigurable
 
-from dispatch.message import Message
+from dispatch.message import KernelMessage, Message
 from dispatch.relay import Relay
 from dispatch.source import Source
 from .entry import entry_template
@@ -131,8 +131,9 @@ def tab_content_template(edit_class):
             # print('Send clicked')
             self.dispatch(Message(eval(self.entry.source.code), from_here=True))
 
-        @QtCore.Slot(Message)
+        @QtCore.Slot(KernelMessage)
         def dispatch(self, msg):
+            msg = Message(msg)
             msg.show_other = self.show_other
             msg.ansi_codes = self.ansi_codes
             self.message_arrived.emit(msg)
