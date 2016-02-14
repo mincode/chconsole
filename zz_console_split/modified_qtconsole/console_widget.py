@@ -337,6 +337,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         self.addAction(action)
         self.select_all_action = action
 
+# <done>
         self.increase_font_size = QtGui.QAction("Bigger Font",
                 self,
                 shortcut=QtGui.QKeySequence.ZoomIn,
@@ -361,7 +362,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
                 triggered=self.reset_font)
         self.addAction(self.reset_font_size)
 
-# <done>
         # Accept drag and drop events here. Drops were already turned off
         # in self._control when that widget was created.
         self.setAcceptDrops(True)
@@ -809,8 +809,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         font.setStyleHint(QtGui.QFont.TypeWriter)
         self._set_font(font)
 
-# </done>
-
     def change_font_size(self, delta):
         """Change the font size by the specified amount (in points).
         """
@@ -824,6 +822,8 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
 
     def _decrease_font_size(self):
         self.change_font_size(-1)
+
+# </done>
 
     def select_all(self):
         """ Selects all the text in the buffer.
@@ -1563,6 +1563,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
 
         return columnize(items, separator, displaywidth)
 
+# <done>
     def _get_block_plain_text(self, block):
         """ Given a QTextBlock, return its unformatted text.
         """
@@ -1571,6 +1572,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         cursor.movePosition(QtGui.QTextCursor.EndOfBlock,
                             QtGui.QTextCursor.KeepAnchor)
         return cursor.selection().toPlainText()
+# </done>
 
     def _get_cursor(self):
         """ Convenience method that returns a cursor for the current position.
@@ -1736,6 +1738,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             block_format = QtGui.QTextBlockFormat()
         cursor.insertBlock(block_format)
 
+# <done>
     def _insert_html(self, cursor, html):
         """ Inserts HTML using the specified cursor in such a way that future
             formatting is unaffected.
@@ -1756,6 +1759,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             cursor.movePosition(QtGui.QTextCursor.Right)
         cursor.insertText(' ', QtGui.QTextCharFormat())
         cursor.endEditBlock()
+# </done>
 
     def _insert_html_fetching_plain_text(self, cursor, html):
         """ Inserts HTML using the specified cursor, then returns its plain text

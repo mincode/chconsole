@@ -3,7 +3,6 @@ from functools import singledispatch
 from traitlets import Integer, Unicode
 from qtconsole.qt import QtCore, QtGui
 from qtconsole.util import MetaQObjectHasTraits
-from qtconsole.ansi_code_processor import QtAnsiCodeProcessor
 from dispatch.out_item import OutItem, Stream, Input, ClearOutput
 from dispatch.outbuffer import OutBuffer
 from ui.text_config import TextConfig
@@ -69,7 +68,7 @@ def _(item, receiver):
 def _(item, receiver):
     receiver.data_stream_end = None
     receiver.insertPlainText('\n')
-    receiver.insertHtml(_make_in_prompt(receiver.in_prompt, item.execution_count))
+    receiver.insert_html(_make_in_prompt(receiver.in_prompt, item.execution_count))
     receiver.insert_ansi_text(item.code, item.ansi_codes)
     if item.code[-1] != '\n':
         receiver.insertPlainText('\n')
@@ -107,7 +106,6 @@ def receiver_template(edit_class):
         receive_time = 0
 
         data_stream_end = None  # QTextCursor, end of the last output line of stream or data
-        _ansi_processor = None  # QtAnsiCodeProcessor
 
         width = Integer(81, config=True,
             help="""The width of the command display at start time in number
@@ -128,7 +126,6 @@ def receiver_template(edit_class):
             """
             edit_class.__init__(self, text, parent)
             TextConfig.__init__(self, **kwargs)
-            self._ansi_processor = QtAnsiCodeProcessor()
             # Set a monospaced font.
             self.reset_font()
 
@@ -161,6 +158,34 @@ def receiver_template(edit_class):
             height = font_metrics.height() * self.height + margin
 
             return QtCore.QSize(width, height)
+
+        # adopted from qtconsole.console_widget
+        def insert_html(self, html, cursor=None):
+            """
+            Inserts HTML using the specified cursor in such a way that future
+                formatting is unaffected.
+            :param html:
+            :param cursor:
+            :return:
+            """
+            cursor = cursor if cursor else self.textCursor()
+            cursor.beginEditBlock()
+            cursor.insertHtml(html)
+
+            # Remark from qtconsole.console_widget:
+            # After inserting HTML, the text document "remembers" it's in "html
+            # mode", which means that subsequent calls adding plain text will result
+            # in unwanted formatting, lost tab characters, etc. The following code
+            # hacks around this behavior, which I consider to be a bug in Qt, by
+            # (crudely) resetting the document's style state.
+            cursor.movePosition(QtGui.QTextCursor.Left,
+                                QtGui.QTextCursor.KeepAnchor)
+            if cursor.selection().toPlainText() == ' ':
+                cursor.removeSelectedText()
+            else:
+                cursor.movePosition(QtGui.QTextCursor.Right)
+            cursor.insertText(' ', QtGui.QTextCharFormat())
+            cursor.endEditBlock()
 
         # adopted from qtconsole.console_widget
         def insert_ansi_text(self, text, ansi_codes=True, cursor=None):

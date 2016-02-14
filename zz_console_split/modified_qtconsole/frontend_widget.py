@@ -56,7 +56,7 @@ def transform_ipy_prompt(line):
     else:
         return line
 
-
+# <done>
 class FrontendHighlighter(PygmentsHighlighter):
     """ A PygmentsHighlighter that understands and ignores prompts.
     """
@@ -105,6 +105,7 @@ class FrontendHighlighter(PygmentsHighlighter):
         """
         start += self._current_offset
         super(FrontendHighlighter, self).setFormat(start, count, format)
+# </done>
 
 
 class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
@@ -137,7 +138,8 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
 
     confirm_restart = Bool(True, config=True,
         help="Whether to ask for user confirmation when restarting kernel")
-    
+
+# <done>
     lexer_class = DottedObjectName(config=True,
         help="The pygments lexer class to use."
     )
@@ -158,6 +160,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     def _lexer_default(self):
         lexer_class = import_item(self.lexer_class)
         return lexer_class()
+# </done>
 
     # Emitted when a user visible 'execute_request' has been submitted to the
     # kernel from the FrontendWidget. Contains the code to be executed.
@@ -174,7 +177,9 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     _CompletionRequest = namedtuple('_CompletionRequest', ['id', 'pos'])
     _ExecutionRequest = namedtuple('_ExecutionRequest', ['id', 'kind'])
     _local_kernel = False
+# </done>
     _highlighter = Instance(FrontendHighlighter, allow_none=True)
+# </done>
 
     #---------------------------------------------------------------------------
     # 'object' interface

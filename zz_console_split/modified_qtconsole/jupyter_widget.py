@@ -80,6 +80,7 @@ class JupyterWidget(IPythonWidget):
         magic will be ignored.
         """)
 
+# <done>
     style_sheet = Unicode(config=True,
         help="""
         A CSS stylesheet. The stylesheet can contain classes for:
@@ -94,6 +95,7 @@ class JupyterWidget(IPythonWidget):
         Otherwise, the style sheet is queried for Pygments style
         information.
         """)
+# </done>
 
     # Prompts.
 
@@ -130,6 +132,7 @@ class JupyterWidget(IPythonWidget):
         self._previous_prompt_obj = None
         self._keep_kernel_on_exit = None
 
+# <done>
         # Initialize widget styling.
         if self.style_sheet:
             self._style_sheet_changed()
@@ -139,6 +142,7 @@ class JupyterWidget(IPythonWidget):
 
         self._guiref_loaded = False
         #print('init modified JupyterWidget')
+# </done>
 
     #---------------------------------------------------------------------------
     # 'BaseFrontendMixin' abstract interface
@@ -396,6 +400,7 @@ class JupyterWidget(IPythonWidget):
     # 'JupyterWidget' interface
     #---------------------------------------------------------------------------
 
+# <done>
     def set_default_style(self, colors='lightbg'):
         """ Sets the widget style to the class defaults.
 
@@ -417,6 +422,7 @@ class JupyterWidget(IPythonWidget):
             self.syntax_style = styles.default_bw_syntax_style
         else:
             raise KeyError("No such color scheme: %s"%colors)
+# </done>
 
     #---------------------------------------------------------------------------
     # 'JupyterWidget' protected interface
@@ -522,6 +528,7 @@ class JupyterWidget(IPythonWidget):
 
     #------ Trait change handlers --------------------------------------------
 
+# <done>
     def _style_sheet_changed(self):
         """ Set the style sheets of the underlying widgets.
         """
@@ -533,8 +540,6 @@ class JupyterWidget(IPythonWidget):
         
         if self._page_control is not None:
             self._page_control.document().setDefaultStyleSheet(self.style_sheet)
-
-
 
     def _syntax_style_changed(self):
         """ Set the style for the syntax highlighter.
@@ -548,6 +553,7 @@ class JupyterWidget(IPythonWidget):
             self._highlighter.set_style_sheet(self.style_sheet)
 
     #------ Trait default initializers -----------------------------------------
+# </done>
 
     def _banner_default(self):
         return "Jupyter QtConsole {version}\n".format(version=__version__)
