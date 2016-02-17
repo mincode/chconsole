@@ -109,10 +109,12 @@ class JupyterWidget(IPythonWidget):
 
     # JupyterWidget protected class variables.
     _PromptBlock = namedtuple('_PromptBlock', ['block', 'length', 'number'])
+# <done>
     _payload_source_edit = 'edit_magic'
     _payload_source_exit = 'ask_exit'
     _payload_source_next_input = 'set_next_input'
     _payload_source_page = 'page'
+# </done>
     _retrying_history_request = False
     _starting = False
 
@@ -124,11 +126,13 @@ class JupyterWidget(IPythonWidget):
         super(JupyterWidget, self).__init__(*args, **kw)
 
         # JupyterWidget protected variables.
+# <done>
         self._payload_handlers = {
             self._payload_source_edit : self._handle_payload_edit,
             self._payload_source_exit : self._handle_payload_exit,
             self._payload_source_page : self._handle_payload_page,
             self._payload_source_next_input : self._handle_payload_next_input }
+# </done>
         self._previous_prompt_obj = None
         self._keep_kernel_on_exit = None
 
@@ -265,6 +269,7 @@ class JupyterWidget(IPythonWidget):
                     self._append_plain_text('\n', True)
                 self._append_plain_text(text + self.output_sep2, True)
 
+# <done>
     def _handle_display_data(self, msg):
         """The base handler for the ``display_data`` message."""
         # For now, we don't display data from other frontends, but we
@@ -281,6 +286,7 @@ class JupyterWidget(IPythonWidget):
                 self._append_plain_text(text, True)
             # This newline seems to be needed for text and html output.
             self._append_plain_text(u'\n', True)
+# </done>
 
     def _handle_kernel_info_reply(self, rep):
         """Handle kernel info replies."""
@@ -325,6 +331,7 @@ class JupyterWidget(IPythonWidget):
             # This is the fallback for now, using plain text with ansi escapes
             self._append_plain_text(traceback)
 
+# <done>
     def _process_execute_payload(self, item):
         """ Reimplemented to dispatch payloads to handler methods.
         """
@@ -335,6 +342,7 @@ class JupyterWidget(IPythonWidget):
         else:
             handler(item)
             return True
+# </done>
 
     def _show_interpreter_prompt(self, number=None):
         """ Reimplemented for IPython-style prompts.
@@ -500,6 +508,7 @@ class JupyterWidget(IPythonWidget):
             body = escape(self.out_prompt)
         return '<span class="out-prompt">%s</span>' % body
 
+# <done>
     #------ Payload handlers --------------------------------------------------
 
     # Payload handlers with a generic interface: each takes the opaque payload
@@ -528,7 +537,6 @@ class JupyterWidget(IPythonWidget):
 
     #------ Trait change handlers --------------------------------------------
 
-# <done>
     def _style_sheet_changed(self):
         """ Set the style sheets of the underlying widgets.
         """

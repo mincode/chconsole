@@ -120,3 +120,12 @@ class ExpandedMainWindow(mainwindow.MainWindow):
                 pager_action = QtGui.QAction('&'+location.capitalize(), self,
                     triggered=self.set_paging_active_frontend(location))
                 self.pager_menu.addAction(pager_action)
+
+    def print_action_active_frontend(self):
+        self.active_frontend.main_content.print_action.trigger()
+
+    def export_action_active_frontend(self):
+        self.active_frontend.main_content.export_action.trigger()
+
+    def select_all_active_frontend(self):
+        self.active_frontend.main_content.select_all_action.trigger()

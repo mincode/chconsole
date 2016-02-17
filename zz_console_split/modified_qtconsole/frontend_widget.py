@@ -400,6 +400,8 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     #---------------------------------------------------------------------------
     # 'BaseFrontendMixin' abstract interface
     #---------------------------------------------------------------------------
+
+# <done>
     def _handle_clear_output(self, msg):
         """Handle clear output messages."""
         if self.include_output(msg):
@@ -408,6 +410,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
                 self._pending_clearoutput = True
             else:
                 self.clear_output()
+# </done>
 
     def _silent_exec_callback(self, expr, callback):
         """Silently execute `expr` in the kernel and call `callback` with reply
@@ -810,6 +813,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
             traceback = ''.join(content['traceback'])
             self._append_plain_text(traceback)
 
+# <done>
     def _process_execute_ok(self, msg):
         """ Process a reply for a successful execution request.
         """
@@ -826,6 +830,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         # The basic FrontendWidget doesn't handle payloads, as they are a
         # mechanism for going beyond the standard Python interpreter model.
         return False
+# </done>
 
     def _show_interpreter_prompt(self):
         """ Shows a prompt for the interpreter.

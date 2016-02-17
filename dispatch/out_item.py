@@ -91,6 +91,25 @@ class Stream(OutText):
         self.ansi_codes = ansi_codes
 
 
+class PageStream(Stream):
+    def __init__(self, text='', head=True, empty=False, ansi_codes=True):
+        super(PageStream, self).__init__(
+            text=text, name='stdout', clearable=False, head=head, empty=empty, ansi_codes=ansi_codes)
+
+
+class HtmlStream(OutItem):
+    text = ''
+
+    def __init__(self, text='', head=True, empty=False):
+        super(HtmlStream, self).__init__(head=head, empty=empty)
+        self.text = text
+
+
+class PageHtmlStream(HtmlStream):
+    def __init__(self, text='', head=True, empty=False):
+        super(PageHtmlStream, self).__init__(text=text, head=head, empty=empty)
+
+
 class Input(OutText):
     execution_count = 0  # int
 

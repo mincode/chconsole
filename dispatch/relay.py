@@ -12,9 +12,20 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
     """
     please_output = QtCore.Signal(OutItem)
 
+    _payload_source_edit = 'edit_magic'
+    _payload_source_exit = 'ask_exit'
+    _payload_source_next_input = 'set_next_input'
+    _payload_source_page = 'page'
+
     def __init__(self, parent=None, **kwargs):
         QtCore.QObject.__init__(self, parent)
         LoggingConfigurable.__init__(self, **kwargs)
+
+        self._payload_handlers = {
+            self._payload_source_edit : self._handle_payload_edit,
+            self._payload_source_exit : self._handle_payload_exit,
+            self._payload_source_page : self._handle_payload_page,
+            self._payload_source_next_input : self._handle_payload_next_input }
 
     def dispatch(self, msg):
         print('dispatch: ' + msg.type)
@@ -52,16 +63,17 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
         # print('wait: ' + str(content['wait']))
         self.please_output.emit(ClearOutput(wait=content['wait']))
 
+    def _handle_display_data(self, msg):
+        data = msg.content['data']
+        # metadata = msg.content['metadata']
+        if 'text/plain' in data:
+            self.please_output.emit(Stream(data['text/plain'], name='stdout'))
+
 # frontend_widget
-#     def _handle_execute_reply(self, msg):
-#         """ Handles replies for code execution.
-#         """
-#         self.log.debug("execute: %s", msg.get('content', ''))
+    def _handle_execute_reply(self, msg):
+        self.log.debug("execute: %s", msg.get('content', ''))
 #         msg_id = msg['parent_header']['msg_id']
 #         info = self._request_info['execute'].get(msg_id)
-#         # unset reading flag, because if execute finished, raw_input can't
-#         # still be pending.
-#         self._reading = False
 #         # MM: hidden means silent execute request; no way for user to specify hidden but it should be possible
 #         if info and info.kind == 'user' and not self._hidden:
 #             # Make sure that all output from the SUB channel has been processed
@@ -74,14 +86,15 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
 #             if self.ansi_codes:
 #                 self._ansi_processor.reset_sgr()
 #
-#             content = msg['content']
-#             status = content['status']
-#             if status == 'ok':
-#                 self._process_execute_ok(msg)
-#             elif status == 'error':
-#                 self._process_execute_error(msg)
-#             elif status == 'aborted':
-#                 self._process_execute_abort(msg)
+        status = msg.content['status']
+        if status == 'ok':
+            self._process_execute_ok(msg)
+        elif status == 'error':
+            # self._process_execute_error(msg)
+            pass
+        elif status == 'aborted':
+            # self._process_execute_abort(msg)
+            pass
 #
 #             self._show_interpreter_prompt_for_reply(msg)
 #             self.executed.emit(msg)
@@ -92,3 +105,49 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
 #         else:
 #             # does not exist
 #             super(FrontendWidget, self)._handle_execute_reply(msg)
+
+    # FrontendWidget
+    def _process_execute_ok(self, msg):
+        """ Process a reply for a successful execution request.
+        """
+        payload = msg['content'].get('payload', [])
+        for item in payload:
+            if not self._process_execute_payload(item):
+                warning = 'Warning: received unknown payload of type %s'
+                print(warning % repr(item['source']))
+
+    # JupyterWidget
+    def _process_execute_payload(self, item):
+        """ Reimplemented to dispatch payloads to handler methods.
+        """
+        handler = self._payload_handlers.get(item['source'])
+        if handler is None:
+            # We have no handler for this type of payload, simply ignore it
+            return False
+        else:
+            handler(item)
+            return True
+
+    # Payload handlers with a generic interface: each takes the opaque payload
+    # dict, unpacks it and calls the underlying functions with the necessary
+    # arguments.
+
+    def _handle_payload_edit(self, item):
+        self._edit(item['filename'], item['line_number'])
+
+    def _handle_payload_exit(self, item):
+        self._keep_kernel_on_exit = item['keepkernel']
+        self.exit_requested.emit(self)
+
+    def _handle_payload_next_input(self, item):
+        self.input_buffer = item['text']
+
+    def _handle_payload_page(self, item):
+        # Since the plain text widget supports only a very small subset of HTML
+        # and we have no control over the HTML source, we only page HTML
+        # payloads in the rich text widget.
+        data = item['data']
+        if 'text/html' in data and self.kind == 'rich':
+            self._page(data['text/html'], html=True)
+        else:
+            self._page(data['text/plain'], html=False)

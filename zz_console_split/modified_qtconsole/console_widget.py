@@ -146,14 +146,11 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         of characters (will double with `vsplit` paging)
         """)
 
-# </done>
-
     # Whether to override ShortcutEvents for the keybindings defined by this
     # widget (Ctrl+n, Ctrl+a, etc). Enable this if you want this widget to take
     # priority (when it has focus) over, e.g., window-level menu shortcuts.
     override_shortcuts = Bool(False)
 
-# <done>
     # ------ Custom Qt Widgets -------------------------------------------------
     
     # For other projects to easily override the Qt widgets used by the console
@@ -184,7 +181,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
     _control = None
     _page_control = None
     _splitter = None
-# </done>
 
     # When the control key is down, these keys are mapped.
     _ctrl_down_remap = { QtCore.Qt.Key_B : QtCore.Qt.Key_Left,
@@ -203,6 +199,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
     _shortcuts = set(_ctrl_down_remap.keys()) | \
                      { QtCore.Qt.Key_C, QtCore.Qt.Key_G, QtCore.Qt.Key_O,
                        QtCore.Qt.Key_V }
+# </done>
 
     _temp_buffer_filled = False
 
@@ -269,7 +266,9 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         self._continuation_prompt_html = None
         self._executing = False
         self._filter_resize = False
+# <done>
         self._html_exporter = HtmlExporter(self._control)
+# </done>
         self._input_buffer_executing = ''
         self._input_buffer_pending = ''
         self._kill_ring = QtKillRing(self._control)
@@ -301,7 +300,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
 
         # Set a monospaced font.
         self.reset_font()
-# </done>
 
         # Configure actions.
         action = QtGui.QAction('Print', None)
@@ -337,7 +335,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         self.addAction(action)
         self.select_all_action = action
 
-# <done>
         self.increase_font_size = QtGui.QAction("Bigger Font",
                 self,
                 shortcut=QtGui.QKeySequence.ZoomIn,
@@ -763,6 +760,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             text = QtGui.QApplication.clipboard().text(mode).rstrip()
             self._insert_plain_text_into_buffer(cursor, dedent(text))
 
+# <done>
     def print_(self, printer = None):
         """ Print the contents of the ConsoleWidget to the specified QPrinter.
         """
@@ -771,6 +769,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             if(QtGui.QPrintDialog(printer).exec_() != QtGui.QDialog.Accepted):
                 return
         self._control.print_(printer)
+# </done>
 
     def prompt_to_top(self):
         """ Moves the prompt to the top of the viewport.
@@ -823,12 +822,11 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
     def _decrease_font_size(self):
         self.change_font_size(-1)
 
-# </done>
-
     def select_all(self):
         """ Selects all the text in the buffer.
         """
         self._control.selectAll()
+# </done>
 
     def _get_tab_width(self):
         """ The width (in terms of space characters) for tab characters.

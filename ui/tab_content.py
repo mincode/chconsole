@@ -6,6 +6,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from dispatch.message import KernelMessage, Message
 from dispatch.relay import Relay
 from dispatch.source import Source
+from dispatch.out_item import OutItem
 from .entry import entry_template
 from .pager import pager_template
 from .receiver import receiver_template
@@ -63,6 +64,10 @@ def tab_content_template(edit_class):
         message_arrived = QtCore.Signal(Message)  # to signal a message from the kernel
         please_execute = QtCore.Signal(Source)  # source to be executed
 
+        print_action = None  # action for printing
+        export_action = None # action for exporting
+        select_all_action = None  # action for selecting all
+
         def __init__(self, **kwargs):
             QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
             LoggingConfigurable.__init__(self, **kwargs)
@@ -84,6 +89,9 @@ def tab_content_template(edit_class):
             self.receiver = receiver_template(edit_class)()
             self._console_area.addWidget(self.receiver)
             self._console_area.addWidget(self.entry)
+            self.print_action = self.receiver.print_action
+            self.export_action = self.receiver.export_action
+            self.select_all_action = self.receiver.select_all_action
 
             self._pager_targets = [
                 ('right', {'target': self, 'index': 1}),
@@ -96,8 +104,14 @@ def tab_content_template(edit_class):
             self.pager.hide()
 
             self._relay = Relay(self)
-            self._relay.please_output.connect(self.receiver.post)
+            self._relay.please_output.connect(self.post)
             self.message_arrived.connect(self._relay.dispatch)
+
+        @QtCore.Slot(OutItem)
+        def post(self, item):
+            # _receive(item, self)
+            # print('Enqueued: ' + item.text)
+            self.receiver.post(item)
 
         @property
         def pager_locations(self):

@@ -1,8 +1,10 @@
+import sys
 from queue import Queue
 from functools import singledispatch
 from traitlets import Integer, Unicode
 from qtconsole.qt import QtCore, QtGui
 from qtconsole.util import MetaQObjectHasTraits
+from qtconsole.rich_text import HtmlExporter
 from dispatch.out_item import OutItem, Stream, Input, ClearOutput
 from dispatch.outbuffer import OutBuffer
 from ui.text_config import TextConfig
@@ -117,6 +119,11 @@ def receiver_template(edit_class):
             of characters (will double with `top` paging)
             """)
 
+        _html_exporter = None
+        print_action = None  # action for printing
+        export_action = None  # action for exporting
+        select_all_action = None  # action for selecting all
+
         def __init__(self, text='', parent=None, **kwargs):
             """
             Initialize.
@@ -135,6 +142,54 @@ def receiver_template(edit_class):
             self._flush = OutBuffer(self, self)
             self._flush.item_ready.connect(self.on_item_ready)
             self._flush.start()
+
+            action = QtGui.QAction('Print', None)
+            action.setEnabled(True)
+            print_key = QtGui.QKeySequence(QtGui.QKeySequence.Print)
+            if print_key.matches("Ctrl+P") and sys.platform != 'darwin':
+                # Only override the default if there is a collision.
+                # Qt ctrl = cmd on OSX, so the match gets a false positive on OSX.
+                print_key = "Ctrl+Shift+P"
+            action.setShortcut(print_key)
+            action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
+            action.triggered.connect(self._print_doc)
+            self.addAction(action)
+            self.print_action = action
+
+            self._html_exporter = HtmlExporter(self)
+            action = QtGui.QAction('Save as HTML/XML', None)
+            action.setShortcut(QtGui.QKeySequence.Save)
+            action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
+            action.triggered.connect(self._html_exporter.export)
+            self.addAction(action)
+            self.export_action = action
+
+            action = QtGui.QAction('Select All', None)
+            action.setEnabled(True)
+            select_all = QtGui.QKeySequence(QtGui.QKeySequence.SelectAll)
+            if select_all.matches("Ctrl+A") and sys.platform != 'darwin':
+                # Only override the default if there is a collision.
+                # Qt ctrl = cmd on OSX, so the match gets a false positive on OSX.
+                select_all = "Ctrl+Shift+A"
+            action.setShortcut(select_all)
+            action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
+            action.triggered.connect(self.selectAll)
+            self.addAction(action)
+            self.select_all_action = action
+
+        def _print_doc(self, printer=None):
+            """ Print the contents of the ConsoleWidget to the specified QPrinter.
+            """
+            if not printer:
+                printer = QtGui.QPrinter()
+                if QtGui.QPrintDialog(printer).exec_() != QtGui.QDialog.Accepted:
+                    return
+            self.print_(printer)
+
+        def export_html(self):
+            """ Shows a dialog to export HTML/XML in various formats.
+            """
+            self._html_exporter.export()
 
         # adopted from qtconsole.console_widget
         def sizeHint(self):
@@ -255,7 +310,7 @@ def receiver_template(edit_class):
             if self.timing_guard:
                 self.timing_guard.release()
 
-        @QtCore.Slot(OutItem)
+        # @QtCore.Slot(OutItem)
         def post(self, item):
             # _receive(item, self)
             # print('Enqueued: ' + item.text)

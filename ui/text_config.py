@@ -132,6 +132,16 @@ class TextConfig(LoggingConfigurable):
         super(LoggingConfigurable, self).__init__(**kwargs)
         self._ansi_processor = QtAnsiCodeProcessor()
 
+        # JupyterWidget
+        # Initialize widget styling.
+        if self.style_sheet:
+            self._style_sheet_changed()
+            self._syntax_style_changed()
+        else:
+            self.set_default_style()
+
+        self._highlighter = FrontendHighlighter(self, lexer=self.lexer)
+
         self.increase_font_size = QtGui.QAction("Bigger Font",
                 self,
                 shortcut=QtGui.QKeySequence.ZoomIn,
@@ -163,16 +173,6 @@ class TextConfig(LoggingConfigurable):
                 statusTip="Restore the Normal font size",
                 triggered=self.reset_font)
         self.addAction(self.reset_font_size)
-
-        #JupyterWidget
-        # Initialize widget styling.
-        if self.style_sheet:
-            self._style_sheet_changed()
-            self._syntax_style_changed()
-        else:
-            self.set_default_style()
-
-        self._highlighter = FrontendHighlighter(self, lexer=self.lexer)
 
     @staticmethod
     def _font_family_default():
