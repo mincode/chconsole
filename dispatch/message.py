@@ -40,4 +40,4 @@ class Message(KernelMessage):
 
     @property
     def content(self):
-        return self.whole['content']
+        return self.whole.get('content', '')

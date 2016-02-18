@@ -1,4 +1,4 @@
-import sys
+import sys, re
 from queue import Queue
 from functools import singledispatch
 from traitlets import Integer, Unicode
@@ -13,18 +13,6 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
 default_in_prompt = 'In [<span class="in-prompt-number">%i</span>]: '
-
-
-# adopted from qtconsole.console_widget
-def _set_top_cursor(receiver, cursor):
-    """ Scrolls the viewport so that the specified cursor is at the top.
-    """
-    scrollbar = receiver.verticalScrollBar()
-    scrollbar.setValue(scrollbar.maximum())
-    original_cursor = receiver.textCursor()
-    receiver.setTextCursor(cursor)
-    receiver.ensureCursorVisible()
-    receiver.setTextCursor(original_cursor)
 
 
 def _make_in_prompt(prompt_template, number=None):
@@ -43,6 +31,13 @@ def _make_in_prompt(prompt_template, number=None):
 def clear_to_beginning_of_line(cursor):
     cursor.movePosition(cursor.StartOfLine, cursor.KeepAnchor)
     cursor.insertText('')
+
+
+def _covers(edit_widget, text):
+    line_height = QtGui.QFontMetrics(edit_widget.font).height()
+    # print('lines: {}'.format(line_height))
+    min_lines = edit_widget.viewport().height() / line_height
+    return re.match("(?:[^\n]*\n){%i}" % min_lines, text)
 
 
 @singledispatch
@@ -133,8 +128,6 @@ def receiver_template(edit_class):
             """
             edit_class.__init__(self, text, parent)
             TextConfig.__init__(self, **kwargs)
-            # Set a monospaced font.
-            self.reset_font()
 
             self.document().setMaximumBlockCount(self.max_blocks)
             self.output_q = Queue()
@@ -214,92 +207,6 @@ def receiver_template(edit_class):
 
             return QtCore.QSize(width, height)
 
-        # adopted from qtconsole.console_widget
-        def insert_html(self, html, cursor=None):
-            """
-            Inserts HTML using the specified cursor in such a way that future
-                formatting is unaffected.
-            :param html:
-            :param cursor:
-            :return:
-            """
-            cursor = cursor if cursor else self.textCursor()
-            cursor.beginEditBlock()
-            cursor.insertHtml(html)
-
-            # Remark from qtconsole.console_widget:
-            # After inserting HTML, the text document "remembers" it's in "html
-            # mode", which means that subsequent calls adding plain text will result
-            # in unwanted formatting, lost tab characters, etc. The following code
-            # hacks around this behavior, which I consider to be a bug in Qt, by
-            # (crudely) resetting the document's style state.
-            cursor.movePosition(QtGui.QTextCursor.Left,
-                                QtGui.QTextCursor.KeepAnchor)
-            if cursor.selection().toPlainText() == ' ':
-                cursor.removeSelectedText()
-            else:
-                cursor.movePosition(QtGui.QTextCursor.Right)
-            cursor.insertText(' ', QtGui.QTextCharFormat())
-            cursor.endEditBlock()
-
-        # adopted from qtconsole.console_widget
-        def insert_ansi_text(self, text, ansi_codes=True, cursor=None):
-            cursor = cursor if cursor else self.textCursor()
-            cursor.beginEditBlock()
-            if ansi_codes:
-                for substring in self._ansi_processor.split_string(text):
-                    for act in self._ansi_processor.actions:
-
-                        # Unlike real terminal emulators, we don't distinguish
-                        # between the screen and the scrollback buffer. A screen
-                        # erase request clears everything.
-                        if act.action == 'erase' and act.area == 'screen':
-                            cursor.select(QtGui.QTextCursor.Document)
-                            cursor.removeSelectedText()
-
-                        # Simulate a form feed by scrolling just past the last line.
-                        elif act.action == 'scroll' and act.unit == 'page':
-                            cursor.insertText('\n')
-                            cursor.endEditBlock()
-                            _set_top_cursor(self, cursor)
-                            cursor.joinPreviousEditBlock()
-                            cursor.deletePreviousChar()
-
-                        elif act.action == 'carriage-return':
-                            cursor.movePosition(
-                                cursor.StartOfLine, cursor.KeepAnchor)
-
-                        elif act.action == 'beep':
-                            QtGui.qApp.beep()
-
-                        elif act.action == 'backspace':
-                            if not cursor.atBlockStart():
-                                cursor.movePosition(
-                                    cursor.PreviousCharacter, cursor.KeepAnchor)
-
-                        elif act.action == 'newline':
-                            cursor.movePosition(cursor.EndOfLine)
-
-                    ansi_format = self._ansi_processor.get_format()
-
-                    selection = cursor.selectedText()
-                    if len(selection) == 0:
-                        cursor.insertText(substring, ansi_format)
-                    elif substring is not None:
-                        # BS and CR are treated as a change in print
-                        # position, rather than a backwards character
-                        # deletion for output equivalence with (I)Python
-                        # terminal.
-                        if len(substring) >= len(selection):
-                            cursor.insertText(substring, ansi_format)
-                        else:
-                            old_text = selection[len(substring):]
-                            cursor.insertText(substring + old_text, ansi_format)
-                            cursor.movePosition(cursor.PreviousCharacter, cursor.KeepAnchor, len(old_text))
-            else:
-                cursor.insertText(text)
-            cursor.endEditBlock()
-
         @QtCore.Slot(OutItem)
         def on_item_ready(self, item):
             # print('receive: '+item.text)
@@ -312,8 +219,14 @@ def receiver_template(edit_class):
 
         # @QtCore.Slot(OutItem)
         def post(self, item):
-            # _receive(item, self)
-            # print('Enqueued: ' + item.text)
             self.output_q.put(item)
+
+        # Adopted from ConsoleWidget
+        def covers(self, page_doc):
+            if hasattr(self, 'insertHtml') and page_doc.html != '':
+                doc = page_doc.html
+            else:
+                doc = page_doc.text
+            return _covers(self, doc)
 
     return Receiver

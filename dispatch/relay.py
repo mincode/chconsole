@@ -1,7 +1,7 @@
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from .out_item import OutItem, Stream, Input, ClearOutput
+from .out_item import OutItem, Stream, Input, ClearOutput, PageDoc
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -71,7 +71,7 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
 
 # frontend_widget
     def _handle_execute_reply(self, msg):
-        self.log.debug("execute: %s", msg.get('content', ''))
+        self.log.debug("execute: %s", msg.content)
 #         msg_id = msg['parent_header']['msg_id']
 #         info = self._request_info['execute'].get(msg_id)
 #         # MM: hidden means silent execute request; no way for user to specify hidden but it should be possible
@@ -110,7 +110,7 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
     def _process_execute_ok(self, msg):
         """ Process a reply for a successful execution request.
         """
-        payload = msg['content'].get('payload', [])
+        payload = msg.content.get('payload', [])
         for item in payload:
             if not self._process_execute_payload(item):
                 warning = 'Warning: received unknown payload of type %s'
@@ -132,6 +132,17 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
     # dict, unpacks it and calls the underlying functions with the necessary
     # arguments.
 
+    def _handle_payload_page(self, item):
+        # Since the plain text widget supports only a very small subset of HTML
+        # and we have no control over the HTML source, we only page HTML
+        # payloads in the rich text widget.
+        data = item['data']
+        text = data.get('text/plain', '')
+        html = data.get('text/html', '')
+        self.please_output.emit(PageDoc(text=text, html=html))
+        # print('text: ' + str(text!=''))
+        # print('html: ' + str(html!=''))
+
     def _handle_payload_edit(self, item):
         self._edit(item['filename'], item['line_number'])
 
@@ -141,13 +152,3 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
 
     def _handle_payload_next_input(self, item):
         self.input_buffer = item['text']
-
-    def _handle_payload_page(self, item):
-        # Since the plain text widget supports only a very small subset of HTML
-        # and we have no control over the HTML source, we only page HTML
-        # payloads in the rich text widget.
-        data = item['data']
-        if 'text/html' in data and self.kind == 'rich':
-            self._page(data['text/html'], html=True)
-        else:
-            self._page(data['text/plain'], html=False)

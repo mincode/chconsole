@@ -1919,6 +1919,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         else:
             self.input_buffer = ''
 
+# <done>
     def _page(self, text, html=False):
         """ Displays text using the pager if it exceeds the height of the
         viewport.
@@ -1978,6 +1979,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         else:
             raise ValueError("unknown paging method '%s'" % paging)
         self.paging = paging
+# </done>
 
     def _prompt_finished(self):
         """ Called immediately after a prompt is finished, i.e. when some input

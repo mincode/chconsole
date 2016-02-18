@@ -129,3 +129,15 @@ class ExpandedMainWindow(mainwindow.MainWindow):
 
     def select_all_active_frontend(self):
         self.active_frontend.main_content.select_all_action.trigger()
+
+    def increase_font_size_active_frontend(self):
+        self.active_frontend.main_content.increase_font_size.trigger()
+
+    def decrease_font_size_active_frontend(self):
+        self.active_frontend.main_content.decrease_font_size.trigger()
+
+    def reset_font_size_active_frontend(self):
+        self.active_frontend.main_content.reset_font_size.trigger()
+
+    def clear_active_frontend(self):
+        self.active_frontend.main_content.clear()

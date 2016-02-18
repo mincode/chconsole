@@ -12,6 +12,18 @@ from qtconsole.pygments_highlighter import PygmentsHighlighter
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
+# adopted from ConsoleWidget
+def _set_top_cursor(receiver, cursor):
+    """ Scrolls the viewport so that the specified cursor is at the top.
+    """
+    scrollbar = receiver.verticalScrollBar()
+    scrollbar.setValue(scrollbar.maximum())
+    original_cursor = receiver.textCursor()
+    receiver.setTextCursor(cursor)
+    receiver.ensureCursorVisible()
+    receiver.setTextCursor(original_cursor)
+
+
 # ConsoleWidget
 def _get_block_plain_text(block):
     """ Given a QTextBlock, return its unformatted text.
@@ -124,6 +136,10 @@ class TextConfig(LoggingConfigurable):
 
     _ansi_processor = None  # QtAnsiCodeProcessor
 
+    increase_font_size = None  # action for increasing font size
+    decrease_font_size = None  # action for decreasing font size
+    reset_font_size = None  # action for resetting font size
+
     def __init__(self, **kwargs):
         """
         Initialize.
@@ -173,6 +189,9 @@ class TextConfig(LoggingConfigurable):
                 statusTip="Restore the Normal font size",
                 triggered=self.reset_font)
         self.addAction(self.reset_font_size)
+
+        # Set a monospaced font.
+        self.reset_font()
 
     @staticmethod
     def _font_family_default():
@@ -313,3 +332,89 @@ class TextConfig(LoggingConfigurable):
     def _lexer_default(self):
         lexer_class = import_item(self.lexer_class)
         return lexer_class()
+
+    # adopted from ConsoleWidget
+    def insert_ansi_text(self, text, ansi_codes=True, cursor=None):
+        cursor = cursor if cursor else self.textCursor()
+        cursor.beginEditBlock()
+        if ansi_codes:
+            for substring in self._ansi_processor.split_string(text):
+                for act in self._ansi_processor.actions:
+
+                    # Unlike real terminal emulators, we don't distinguish
+                    # between the screen and the scrollback buffer. A screen
+                    # erase request clears everything.
+                    if act.action == 'erase' and act.area == 'screen':
+                        cursor.select(QtGui.QTextCursor.Document)
+                        cursor.removeSelectedText()
+
+                    # Simulate a form feed by scrolling just past the last line.
+                    elif act.action == 'scroll' and act.unit == 'page':
+                        cursor.insertText('\n')
+                        cursor.endEditBlock()
+                        _set_top_cursor(self, cursor)
+                        cursor.joinPreviousEditBlock()
+                        cursor.deletePreviousChar()
+
+                    elif act.action == 'carriage-return':
+                        cursor.movePosition(
+                            cursor.StartOfLine, cursor.KeepAnchor)
+
+                    elif act.action == 'beep':
+                        QtGui.qApp.beep()
+
+                    elif act.action == 'backspace':
+                        if not cursor.atBlockStart():
+                            cursor.movePosition(
+                                cursor.PreviousCharacter, cursor.KeepAnchor)
+
+                    elif act.action == 'newline':
+                        cursor.movePosition(cursor.EndOfLine)
+
+                ansi_format = self._ansi_processor.get_format()
+
+                selection = cursor.selectedText()
+                if len(selection) == 0:
+                    cursor.insertText(substring, ansi_format)
+                elif substring is not None:
+                    # BS and CR are treated as a change in print
+                    # position, rather than a backwards character
+                    # deletion for output equivalence with (I)Python
+                    # terminal.
+                    if len(substring) >= len(selection):
+                        cursor.insertText(substring, ansi_format)
+                    else:
+                        old_text = selection[len(substring):]
+                        cursor.insertText(substring + old_text, ansi_format)
+                        cursor.movePosition(cursor.PreviousCharacter, cursor.KeepAnchor, len(old_text))
+        else:
+            cursor.insertText(text)
+        cursor.endEditBlock()
+
+    # adopted from ConsoleWidget
+    def insert_html(self, html, cursor=None):
+        """
+        Inserts HTML using the specified cursor in such a way that future
+            formatting is unaffected.
+        :param html:
+        :param cursor:
+        :return:
+        """
+        cursor = cursor if cursor else self.textCursor()
+        cursor.beginEditBlock()
+        cursor.insertHtml(html)
+
+        # Remark from qtconsole.console_widget:
+        # After inserting HTML, the text document "remembers" it's in "html
+        # mode", which means that subsequent calls adding plain text will result
+        # in unwanted formatting, lost tab characters, etc. The following code
+        # hacks around this behavior, which I consider to be a bug in Qt, by
+        # (crudely) resetting the document's style state.
+        cursor.movePosition(QtGui.QTextCursor.Left,
+                            QtGui.QTextCursor.KeepAnchor)
+        if cursor.selection().toPlainText() == ' ':
+            cursor.removeSelectedText()
+        else:
+            cursor.movePosition(QtGui.QTextCursor.Right)
+        cursor.insertText(' ', QtGui.QTextCharFormat())
+        cursor.endEditBlock()

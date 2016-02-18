@@ -2,11 +2,10 @@ from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Integer, Unicode, Bool
 from traitlets.config.configurable import LoggingConfigurable
-
 from dispatch.message import KernelMessage, Message
 from dispatch.relay import Relay
 from dispatch.source import Source
-from dispatch.out_item import OutItem
+from dispatch.out_item import OutItem, PageDoc
 from .entry import entry_template
 from .pager import pager_template
 from .receiver import receiver_template
@@ -67,6 +66,9 @@ def tab_content_template(edit_class):
         print_action = None  # action for printing
         export_action = None # action for exporting
         select_all_action = None  # action for selecting all
+        increase_font_size = None  # action for increasing font size
+        decrease_font_size = None  # action for decreasing font size
+        reset_font_size = None  # action for resetting font size
 
         def __init__(self, **kwargs):
             QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
@@ -92,6 +94,9 @@ def tab_content_template(edit_class):
             self.print_action = self.receiver.print_action
             self.export_action = self.receiver.export_action
             self.select_all_action = self.receiver.select_all_action
+            self.increase_font_size = self.receiver.increase_font_size
+            self.decrease_font_size = self.receiver.decrease_font_size
+            self.reset_font_size = self.receiver.reset_font_size
 
             self._pager_targets = [
                 ('right', {'target': self, 'index': 1}),
@@ -107,11 +112,15 @@ def tab_content_template(edit_class):
             self._relay.please_output.connect(self.post)
             self.message_arrived.connect(self._relay.dispatch)
 
+        def clear(self):
+            self.receiver.clear()
+
         @QtCore.Slot(OutItem)
         def post(self, item):
-            # _receive(item, self)
-            # print('Enqueued: ' + item.text)
-            self.receiver.post(item)
+            if isinstance(item, PageDoc) and self.receiver.covers(item):
+                self.pager.post(item)
+            else:
+                self.receiver.post(item)
 
         @property
         def pager_locations(self):

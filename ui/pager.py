@@ -2,12 +2,13 @@ from traitlets import Unicode
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.qt import QtGui
+from .text_config import TextConfig
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
 def pager_template(edit_class):
-    class Pager(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, edit_class), {})):
+    class Pager(MetaQObjectHasTraits('NewBase', (TextConfig, edit_class), {})):
         """
         The pager of the console.
         """
@@ -30,9 +31,10 @@ def pager_template(edit_class):
             :return:
             """
             QtGui.QTextEdit.__init__(self, text, parent)
-            LoggingConfigurable.__init__(self, **kwargs)
+            TextConfig.__init__(self, **kwargs)
             self._locations = dict(locations)
             self.location = initial_location
+            self.document().setMaximumBlockCount(0)
 
         # Traitlets handler
         def _location_changed(self, changed=None):
@@ -69,5 +71,15 @@ def pager_template(edit_class):
                 index = self._locations[self.location]['index']
                 target.setCurrentIndex((index+1) % target.count())
             super(edit_class, self).hide()
+
+        def post(self, item):
+            self.clear()
+            if hasattr(self, 'insertHtml') and item.html != '':
+                self.insert_html(item.html)
+            else:
+                self.insert_ansi_text(item.text)
+            self.moveCursor(QtGui.QTextCursor.Start)
+            self.setFocus()
+            self.show()
 
     return Pager
