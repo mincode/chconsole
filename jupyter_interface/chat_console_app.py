@@ -14,6 +14,7 @@ class ChatConsoleApp(JupyterQtConsoleApp):
     def init_qt_elements(self):
         super(ChatConsoleApp, self).init_qt_elements()
         self.window.setWindowTitle('Chat Console')
+        self.window.active_frontend.main_content.entry.setFocus()
 
     # traitlets handler
     def _plain_changed(self, name, old, new):

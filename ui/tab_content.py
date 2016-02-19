@@ -9,6 +9,7 @@ from dispatch.out_item import OutItem, PageDoc
 from .entry import entry_template
 from .pager import pager_template
 from .receiver import receiver_template
+from .pager_event_filter import TabContentFilter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -91,6 +92,7 @@ def tab_content_template(edit_class):
             self.receiver = receiver_template(edit_class)()
             self._console_area.addWidget(self.receiver)
             self._console_area.addWidget(self.entry)
+
             self.print_action = self.receiver.print_action
             self.export_action = self.receiver.export_action
             self.select_all_action = self.receiver.select_all_action
@@ -111,6 +113,9 @@ def tab_content_template(edit_class):
             self._relay = Relay(self)
             self._relay.please_output.connect(self.post)
             self.message_arrived.connect(self._relay.dispatch)
+
+            self.tab_content_filter = TabContentFilter(self)
+            self.installEventFilter(self.tab_content_filter)
 
         def clear(self):
             self.receiver.clear()

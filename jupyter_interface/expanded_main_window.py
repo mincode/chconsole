@@ -1,5 +1,5 @@
 import sys
-from qtconsole.qt import QtGui
+from qtconsole.qt import QtGui, QtCore
 from qtconsole import mainwindow
 from ui.statusbar import StatusBar
 from ui.entry import code_active_color, chat_active_color
@@ -141,3 +141,7 @@ class ExpandedMainWindow(mainwindow.MainWindow):
 
     def clear_active_frontend(self):
         self.active_frontend.main_content.clear()
+
+    # MM: This method does not seem to be in use.
+    def _set_active_frontend_focus(self):
+        QtCore.QTimer.singleShot(200, self.active_frontend.main_content.entry.setFocus)

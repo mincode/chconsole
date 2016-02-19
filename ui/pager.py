@@ -1,8 +1,9 @@
 from traitlets import Unicode
-from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.util import MetaQObjectHasTraits
-from qtconsole.qt import QtGui
+from qtconsole.qt import QtGui, QtCore
 from .text_config import TextConfig
+from .base_event_filter import ViewportFilter, TextAreaFilter
+from .pager_event_filter import PagerFilter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -16,6 +17,11 @@ def pager_template(edit_class):
         # The type of paging to use.
 
         _locations = {}  # Possible pager locations
+
+        pager_scroll_events = None  # list of admissible scroll events for the pager
+        viewport_filter = None
+        pager_filter = None
+        text_area_filter = None
 
         def __init__(self, locations, initial_location, text='', parent=None, **kwargs):
             """
@@ -35,6 +41,20 @@ def pager_template(edit_class):
             self._locations = dict(locations)
             self.location = initial_location
             self.document().setMaximumBlockCount(0)
+
+            # While scrolling the pager on Mac OS X, it tears badly.  The
+            # NativeGesture is platform and perhaps build-specific hence
+            # we take adequate precautions here.
+            self.pager_scroll_events = [QtCore.QEvent.Wheel]
+            if hasattr(QtCore.QEvent, 'NativeGesture'):
+                self.pager_scroll_events.append(QtCore.QEvent.NativeGesture)
+
+            self.viewport_filter = ViewportFilter(self)
+            self.viewport().installEventFilter(self.viewport_filter)
+            self.pager_filter = PagerFilter(self)
+            self.installEventFilter(self.pager_filter)
+            self.text_area_filter = TextAreaFilter(self)
+            self.installEventFilter(self.text_area_filter)
 
         # Traitlets handler
         def _location_changed(self, changed=None):

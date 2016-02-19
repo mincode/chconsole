@@ -218,6 +218,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         QtGui.QWidget.__init__(self, parent)
         LoggingConfigurable.__init__(self, **kw)
 
+# <done>
         # While scrolling the pager on Mac OS X, it tears badly.  The
         # NativeGesture is platform and perhaps build-specific hence
         # we take adequate precautions here.
@@ -225,7 +226,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         if hasattr(QtCore.QEvent, 'NativeGesture'):
             self._pager_scroll_events.append(QtCore.QEvent.NativeGesture)
 
-# <done>
         # Create the layout and underlying text widget.
         layout = QtGui.QStackedLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -453,6 +453,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
                 event.key() in self._shortcuts:
             event.accept()
 
+# <done>
         # Handle scrolling of the vsplit pager. This hack attempts to solve
         # problems with tearing of the help text inside the pager window.  This
         # happens only on Mac OS X with both PySide and PyQt. This fix isn't
@@ -461,6 +462,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
                 obj == self._page_control:
             self._page_control.repaint()
             return True
+# </done>
 
         elif etype == QtCore.QEvent.MouseMove:
             anchor = self._control.anchorAt(event.pos())
@@ -1057,6 +1059,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
 
         return menu
 
+# <done>
     def _control_key_down(self, modifiers, include_command=False):
         """ Given a KeyboardModifiers flags object, return whether the Control
         key is down.
@@ -1074,11 +1077,14 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             return bool(down) ^ bool(modifiers & QtCore.Qt.MetaModifier)
         else:
             return bool(modifiers & QtCore.Qt.ControlModifier)
+# </done>
 
     def _create_control(self):
         """ Creates and connects the underlying text widget.
         """
         # Create the underlying control.
+
+# <done>
         if self.custom_control:
             control = self.custom_control()
         elif self.kind == 'plain':
@@ -1087,6 +1093,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             control = QtGui.QTextEdit()
             control.setAcceptRichText(False)
             control.setMouseTracking(True)
+# </done>
 
         # Prevent the widget from handling drops, as we already provide
         # the logic in this class.
@@ -1104,6 +1111,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         control.redoAvailable.connect(self.redo_available)
         control.undoAvailable.connect(self.undo_available)
 
+# <done>
         # Hijack the document size change signal to prevent Qt from adjusting
         # the viewport's scrollbar. We are relying on an implementation detail
         # of Q(Plain)TextEdit here, which is potentially dangerous, but without
@@ -1111,6 +1119,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         layout = control.document().documentLayout()
         layout.documentSizeChanged.disconnect()
         layout.documentSizeChanged.connect(self._adjust_scrollbars)
+# </done>
 
         # Configure the control.
         control.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
@@ -1444,6 +1453,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
 
         return intercepted
 
+# <done>
     def _event_filter_page_keypress(self, event):
         """ Filter key events for the paging widget to create console-like
             interface.
@@ -1509,7 +1519,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
 
         return False
 
-# <done>
     def _on_flush_pending_stream_timer(self):
         """ Flush the pending stream output and change the
         prompt position appropriately.

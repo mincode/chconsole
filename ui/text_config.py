@@ -146,6 +146,26 @@ class TextConfig(LoggingConfigurable):
         :return:
         """
         super(LoggingConfigurable, self).__init__(**kwargs)
+
+        self.setMouseTracking(True)
+        if hasattr(self, 'setAcceptRichText'):
+            self.setAcceptRichText(False)
+
+        self.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.setReadOnly(True)
+        self.setUndoRedoEnabled(False)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+
+        # ConsoleWidget
+        # Hijack the document size change signal to prevent Qt from adjusting
+        # the viewport's scrollbar. We are relying on an implementation detail
+        # of Q(Plain)TextEdit here, which is potentially dangerous, but without
+        # this functionality we cannot create a nice terminal interface.
+        layout = self.document().documentLayout()
+        layout.documentSizeChanged.disconnect()
+        layout.documentSizeChanged.connect(self.adjust_scrollbars)
+
         self._ansi_processor = QtAnsiCodeProcessor()
 
         # JupyterWidget
@@ -192,6 +212,33 @@ class TextConfig(LoggingConfigurable):
 
         # Set a monospaced font.
         self.reset_font()
+
+    # ConsoleWidget
+    def adjust_scrollbars(self):
+        """ Expands the vertical scrollbar beyond the range set by Qt.
+        """
+        # This code is adapted from _q_adjustScrollbars in qplaintextedit.cpp
+        # and qtextedit.cpp.
+        document = self.document()
+        scrollbar = self.verticalScrollBar()
+        viewport_height = self.viewport().height()
+        if isinstance(self, QtGui.QPlainTextEdit):
+            maximum = max(0, document.lineCount() - 1)
+            step = viewport_height / self.fontMetrics().lineSpacing()
+        else:
+            # QTextEdit does not do line-based layout and blocks will not in
+            # general have the same height. Therefore it does not make sense to
+            # attempt to scroll in line height increments.
+            maximum = document.size().height()
+            step = viewport_height
+        diff = maximum - scrollbar.maximum()
+        scrollbar.setRange(0, maximum)
+        scrollbar.setPageStep(step)
+
+        # Compensate for undesirable scrolling that occurs automatically due to
+        # maximumBlockCount() text truncation.
+        if diff < 0 and document.blockCount() == document.maximumBlockCount():
+            scrollbar.setValue(scrollbar.value() + diff)
 
     @staticmethod
     def _font_family_default():
