@@ -10,24 +10,12 @@ from dispatch.source import Source
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-def _resize_last(splitter, fraction=4):
-    sizes = splitter.sizes()
-    print(str(sizes))
-    total_height = sum(sizes)
-    num_widgets = len(sizes)
-    height_last = total_height // fraction
-    height_rest = (total_height * (fraction - 1)) // fraction
-    new_sizes = [height_rest for i in range(num_widgets - 1)]
-    new_sizes.append(height_last)
-    splitter.setSizes(new_sizes)
-
-
 class _BaseTabWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QWidget), {})):
     """ The base class for the main widget to be inserted into a tab of the Jupyter MainWindow object.
     """
 
     ###############################################################################################################
-    # The following data members are required to launch qtconsole.qtconsoleapp with this widget as widget_factor:
+    # The following data members are required to launch qtconsole.qtconsoleapp with this widget as widget_factory:
 
     # Emitted when an exit request has been received from the kernel.
     exit_requested = QtCore.Signal(object)

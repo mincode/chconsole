@@ -119,6 +119,16 @@ class Input(OutText):
         return count, first, rest
 
 
+class EditFile(OutItem):
+    filename = ''
+    line_number = None  # line number
+
+    def __init__(self, filename, line_number=None, head=True, empty=False):
+        super(EditFile, self).__init__(head=head, empty=empty)
+        self.filename = filename
+        self.line_number = line_number
+
+
 class InputRequest(OutText):
     password = False  # whether the request is for a password; if True the input should not be echoed
 

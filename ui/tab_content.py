@@ -1,3 +1,5 @@
+import sys
+from subprocess import Popen
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Integer, Unicode, Bool
@@ -5,7 +7,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from dispatch.message import KernelMessage, Message
 from dispatch.relay import Relay
 from dispatch.source import Source
-from dispatch.out_item import OutItem, PageDoc
+from dispatch.out_item import OutItem, PageDoc, EditFile, Stream
 from .entry import entry_template
 from .pager import pager_template
 from .receiver import receiver_template
@@ -30,6 +32,29 @@ def _resize_last(splitter, fraction=4):
     new_sizes = [height_rest for i in range(num_widgets - 1)]
     new_sizes.append(height_last)
     splitter.setSizes(new_sizes)
+
+
+# JupyterWidget
+if sys.platform.startswith('win'):
+    default_editor = 'notepad'
+else:
+    default_editor = ''
+
+
+class NoDefaultEditor(Exception):
+    def __init__(self):
+        super(NoDefaultEditor, self).__init__()
+
+    def __str__(self):
+        return 'NoDefaultEditor'
+
+
+class CommandError(Exception):
+    command = ''
+
+    def __init__(self, command):
+        super(CommandError, self).__init__()
+        self.command = command
 
 
 def tab_content_template(edit_class):
@@ -71,6 +96,28 @@ def tab_content_template(edit_class):
         decrease_font_size = None  # action for decreasing font size
         reset_font_size = None  # action for resetting font size
 
+        # JupyterWidget:
+        # If set, the 'custom_edit_requested(str, int)' signal will be emitted when
+        # an editor is needed for a file. This overrides 'editor' and 'editor_line'
+        # settings.
+        custom_edit = Bool(False)
+        custom_edit_requested = QtCore.Signal(object, object)
+
+        editor = Unicode(default_editor, config=True,
+            help="""
+            A command for invoking a system text editor. If the string contains a
+            {filename} format specifier, it will be used. Otherwise, the filename
+            will be appended to the end the command.
+            """)
+
+        editor_line = Unicode(config=True,
+            help="""
+            The editor command to use when a specific line number is requested. The
+            string should contain two format specifiers: {line} and {filename}. If
+            this parameter is not specified, the line number option to the %edit
+            magic will be ignored.
+            """)
+
         def __init__(self, **kwargs):
             QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
             LoggingConfigurable.__init__(self, **kwargs)
@@ -111,7 +158,7 @@ def tab_content_template(edit_class):
             self.pager.hide()
 
             self._relay = Relay(self)
-            self._relay.please_output.connect(self.post)
+            self._relay.please_process.connect(self.post)
             self.message_arrived.connect(self._relay.dispatch)
 
             self.tab_content_filter = TabContentFilter(self)
@@ -120,10 +167,61 @@ def tab_content_template(edit_class):
         def clear(self):
             self.receiver.clear()
 
+        # JupyterWidget
+        def _edit(self, filename, line=None):
+            """ Opens a Python script for editing.
+
+            Parameters
+            ----------
+            filename : str
+                A path to a local system file.
+
+            line : int, optional
+                A line of interest in the file.
+            """
+            if self.custom_edit:
+                self.custom_edit_requested.emit(filename, line)
+            elif not self.editor:
+                raise NoDefaultEditor()
+            else:
+                try:
+                    filename = '"%s"' % filename
+                    if line and self.editor_line:
+                        command = self.editor_line.format(filename=filename,
+                                                          line=line)
+                    else:
+                        try:
+                            command = self.editor.format()
+                        except KeyError:
+                            command = self.editor.format(filename=filename)
+                        else:
+                            command += ' ' + filename
+                except KeyError:
+                    raise
+                else:
+                    try:
+                        Popen(command, shell=True)
+                    except OSError:
+                        raise CommandError(command)
+
         @QtCore.Slot(OutItem)
         def post(self, item):
             if isinstance(item, PageDoc) and self.receiver.covers(item):
                 self.pager.post(item)
+            elif isinstance(item, EditFile):
+                try:
+                    self._edit(item.filename, item.line_number)
+                except NoDefaultEditor:
+                    text = ('No default editor available. '
+                            'Specify a GUI text editor in the `TabContent.editor` configurable '
+                            'to enable the %edit magic')
+                    self.receiver.post(Stream(text=text, name='stderr', clearable=False))
+                except KeyError:
+                    text = 'Invalid editor command.'
+                    self.receiver.post(Stream(text=text, name='stderr', clearable=False))
+                except CommandError as e:
+                    text = 'Opening editor with command "%s" failed.' % e.command
+                    self.receiver.post(Stream(text=text, name='stderr', clearable=False))
             else:
                 self.receiver.post(item)
 

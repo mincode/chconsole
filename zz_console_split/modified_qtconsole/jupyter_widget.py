@@ -43,10 +43,12 @@ default_output_sep2 = ''
 # Base path for most payload sources.
 zmq_shell_source = 'ipykernel.zmqshell.ZMQInteractiveShell'
 
+# <done>
 if sys.platform.startswith('win'):
     default_editor = 'notepad'
 else:
     default_editor = ''
+# </done>
 
 #-----------------------------------------------------------------------------
 # JupyterWidget class
@@ -58,6 +60,8 @@ class IPythonWidget(FrontendWidget):
 
 class JupyterWidget(IPythonWidget):
     """A FrontendWidget for a Jupyter kernel."""
+
+# <done>
 
     # If set, the 'custom_edit_requested(str, int)' signal will be emitted when
     # an editor is needed for a file. This overrides 'editor' and 'editor_line'
@@ -80,7 +84,6 @@ class JupyterWidget(IPythonWidget):
         magic will be ignored.
         """)
 
-# <done>
     style_sheet = Unicode(config=True,
         help="""
         A CSS stylesheet. The stylesheet can contain classes for:
@@ -430,7 +433,6 @@ class JupyterWidget(IPythonWidget):
             self.syntax_style = styles.default_bw_syntax_style
         else:
             raise KeyError("No such color scheme: %s"%colors)
-# </done>
 
     #---------------------------------------------------------------------------
     # 'JupyterWidget' protected interface
@@ -475,7 +477,6 @@ class JupyterWidget(IPythonWidget):
                     msg = 'Opening editor with command "%s" failed.\n'
                     self._append_plain_text(msg % command)
 
-# <done>
     def _make_in_prompt(self, number):
         """ Given a prompt number, returns an HTML In prompt.
         """

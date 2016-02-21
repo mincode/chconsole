@@ -1,7 +1,7 @@
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from .out_item import OutItem, Stream, Input, ClearOutput, PageDoc
+from .out_item import OutItem, Stream, Input, ClearOutput, PageDoc, EditFile
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -10,7 +10,7 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
     """
     Relay messages from the kernel.
     """
-    please_output = QtCore.Signal(OutItem)
+    please_process = QtCore.Signal(OutItem)
 
     _payload_source_edit = 'edit_magic'
     _payload_source_exit = 'ask_exit'
@@ -36,23 +36,23 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
 
     def _handle_stream(self, msg):
         content = msg.content
-        self.please_output.emit(Stream(content['text'], name=content['name']))
+        self.please_process.emit(Stream(content['text'], name=content['name']))
 
     def _handle_kernel_info_reply(self, msg):
-        self.please_output.emit(Stream(msg.content['banner'], clearable=False))
+        self.please_process.emit(Stream(msg.content['banner'], clearable=False))
         help_links = msg.content['help_links']
         if help_links:
-            self.please_output.emit(Stream('\nHelp Links', clearable=False))
+            self.please_process.emit(Stream('\nHelp Links', clearable=False))
             for helper in help_links:
-                self.please_output.emit(Stream('\n' + helper['text'] + ': ' + helper['url'], clearable=False))
-            self.please_output.emit(Stream('\n', clearable=False))
+                self.please_process.emit(Stream('\n' + helper['text'] + ': ' + helper['url'], clearable=False))
+            self.please_process.emit(Stream('\n', clearable=False))
 
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""
         content = msg.content
         self.log.debug("execute_input: %s", content)
 
-        self.please_output.emit(Input(content['code'], execution_count=content['execution_count']))
+        self.please_process.emit(Input(content['code'], execution_count=content['execution_count']))
 
     def _handle_clear_output(self, msg):
         # {'header': {'msg_type': 'clear_output'}, 'content': {'wait': False}}
@@ -61,13 +61,13 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
         # {'header': {'msg_type': 'stream'}, 'content': {'name': 'stdout', 'text': 'XYZ'}}
         content = msg.content
         # print('wait: ' + str(content['wait']))
-        self.please_output.emit(ClearOutput(wait=content['wait']))
+        self.please_process.emit(ClearOutput(wait=content['wait']))
 
     def _handle_display_data(self, msg):
         data = msg.content['data']
         # metadata = msg.content['metadata']
         if 'text/plain' in data:
-            self.please_output.emit(Stream(data['text/plain'], name='stdout'))
+            self.please_process.emit(Stream(data['text/plain'], name='stdout'))
 
 # frontend_widget
     def _handle_execute_reply(self, msg):
@@ -133,18 +133,13 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
     # arguments.
 
     def _handle_payload_page(self, item):
-        # Since the plain text widget supports only a very small subset of HTML
-        # and we have no control over the HTML source, we only page HTML
-        # payloads in the rich text widget.
         data = item['data']
         text = data.get('text/plain', '')
         html = data.get('text/html', '')
-        self.please_output.emit(PageDoc(text=text, html=html))
-        # print('text: ' + str(text!=''))
-        # print('html: ' + str(html!=''))
+        self.please_process.emit(PageDoc(text=text, html=html))
 
     def _handle_payload_edit(self, item):
-        self._edit(item['filename'], item['line_number'])
+        self.please_process.emit(EditFile(item['filename'], item['line_number']))
 
     def _handle_payload_exit(self, item):
         self._keep_kernel_on_exit = item['keepkernel']
