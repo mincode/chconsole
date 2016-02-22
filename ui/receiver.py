@@ -5,7 +5,7 @@ from traitlets import Integer, Unicode
 from qtconsole.qt import QtCore, QtGui
 from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.rich_text import HtmlExporter
-from dispatch.out_item import OutItem, Stream, Input, ClearOutput
+from dispatch.relay_item import RelayItem, Stream, Input, ClearOutput
 from dispatch.outbuffer import OutBuffer
 from ui.text_config import TextConfig
 
@@ -207,7 +207,7 @@ def receiver_template(edit_class):
 
             return QtCore.QSize(width, height)
 
-        @QtCore.Slot(OutItem)
+        @QtCore.Slot(RelayItem)
         def on_item_ready(self, item):
             # print('receive: '+item.text)
             stamp = QtCore.QTime()
@@ -217,7 +217,6 @@ def receiver_template(edit_class):
             if self.timing_guard:
                 self.timing_guard.release()
 
-        # @QtCore.Slot(OutItem)
         def post(self, item):
             self.output_q.put(item)
 

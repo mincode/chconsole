@@ -7,7 +7,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from dispatch.message import KernelMessage, Message
 from dispatch.relay import Relay
 from dispatch.source import Source
-from dispatch.out_item import OutItem, PageDoc, EditFile, Stream, ExitRequested
+from dispatch.relay_item import RelayItem, PageDoc, EditFile, Stream, ExitRequested, InText
 from .entry import entry_template
 from .pager import pager_template
 from .receiver import receiver_template
@@ -207,7 +207,7 @@ def tab_content_template(edit_class):
                     except OSError:
                         raise CommandError(command)
 
-        @QtCore.Slot(OutItem)
+        @QtCore.Slot(RelayItem)
         def post(self, item):
             if isinstance(item, PageDoc) and self.receiver.covers(item):
                 self.pager.post(item)
@@ -227,6 +227,8 @@ def tab_content_template(edit_class):
                     self.receiver.post(Stream(text=text, name='stderr', clearable=False))
             elif isinstance(item, ExitRequested):
                 self.exit_requested.emit(item.keep_kernel_on_exit)
+            elif isinstance(item, InText):
+                self.entry.post(item)
             else:
                 self.receiver.post(item)
 

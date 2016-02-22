@@ -137,19 +137,20 @@ class JupyterWidget(IPythonWidget):
             self._payload_source_next_input : self._handle_payload_next_input }
 # </done>
         self._previous_prompt_obj = None
-        self._keep_kernel_on_exit = None
+
 
 # <done>
+        self._keep_kernel_on_exit = None
+
         # Initialize widget styling.
         if self.style_sheet:
             self._style_sheet_changed()
             self._syntax_style_changed()
         else:
             self.set_default_style()
+# </done>
 
         self._guiref_loaded = False
-        #print('init modified JupyterWidget')
-# </done>
 
     #---------------------------------------------------------------------------
     # 'BaseFrontendMixin' abstract interface
@@ -235,7 +236,8 @@ class JupyterWidget(IPythonWidget):
                 items.append(cell)
                 last_cell = cell
         self._set_history(items)
-    
+
+# <done>
     def _insert_other_input(self, cursor, content):
         """Insert function for input from other frontends"""
         cursor.beginEditBlock()
@@ -247,7 +249,6 @@ class JupyterWidget(IPythonWidget):
         self._highlighter.rehighlightBlock(cursor.block())
         cursor.endEditBlock()
 
-# <done>
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""
         self.log.debug("execute_input: %s", msg.get('content', ''))
@@ -437,7 +438,6 @@ class JupyterWidget(IPythonWidget):
     #---------------------------------------------------------------------------
     # 'JupyterWidget' protected interface
     #---------------------------------------------------------------------------
-
     def _edit(self, filename, line=None):
         """ Opens a Python script for editing.
 

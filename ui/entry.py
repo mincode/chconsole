@@ -61,6 +61,15 @@ def entry_template(edit_class):
             """
             return Source(self.toPlainText())
 
+        def post(self, item):
+            """
+            Process the item received.
+            :param item: InText to be shown in the input area.
+            :return:
+            """
+            self.clear()
+            self.insertPlainText(item.text)
+
         # traitlets handlers
         def _code_changed(self, name=None, old=None, new=None):
             """

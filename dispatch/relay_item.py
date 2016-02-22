@@ -20,7 +20,7 @@ def _split_lines(num_lines, text):
     return num_lines, text[:location], text[location:]
 
 
-class OutItem:
+class RelayItem:
     head = True
     # True if this is the beginning of a new item for output.
     # False if this is a part of the item previously sent to output.
@@ -49,7 +49,7 @@ class OutItem:
         return count, first_item, rest_item
 
 
-class ClearOutput(OutItem):
+class ClearOutput(RelayItem):
     wait = False  # Wait to clear the output until new output is available
 
     def __init__(self, wait=False, head=True, empty=False):
@@ -57,7 +57,7 @@ class ClearOutput(OutItem):
         self.wait = wait
 
 
-class OutText(OutItem):
+class OutText(RelayItem):
     text = ''
     ansi_codes = True  # whether text has ansi_codes
 
@@ -119,7 +119,7 @@ class Input(OutText):
         return count, first, rest
 
 
-class EditFile(OutItem):
+class EditFile(RelayItem):
     filename = ''
     line_number = None  # line number
 
@@ -129,12 +129,20 @@ class EditFile(OutItem):
         self.line_number = line_number
 
 
-class ExitRequested(OutItem):
+class ExitRequested(RelayItem):
     keep_kernel_on_exit = False  # keep kernel when exit main widget
 
     def __init__(self, keep_kernel_on_exit, head=True, empty=False):
         super(ExitRequested, self).__init__(head=head, empty=empty)
         self.keep_kernel_on_exit = keep_kernel_on_exit
+
+
+class InText(RelayItem):
+    text = ''
+
+    def __init__(self, text='', head=True, empty=False):
+        super(InText, self).__init__(head=head, empty=empty)
+        self.text = text
 
 
 class InputRequest(OutText):

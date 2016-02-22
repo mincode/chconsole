@@ -1,7 +1,7 @@
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from .out_item import OutItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested
+from .relay_item import RelayItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested, InText
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -10,7 +10,7 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
     """
     Relay messages from the kernel.
     """
-    please_process = QtCore.Signal(OutItem)
+    please_process = QtCore.Signal(RelayItem)
 
     _payload_source_edit = 'edit_magic'
     _payload_source_exit = 'ask_exit'
@@ -146,4 +146,4 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
         self.please_process.emit(ExitRequested(keep_kernel_on_exit))
 
     def _handle_payload_next_input(self, item):
-        self.input_buffer = item['text']
+        self.please_process.emit(InText(item['text']))
