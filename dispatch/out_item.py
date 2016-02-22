@@ -129,6 +129,14 @@ class EditFile(OutItem):
         self.line_number = line_number
 
 
+class ExitRequested(OutItem):
+    keep_kernel_on_exit = False  # keep kernel when exit main widget
+
+    def __init__(self, keep_kernel_on_exit, head=True, empty=False):
+        super(ExitRequested, self).__init__(head=head, empty=empty)
+        self.keep_kernel_on_exit = keep_kernel_on_exit
+
+
 class InputRequest(OutText):
     password = False  # whether the request is for a password; if True the input should not be echoed
 

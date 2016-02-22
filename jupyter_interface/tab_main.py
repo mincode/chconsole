@@ -51,6 +51,11 @@ def tab_main_template(edit_class):
 
         message_arrived = QtCore.Signal(KernelMessage)  # signal to send a message that has arrived from the kernel
 
+        # Mechanism for keeping kernel on exit required by MainWindow
+        keep_kernel_on_exit = None
+        exit_requested = QtCore.Signal(object)  # signal to be sent when exit is requested through the kernel
+                                                # emits itself as an argument to the signal
+
         def __init__(self, parent=None, **kw):
             """
             Initialize the main widget.
@@ -62,6 +67,7 @@ def tab_main_template(edit_class):
             self.main_content = tab_content_template(edit_class)()
             self.main_content.please_execute.connect(self._execute)
             self.message_arrived.connect(self.main_content.dispatch)
+            self.main_content.exit_requested.connect(self._on_exit_request)
 
             layout = QtGui.QHBoxLayout(self)
             layout.setContentsMargins(0, 0, 0, 0)
@@ -74,6 +80,11 @@ def tab_main_template(edit_class):
             :return:
             """
             self.message_arrived.emit(KernelMessage(msg, self.from_here(msg)))
+
+        @QtCore.Slot(bool)
+        def _on_exit_request(self, keep_kernel_on_exit):
+            self.keep_kernel_on_exit = True if keep_kernel_on_exit else None
+            self.exit_requested.emit(self)
 
         @QtCore.Slot(Source)
         def _execute(self, source):

@@ -7,7 +7,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from dispatch.message import KernelMessage, Message
 from dispatch.relay import Relay
 from dispatch.source import Source
-from dispatch.out_item import OutItem, PageDoc, EditFile, Stream
+from dispatch.out_item import OutItem, PageDoc, EditFile, Stream, ExitRequested
 from .entry import entry_template
 from .pager import pager_template
 from .receiver import receiver_template
@@ -118,6 +118,9 @@ def tab_content_template(edit_class):
             magic will be ignored.
             """)
 
+        # Signal when exit is requested
+        exit_requested = QtCore.Signal(bool)
+
         def __init__(self, **kwargs):
             QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
             LoggingConfigurable.__init__(self, **kwargs)
@@ -222,6 +225,8 @@ def tab_content_template(edit_class):
                 except CommandError as e:
                     text = 'Opening editor with command "%s" failed.' % e.command
                     self.receiver.post(Stream(text=text, name='stderr', clearable=False))
+            elif isinstance(item, ExitRequested):
+                self.exit_requested.emit(item.keep_kernel_on_exit)
             else:
                 self.receiver.post(item)
 

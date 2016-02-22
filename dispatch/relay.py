@@ -1,7 +1,7 @@
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from .out_item import OutItem, Stream, Input, ClearOutput, PageDoc, EditFile
+from .out_item import OutItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -142,8 +142,8 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
         self.please_process.emit(EditFile(item['filename'], item['line_number']))
 
     def _handle_payload_exit(self, item):
-        self._keep_kernel_on_exit = item['keepkernel']
-        self.exit_requested.emit(self)
+        keep_kernel_on_exit = True if item['keepkernel'] else False
+        self.please_process.emit(ExitRequested(keep_kernel_on_exit))
 
     def _handle_payload_next_input(self, item):
         self.input_buffer = item['text']

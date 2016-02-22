@@ -170,8 +170,10 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     # kernel and processed by the FrontendWidget. Contains the response message.
     executed = QtCore.Signal(object)
 
+# <done>
     # Emitted when an exit request has been received from the kernel.
     exit_requested = QtCore.Signal(object)
+# </done>
 
     _CallTipRequest = namedtuple('_CallTipRequest', ['id', 'pos'])
     _CompletionRequest = namedtuple('_CompletionRequest', ['id', 'pos'])
