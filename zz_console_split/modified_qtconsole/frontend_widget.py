@@ -795,6 +795,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         info = self._CompletionRequest(msg_id, pos)
         self._request_info['complete'] = info
 
+# <done>
     def _process_execute_abort(self, msg):
         """ Process a reply for an aborted execution request.
         """
@@ -815,7 +816,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
             traceback = ''.join(content['traceback'])
             self._append_plain_text(traceback)
 
-# <done>
     def _process_execute_ok(self, msg):
         """ Process a reply for a successful execution request.
         """

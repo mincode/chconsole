@@ -134,7 +134,7 @@ class TextConfig(LoggingConfigurable):
 
     lexer = Any()
 
-    _ansi_processor = None  # QtAnsiCodeProcessor
+    ansi_processor = None  # QtAnsiCodeProcessor
 
     increase_font_size = None  # action for increasing font size
     decrease_font_size = None  # action for decreasing font size
@@ -166,7 +166,7 @@ class TextConfig(LoggingConfigurable):
         layout.documentSizeChanged.disconnect()
         layout.documentSizeChanged.connect(self.adjust_scrollbars)
 
-        self._ansi_processor = QtAnsiCodeProcessor()
+        self.ansi_processor = QtAnsiCodeProcessor()
 
         # JupyterWidget
         # Initialize widget styling.
@@ -346,7 +346,7 @@ class TextConfig(LoggingConfigurable):
         self.setStyleSheet(self.style_sheet)
         self.document().setDefaultStyleSheet(self.style_sheet)
         bg_color = self.palette().window().color()
-        self._ansi_processor.set_background_color(bg_color)
+        self.ansi_processor.set_background_color(bg_color)
 
         # if self._page_control is not None:
         #     self._page_control.document().setDefaultStyleSheet(self.style_sheet)
@@ -385,8 +385,8 @@ class TextConfig(LoggingConfigurable):
         cursor = cursor if cursor else self.textCursor()
         cursor.beginEditBlock()
         if ansi_codes:
-            for substring in self._ansi_processor.split_string(text):
-                for act in self._ansi_processor.actions:
+            for substring in self.ansi_processor.split_string(text):
+                for act in self.ansi_processor.actions:
 
                     # Unlike real terminal emulators, we don't distinguish
                     # between the screen and the scrollback buffer. A screen
@@ -418,7 +418,7 @@ class TextConfig(LoggingConfigurable):
                     elif act.action == 'newline':
                         cursor.movePosition(cursor.EndOfLine)
 
-                ansi_format = self._ansi_processor.get_format()
+                ansi_format = self.ansi_processor.get_format()
 
                 selection = cursor.selectedText()
                 if len(selection) == 0:

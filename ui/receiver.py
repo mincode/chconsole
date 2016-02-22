@@ -50,6 +50,7 @@ def _receive(item, receiver):
 def _(item, receiver):
     if receiver.data_stream_end:
         receiver.setTextCursor(receiver.data_stream_end)
+    receiver.ansi_processor.reset_sgr()
     receiver.insert_ansi_text(item.text, item.ansi_codes)
     cursor = receiver.textCursor()
     if item.clearable:
@@ -66,6 +67,7 @@ def _(item, receiver):
     receiver.data_stream_end = None
     receiver.insertPlainText('\n')
     receiver.insert_html(_make_in_prompt(receiver.in_prompt, item.execution_count))
+    receiver.ansi_processor.reset_sgr()
     receiver.insert_ansi_text(item.code, item.ansi_codes)
     if item.code[-1] != '\n':
         receiver.insertPlainText('\n')

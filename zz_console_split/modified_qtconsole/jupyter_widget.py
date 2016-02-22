@@ -315,6 +315,7 @@ class JupyterWidget(IPythonWidget):
     # 'FrontendWidget' protected interface
     #---------------------------------------------------------------------------
 
+# <done>
     def _process_execute_error(self, msg):
         """Handle an execute_error message"""
         content = msg['content']
@@ -335,7 +336,6 @@ class JupyterWidget(IPythonWidget):
             # This is the fallback for now, using plain text with ansi escapes
             self._append_plain_text(traceback)
 
-# <done>
     def _process_execute_payload(self, item):
         """ Reimplemented to dispatch payloads to handler methods.
         """

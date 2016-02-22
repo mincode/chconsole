@@ -69,42 +69,18 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
         if 'text/plain' in data:
             self.please_process.emit(Stream(data['text/plain'], name='stdout'))
 
-# frontend_widget
+    # frontend_widget
     def _handle_execute_reply(self, msg):
         self.log.debug("execute: %s", msg.content)
-#         msg_id = msg['parent_header']['msg_id']
-#         info = self._request_info['execute'].get(msg_id)
-#         # MM: hidden means silent execute request; no way for user to specify hidden but it should be possible
-#         if info and info.kind == 'user' and not self._hidden:
-#             # Make sure that all output from the SUB channel has been processed
-#             # before writing a new prompt.
-#             self.kernel_client.iopub_channel.flush()
-#
-#             # Reset the ANSI style information to prevent bad text in stdout
-#             # from messing up our colors. We're not a true terminal so we're
-#             # allowed to do this.
-#             if self.ansi_codes:
-#                 self._ansi_processor.reset_sgr()
-#
         status = msg.content['status']
         if status == 'ok':
             self._process_execute_ok(msg)
         elif status == 'error':
-            # self._process_execute_error(msg)
-            pass
+            self._process_execute_error(msg)
         elif status == 'aborted':
-            # self._process_execute_abort(msg)
-            pass
-#
-#             self._show_interpreter_prompt_for_reply(msg)
-#             self.executed.emit(msg)
-#             self._request_info['execute'].pop(msg_id)
-#         elif info and info.kind == 'silent_exec_callback' and not self._hidden:
-#             self._handle_exec_callback(msg)
-#             self._request_info['execute'].pop(msg_id)
-#         else:
-#             # does not exist
-#             super(FrontendWidget, self)._handle_execute_reply(msg)
+            self._process_execute_abort(msg)
+        # MM: FrontendWidget also has an option for 'silent_exec_callback' which does not seem to be used
+        # Therefore it is not implemented here.
 
     # FrontendWidget
     def _process_execute_ok(self, msg):
@@ -147,3 +123,31 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
 
     def _handle_payload_next_input(self, item):
         self.please_process.emit(InText(item['text']))
+
+    # JupyterWidget
+    def _process_execute_error(self, msg):
+        """Handle an execute_error message"""
+        content = msg['content']
+        traceback = '\n'.join(content['traceback']) + '\n'
+        if False:
+            # FIXME: For now, tracebacks come as plain text, so we can't use
+            # the html renderer yet.  Once we refactor ultratb to produce
+            # properly styled tracebacks, this branch should be the default
+            traceback = traceback.replace(' ', '&nbsp;')
+            traceback = traceback.replace('\n', '<br/>')
+
+            ename = content['ename']
+            ename_styled = '<span class="error">%s</span>' % ename
+            traceback = traceback.replace(ename, ename_styled)
+
+            # self._append_html(traceback)
+            # post traceback as html
+        else:
+            # This is the fallback for now, using plain text with ansi escapes
+            self.please_process.emit(Stream(traceback, name='stderr', clearable=False))
+
+    # FrontendWidget
+    def _process_execute_abort(self, msg):
+        """ Process a reply for an aborted execution request.
+        """
+        self.please_process.emit(Stream('ERROR: execution aborted', name='stderr', clearable=False))
