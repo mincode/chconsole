@@ -152,9 +152,9 @@ class JupyterWidget(IPythonWidget):
             self._syntax_style_changed()
         else:
             self.set_default_style()
-# </done>
 
         self._guiref_loaded = False
+# </done>
 
     #---------------------------------------------------------------------------
     # 'BaseFrontendMixin' abstract interface
@@ -192,6 +192,7 @@ class JupyterWidget(IPythonWidget):
             cursor.movePosition(QtGui.QTextCursor.Left, n=offset)
             self._complete_with_items(cursor, matches)
 
+# <done>
     def _handle_execute_reply(self, msg):
         """ Reimplemented to support prompt requests.
         """
@@ -207,6 +208,7 @@ class JupyterWidget(IPythonWidget):
             self._request_info['execute'].pop(msg_id)
         else:
             super(JupyterWidget, self)._handle_execute_reply(msg)
+# </done>
 
     def _handle_history_reply(self, msg):
         """ Implemented to handle history tail replies, which are only supported
@@ -292,7 +294,6 @@ class JupyterWidget(IPythonWidget):
                 self._append_plain_text(text, True)
             # This newline seems to be needed for text and html output.
             self._append_plain_text(u'\n', True)
-# </done>
 
     def _handle_kernel_info_reply(self, rep):
         """Handle kernel info replies."""
@@ -311,7 +312,8 @@ class JupyterWidget(IPythonWidget):
         self.kernel_client.kernel_info()
 
         self.kernel_client.history(hist_access_type='tail', n=1000)
-    
+# </done>
+
 
     #---------------------------------------------------------------------------
     # 'FrontendWidget' protected interface
@@ -564,10 +566,10 @@ class JupyterWidget(IPythonWidget):
             self._highlighter.set_style_sheet(self.style_sheet)
 
     #------ Trait default initializers -----------------------------------------
-# </done>
 
     def _banner_default(self):
         return "Jupyter QtConsole {version}\n".format(version=__version__)
+# </done>
 
 
 # clobber IPythonWidget above:

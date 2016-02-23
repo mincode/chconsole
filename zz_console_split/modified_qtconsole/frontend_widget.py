@@ -623,11 +623,13 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         elif state == 'busy':
             pass
 
+# <done>
     def _started_channels(self):
         """ Called when the KernelManager channels have started listening or
             when the frontend is assigned an already listening KernelManager.
         """
         self.reset(clear=True)
+# </done>
 
     #---------------------------------------------------------------------------
     # 'FrontendWidget' public interface

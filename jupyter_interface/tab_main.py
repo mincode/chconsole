@@ -73,6 +73,18 @@ def tab_main_template(edit_class):
             layout.setContentsMargins(0, 0, 0, 0)
             layout.addWidget(self.main_content)
 
+        def _started_channels(self):
+            """Make a history request and load %guiref, if possible."""
+            # 1) send clear
+            ansi_clear = {'header': {'msg_type': 'stream'}, 'content': {'text': '\x0c\n', 'name': 'stdout'}}
+            self.message_arrived.emit(KernelMessage(ansi_clear))
+            # 2) send kernel info request
+            # The reply will trigger %guiref load provided language=='python' (not implemented)
+            # The following kernel request is masked because the kernel automatically sends the info on startup
+            # self.kernel_client.kernel_info()
+            # 3) load history
+            self.kernel_client.history(hist_access_type='tail', n=1000)
+
         def _dispatch(self, msg):
             """
             Store incoming message in a queue.

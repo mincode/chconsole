@@ -1,7 +1,8 @@
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from .relay_item import RelayItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested, InText, ExecuteResult
+from .relay_item import RelayItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested, \
+    InText, ExecuteResult, Banner
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -39,14 +40,14 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
         self.please_process.emit(Stream(content['text'], name=content['name']))
 
     def _handle_kernel_info_reply(self, msg):
-        self.please_process.emit(Stream(msg.content['banner'], clearable=False))
+        to_show = msg.content['banner']
         help_links = msg.content['help_links']
         if help_links:
-            to_show = '\nHelp Links'
+            to_show += '\nHelp Links'
             for helper in help_links:
                 to_show += '\n' + helper['text'] + ': ' + helper['url']
             to_show += '\n'
-            self.please_process.emit(Stream(to_show, clearable=False))
+            self.please_process.emit(Banner(to_show))
 
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""
@@ -90,6 +91,8 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
             self._process_execute_abort(msg)
         # MM: FrontendWidget also has an option for 'silent_exec_callback' which does not seem to be used
         # Therefore it is not implemented here.
+        # JupyterWidget also handles prompt requests, to show the current prompt in the input area. Since we
+        # are not using prompts, this is not implemented.
 
     # FrontendWidget
     def _process_execute_ok(self, msg):

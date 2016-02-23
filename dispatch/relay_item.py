@@ -91,6 +91,17 @@ class Stream(OutText):
         self.ansi_codes = ansi_codes
 
 
+class Banner(Stream):
+    def __init__(self, text='', head=True, empty=False, ansi_codes=True):
+        super(Banner, self).__init__(text=text, name='stdout', clearable=False, head=head, empty=empty,
+                                     ansi_codes=ansi_codes)
+
+    @property
+    def stream(self):
+        return Stream(text=self.text, name='stdout', clearable=self.clearable, head=self.head, empty=self.empty,
+                      ansi_codes=self.ansi_codes)
+
+
 class PageDoc(Stream):
     html = ''  # html version of text if available
 

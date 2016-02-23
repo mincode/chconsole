@@ -5,9 +5,10 @@ from traitlets import Integer, Unicode
 from qtconsole.qt import QtCore, QtGui
 from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.rich_text import HtmlExporter
-from dispatch.relay_item import RelayItem, Stream, Input, ClearOutput, ExecuteResult
+from dispatch.relay_item import RelayItem, Stream, Input, ClearOutput, ExecuteResult, Banner
 from dispatch.outbuffer import OutBuffer
 from ui.text_config import TextConfig
+from _version import __version__
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -76,6 +77,13 @@ def _(item, receiver):
         receiver.data_stream_end = cursor if item.clearable else None
     else:
         receiver.data_stream_end = None
+
+
+@_receive.register(Banner)
+def _(item, receiver):
+    stream = item.stream
+    stream.text = receiver.banner + stream.text
+    _receive(stream, receiver)
 
 
 @_receive.register(Input)
@@ -153,6 +161,9 @@ def receiver_template(edit_class):
         output_sep = Unicode(default_output_sep, config=True)  # to be included before an execute result
         output_sep2 = Unicode(default_output_sep2, config=True)  # to be included after an execute result
 
+        # The text to show when the kernel is (re)started; before the default kernel banner is shown.
+        banner = Unicode(config=True)
+
         def __init__(self, text='', parent=None, **kwargs):
             """
             Initialize.
@@ -203,6 +214,9 @@ def receiver_template(edit_class):
             action.triggered.connect(self.selectAll)
             self.addAction(action)
             self.select_all_action = action
+
+        def _banner_default(self):
+            return "Chat Console {version}\n".format(version=__version__)
 
         def _print_doc(self, printer=None):
             """ Print the contents of the ConsoleWidget to the specified QPrinter.
