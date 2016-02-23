@@ -5,7 +5,7 @@ from traitlets import Integer, Unicode
 from qtconsole.qt import QtCore, QtGui
 from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.rich_text import HtmlExporter
-from dispatch.relay_item import RelayItem, Stream, Input, ClearOutput
+from dispatch.relay_item import RelayItem, Stream, Input, ClearOutput, ExecuteResult
 from dispatch.outbuffer import OutBuffer
 from ui.text_config import TextConfig
 
@@ -13,12 +13,15 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
 default_in_prompt = 'In [<span class="in-prompt-number">%i</span>]: '
+default_out_prompt = 'Out[<span class="out-prompt-number">%i</span>]: '
+default_output_sep = ''
+default_output_sep2 = ''
 
 
+# JupyterWidget
 def _make_in_prompt(prompt_template, number=None):
     """ Given a prompt number, returns an HTML In prompt.
     """
-    #from qtconsole.jupyter_widget
     try:
         body = prompt_template % number
     except TypeError:
@@ -26,6 +29,19 @@ def _make_in_prompt(prompt_template, number=None):
         from xml.sax.saxutils import escape
         body = escape(prompt_template)
     return '<span class="in-prompt">%s</span>' % body
+
+
+# JupyterWidget
+def _make_out_prompt(prompt_template, number):
+    """ Given a prompt number, returns an HTML Out prompt.
+    """
+    try:
+        body = prompt_template % number
+    except TypeError:
+        # allow out_prompt to leave out number, e.g. '<<< '
+        from xml.sax.saxutils import escape
+        body = escape(prompt_template)
+    return '<span class="out-prompt">%s</span>' % body
 
 
 def clear_to_beginning_of_line(cursor):
@@ -50,8 +66,8 @@ def _receive(item, receiver):
 def _(item, receiver):
     if receiver.data_stream_end:
         receiver.setTextCursor(receiver.data_stream_end)
-    receiver.ansi_processor.reset_sgr()
     receiver.insert_ansi_text(item.text, item.ansi_codes)
+    receiver.ansi_processor.reset_sgr()
     cursor = receiver.textCursor()
     if item.clearable:
         if item.text[-1] == '\n':
@@ -67,10 +83,22 @@ def _(item, receiver):
     receiver.data_stream_end = None
     receiver.insertPlainText('\n')
     receiver.insert_html(_make_in_prompt(receiver.in_prompt, item.execution_count))
-    receiver.ansi_processor.reset_sgr()
     receiver.insert_ansi_text(item.code, item.ansi_codes)
+    receiver.ansi_processor.reset_sgr()
     if item.code[-1] != '\n':
         receiver.insertPlainText('\n')
+
+
+@_receive.register(ExecuteResult)
+def _(item, receiver):
+    receiver.data_stream_end = None
+    receiver.insertPlainText(receiver.output_sep)
+    receiver.insert_html(_make_out_prompt(receiver.out_prompt, item.execution_count))
+    # JupyterWidget: If the repr is multiline, make sure we start on a new line,
+    # so that its lines are aligned.
+    if "\n" in item.text and not receiver.output_sep.endswith("\n"):
+        receiver.insertPlainText('\n')
+    receiver.insertPlainText(item.text + receiver.output_sep2)
 
 
 @_receive.register(ClearOutput)
@@ -97,6 +125,7 @@ def receiver_template(edit_class):
             Specifying a non-positive number disables truncation (not recommended).
             """)
         in_prompt = Unicode(default_in_prompt, config=True)
+        out_prompt = Unicode(default_out_prompt, config=True)
 
         output_q = None  # Queue
         _flush = None  # Flush
@@ -120,6 +149,9 @@ def receiver_template(edit_class):
         print_action = None  # action for printing
         export_action = None  # action for exporting
         select_all_action = None  # action for selecting all
+
+        output_sep = Unicode(default_output_sep, config=True)  # to be included before an execute result
+        output_sep2 = Unicode(default_output_sep2, config=True)  # to be included after an execute result
 
         def __init__(self, text='', parent=None, **kwargs):
             """

@@ -100,23 +100,35 @@ class PageDoc(Stream):
         self.html = html
 
 
-class Input(OutText):
+class ExecuteText(OutText):
     execution_count = 0  # int
 
     def __init__(self, text='', execution_count=0, head=True, empty=False, ansi_codes=True):
-        super(Input, self).__init__(text=text, head=head, empty=empty)
+        super(ExecuteText, self).__init__(text=text, head=head, empty=empty)
         self.execution_count = execution_count
         self.ansi_codes = ansi_codes
+
+    def split(self, num_lines):
+        count, first, rest = super(ExecuteText, self).split(num_lines)
+        first.execution_count = self.execution_count
+        rest.execution_count = self.execution_count
+        return count, first, rest
+
+
+class Input(ExecuteText):
+    def __init__(self, text='', execution_count=0, head=True, empty=False, ansi_codes=True):
+        super(Input, self).__init__(
+            text=text, execution_count=execution_count, head=head, empty=empty, ansi_codes=ansi_codes)
 
     @property
     def code(self):
         return self.text
 
-    def split(self, num_lines):
-        count, first, rest = super(Input, self).split(num_lines)
-        first.execution_count = self.execution_count
-        rest.execution_count = self.execution_count
-        return count, first, rest
+
+class ExecuteResult(ExecuteText):
+    def __init__(self, text='', execution_count=0, head=True, empty=False, ansi_codes=False):
+        super(ExecuteResult, self).__init__(
+            text=text, execution_count=execution_count, head=head, empty=empty, ansi_codes=ansi_codes)
 
 
 class EditFile(RelayItem):

@@ -1,7 +1,7 @@
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from .relay_item import RelayItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested, InText
+from .relay_item import RelayItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested, InText, ExecuteResult
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -42,10 +42,11 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
         self.please_process.emit(Stream(msg.content['banner'], clearable=False))
         help_links = msg.content['help_links']
         if help_links:
-            self.please_process.emit(Stream('\nHelp Links', clearable=False))
+            to_show = '\nHelp Links'
             for helper in help_links:
-                self.please_process.emit(Stream('\n' + helper['text'] + ': ' + helper['url'], clearable=False))
-            self.please_process.emit(Stream('\n', clearable=False))
+                to_show += '\n' + helper['text'] + ': ' + helper['url']
+            to_show += '\n'
+            self.please_process.emit(Stream(to_show, clearable=False))
 
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""
@@ -53,6 +54,14 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
         self.log.debug("execute_input: %s", content)
 
         self.please_process.emit(Input(content['code'], execution_count=content['execution_count']))
+
+    def _handle_execute_result(self, msg):
+        """Handle an execute_result message"""
+        content = msg.content
+        prompt_number = content.get('execution_count', 0)
+        data = content['data']
+        if 'text/plain' in data:
+            self.please_process.emit(ExecuteResult(data['text/plain'], execution_count=prompt_number))
 
     def _handle_clear_output(self, msg):
         # {'header': {'msg_type': 'clear_output'}, 'content': {'wait': False}}

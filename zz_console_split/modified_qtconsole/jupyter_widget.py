@@ -34,11 +34,13 @@ from qtconsole import styles
 
 # <done>
 default_in_prompt = 'In [<span class="in-prompt-number">%i</span>]: '
-# </done>
 default_out_prompt = 'Out[<span class="out-prompt-number">%i</span>]: '
+# </done>
 default_input_sep = '\n'
+# <done>
 default_output_sep = ''
 default_output_sep2 = ''
+# </done>
 
 # Base path for most payload sources.
 zmq_shell_source = 'ipykernel.zmqshell.ZMQInteractiveShell'
@@ -104,11 +106,13 @@ class JupyterWidget(IPythonWidget):
 
 # <done>
     in_prompt = Unicode(default_in_prompt, config=True)
-# </done>
     out_prompt = Unicode(default_out_prompt, config=True)
+# </done>
     input_sep = Unicode(default_input_sep, config=True)
+# <done>
     output_sep = Unicode(default_output_sep, config=True)
     output_sep2 = Unicode(default_output_sep2, config=True)
+# </done>
 
     # JupyterWidget protected class variables.
     _PromptBlock = namedtuple('_PromptBlock', ['block', 'length', 'number'])
@@ -254,7 +258,6 @@ class JupyterWidget(IPythonWidget):
         self.log.debug("execute_input: %s", msg.get('content', ''))
         if self.include_output(msg):
             self._append_custom(self._insert_other_input, msg['content'], before_prompt=True)
-# </done>
     
     def _handle_execute_result(self, msg):
         """Handle an execute_result message"""
@@ -273,7 +276,6 @@ class JupyterWidget(IPythonWidget):
                     self._append_plain_text('\n', True)
                 self._append_plain_text(text + self.output_sep2, True)
 
-# <done>
     def _handle_display_data(self, msg):
         """The base handler for the ``display_data`` message."""
         # For now, we don't display data from other frontends, but we
@@ -498,6 +500,7 @@ class JupyterWidget(IPythonWidget):
         body = '&nbsp;' * space_count + end_chars
         return '<span class="in-prompt">%s</span>' % body
 
+# <done>
     def _make_out_prompt(self, number):
         """ Given a prompt number, returns an HTML Out prompt.
         """
@@ -509,7 +512,6 @@ class JupyterWidget(IPythonWidget):
             body = escape(self.out_prompt)
         return '<span class="out-prompt">%s</span>' % body
 
-# <done>
     #------ Payload handlers --------------------------------------------------
 
     # Payload handlers with a generic interface: each takes the opaque payload
