@@ -2,8 +2,8 @@ from traitlets import Unicode
 from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.qt import QtGui, QtCore
 from .text_config import TextConfig
-from .base_event_filter import ViewportFilter, TextAreaFilter
-from .pager_event_filter import PagerFilter
+from .standard_filters import ViewportFilter, TextAreaFilter
+from .pager_filter import PagerFilter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -22,6 +22,7 @@ def pager_template(edit_class):
         viewport_filter = None
         pager_filter = None
         text_area_filter = None
+        release_focus = QtCore.Signal()
 
         def __init__(self, locations, initial_location, text='', parent=None, **kwargs):
             """

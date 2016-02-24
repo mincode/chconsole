@@ -9,6 +9,8 @@ from dispatch.relay_item import RelayItem, Stream, Input, ClearOutput, ExecuteRe
 from dispatch.outbuffer import OutBuffer
 from ui.text_config import TextConfig
 from _version import __version__
+from .standard_filters import ViewportFilter, TextAreaFilter
+from .receiver_filter import ReceiverFilter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -180,6 +182,11 @@ def receiver_template(edit_class):
         # The text to show when the kernel is (re)started; before the default kernel banner is shown.
         banner = Unicode(config=True)
 
+        viewport_filter = None
+        receiver_filter = None
+        text_area_filter = None
+        release_focus = QtCore.Signal()
+
         def __init__(self, text='', parent=None, **kwargs):
             """
             Initialize.
@@ -230,6 +237,15 @@ def receiver_template(edit_class):
             action.triggered.connect(self.selectAll)
             self.addAction(action)
             self.select_all_action = action
+
+            self.setAcceptDrops(True)
+
+            self.viewport_filter = ViewportFilter(self)
+            self.viewport().installEventFilter(self.viewport_filter)
+            self.receiver_filter = ReceiverFilter(self)
+            self.installEventFilter(self.receiver_filter)
+            self.text_area_filter = TextAreaFilter(self)
+            self.installEventFilter(self.text_area_filter)
 
         def _banner_default(self):
             return "Chat Console {version}\n".format(version=__version__)

@@ -11,7 +11,6 @@ from dispatch.relay_item import RelayItem, PageDoc, EditFile, Stream, ExitReques
 from .entry import entry_template
 from .pager import pager_template
 from .receiver import receiver_template
-from .pager_event_filter import TabContentFilter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -164,8 +163,8 @@ def tab_content_template(edit_class):
             self._relay.please_process.connect(self.post)
             self.message_arrived.connect(self._relay.dispatch)
 
-            self.tab_content_filter = TabContentFilter(self)
-            self.installEventFilter(self.tab_content_filter)
+            self.pager.release_focus.connect(self.entry.set_focus)
+            self.receiver.release_focus.connect(self.entry.set_focus)
 
         def clear(self):
             self.receiver.clear()

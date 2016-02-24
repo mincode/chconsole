@@ -70,6 +70,10 @@ def entry_template(edit_class):
             self.clear()
             self.insertPlainText(item.text)
 
+        @QtCore.Slot()
+        def set_focus(self):
+            self.setFocus()
+
         # traitlets handlers
         def _code_changed(self, name=None, old=None, new=None):
             """

@@ -406,6 +406,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
                 text = e.mimeData().text()
                 self._insert_plain_text_into_buffer(cursor, text)
 
+# <done>
     def eventFilter(self, obj, event):
         """ Reimplemented to ensure a console-like behavior in the underlying
             text widgets.
@@ -453,7 +454,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
                 event.key() in self._shortcuts:
             event.accept()
 
-# <done>
         # Handle scrolling of the vsplit pager. This hack attempts to solve
         # problems with tearing of the help text inside the pager window.  This
         # happens only on Mac OS X with both PySide and PyQt. This fix isn't
@@ -1077,14 +1077,12 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             return bool(down) ^ bool(modifiers & QtCore.Qt.MetaModifier)
         else:
             return bool(modifiers & QtCore.Qt.ControlModifier)
-# </done>
 
     def _create_control(self):
         """ Creates and connects the underlying text widget.
         """
         # Create the underlying control.
 
-# <done>
         if self.custom_control:
             control = self.custom_control()
         elif self.kind == 'plain':
@@ -1093,7 +1091,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             control = QtGui.QTextEdit()
             control.setAcceptRichText(False)
             control.setMouseTracking(True)
-# </done>
 
         # Prevent the widget from handling drops, as we already provide
         # the logic in this class.
@@ -1103,6 +1100,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         # mouse events.
         control.installEventFilter(self)
         control.viewport().installEventFilter(self)
+# </done>
 
         # Connect signals.
         control.customContextMenuRequested.connect(
@@ -1119,7 +1117,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         layout = control.document().documentLayout()
         layout.documentSizeChanged.disconnect()
         layout.documentSizeChanged.connect(self._adjust_scrollbars)
-# </done>
 
         # Configure the control.
         control.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
@@ -1145,6 +1142,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         control.setUndoRedoEnabled(False)
         control.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         return control
+# </done>
 
     def _event_filter_console_keypress(self, event):
         """ Filter key events for the underlying text widget to create a
@@ -1579,7 +1577,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         cursor.movePosition(QtGui.QTextCursor.EndOfBlock,
                             QtGui.QTextCursor.KeepAnchor)
         return cursor.selection().toPlainText()
-# </done>
 
     def _get_cursor(self):
         """ Convenience method that returns a cursor for the current position.
@@ -1592,6 +1589,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         cursor = self._control.textCursor()
         cursor.movePosition(QtGui.QTextCursor.End)
         return cursor
+# </done>
 
     def _get_input_buffer_cursor_column(self):
         """ Returns the column of the cursor in the input buffer, excluding the
@@ -1695,6 +1693,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         cursor.setPosition(end, QtGui.QTextCursor.KeepAnchor)
         return cursor
 
+# <done>
     def _get_word_start_cursor(self, position):
         """ Find the start of the word to the left the given position. If a
             sequence of non-word characters precedes the first word, skip over
@@ -1728,6 +1727,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         cursor = self._control.textCursor()
         cursor.setPosition(position)
         return cursor
+# </done>
 
     def _insert_continuation_prompt(self, cursor):
         """ Inserts new continuation prompt using the specified cursor.
@@ -2082,12 +2082,12 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             self._continuation_prompt = prompt
             self._continuation_prompt_html = None
 
+# <done>
     def _set_cursor(self, cursor):
         """ Convenience method to set the current cursor.
         """
         self._control.setTextCursor(cursor)
 
-# <done>
     def _set_top_cursor(self, cursor):
         """ Scrolls the viewport so that the specified cursor is at the top.
         """

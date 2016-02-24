@@ -1,4 +1,5 @@
 import sys
+from unicodedata import category
 from traitlets.config.configurable import LoggingConfigurable
 from traitlets import Integer, Unicode, Instance, DottedObjectName, Any, Float
 from ipython_genutils import py3compat
@@ -10,6 +11,14 @@ from qtconsole import styles
 from qtconsole.pygments_highlighter import PygmentsHighlighter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
+
+
+# ConsoleWdidget
+def is_letter_or_number(char):
+    """ Returns whether the specified unicode character is a letter or a number.
+    """
+    cat = category(char)
+    return cat.startswith('L') or cat.startswith('N')
 
 
 # adopted from ConsoleWidget
@@ -153,7 +162,7 @@ class TextConfig(LoggingConfigurable):
 
         self.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.setReadOnly(True)
+        self.setReadOnly(False)
         self.setUndoRedoEnabled(False)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
 
@@ -465,3 +474,39 @@ class TextConfig(LoggingConfigurable):
             cursor.movePosition(QtGui.QTextCursor.Right)
         cursor.insertText(' ', QtGui.QTextCharFormat())
         cursor.endEditBlock()
+
+    # ConsoleWdiget
+    @property
+    def word_start_cursor(self):
+        """ Start of the word to the left of the current text cursor. If a
+            sequence of non-word characters precedes the first word, skip over
+            them. (This emulates the behavior of bash, emacs, etc.)
+        """
+        cursor = self.textCursor()
+        position = cursor.position()
+        position -= 1
+        while position >= 0 and not is_letter_or_number(self.document().characterAt(position)):
+            position -= 1
+        while position >= 0 and is_letter_or_number(self.document().characterAt(position)):
+            position -= 1
+        cursor.setPosition(position + 1)
+        return cursor
+
+    # ConsoleWidget
+    @property
+    def word_end_cursor(self):
+        """ End of the word to the right the current text cursor. If a
+            sequence of non-word characters precedes the first word, skip over
+            them. (This emulates the behavior of bash, emacs, etc.)
+        """
+        cursor = self.textCursor()
+        position = cursor.position()
+        cursor.movePosition(QtGui.QTextCursor.End)
+        end = cursor.position()
+        while position < end and not is_letter_or_number(self.document().characterAt(position)):
+            position += 1
+        while position < end and is_letter_or_number(self.document().characterAt(position)):
+            position += 1
+        cursor = self.textCursor()
+        cursor.setPosition(position)
+        return cursor
