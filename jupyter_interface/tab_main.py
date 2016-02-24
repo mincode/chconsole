@@ -56,6 +56,8 @@ def tab_main_template(edit_class):
         exit_requested = QtCore.Signal(object)  # signal to be sent when exit is requested through the kernel
                                                 # emits itself as an argument to the signal
 
+        confirm_restart = Bool(True, config=True, help="Whether to ask for user confirmation when restarting kernel")
+
         def __init__(self, parent=None, **kw):
             """
             Initialize the main widget.
@@ -77,7 +79,7 @@ def tab_main_template(edit_class):
             """Make a history request and load %guiref, if possible."""
             # 1) send clear
             ansi_clear = {'header': {'msg_type': 'stream'}, 'content': {'text': '\x0c\n', 'name': 'stdout'}}
-            self.message_arrived.emit(KernelMessage(ansi_clear))
+            self.message_arrived.emit(KernelMessage(ansi_clear, from_here=True))
             # 2) send kernel info request
             # The reply will trigger %guiref load provided language=='python' (not implemented)
             # The following kernel request is masked because the kernel automatically sends the info on startup
@@ -92,6 +94,71 @@ def tab_main_template(edit_class):
             :return:
             """
             self.message_arrived.emit(KernelMessage(msg, self.from_here(msg)))
+
+        # FrontendWidget
+        def _restart_kernel(self, message, now=False):
+            """ Attempts to restart the running kernel.
+            """
+            # FrontendWidget:
+            # FIXME: now should be configurable via a checkbox in the dialog.  Right
+            # now at least the heartbeat path sets it to True and the manual restart
+            # to False.  But those should just be the pre-selected states of a
+            # checkbox that the user could override if so desired.  But I don't know
+            # enough Qt to go implementing the checkbox now.
+
+            if self.kernel_manager:
+                # Pause the heart beat channel to prevent further warnings.
+                self.kernel_client.hb_channel.pause()
+
+                # Prompt the user to restart the kernel. Un-pause the heartbeat if
+                # they decline. (If they accept, the heartbeat will be un-paused
+                # automatically when the kernel is restarted.)
+                if self.confirm_restart:
+                    buttons = QtGui.QMessageBox.Yes | QtGui.QMessageBox.No
+                    result = QtGui.QMessageBox.question(self, 'Restart kernel?',
+                                                        message, buttons)
+                    do_restart = result == QtGui.QMessageBox.Yes
+                else:
+                    # confirm_restart is False, so we don't need to ask user
+                    # anything, just do the restart
+                    do_restart = True
+                if do_restart:
+                    try:
+                        self.kernel_manager.restart_kernel(now=now)
+                    except RuntimeError as e:
+                        text = 'Error restarting kernel: %s' % e
+                        msg = {'header': {'msg_type': 'stream'}, 'content': {'text': text, 'name': 'stderr'}}
+                        self.message_arrived.emit(KernelMessage(msg, from_here=True))
+                    else:
+                        text = '\nRestarting kernel...\n\n'
+                        msg = {'header': {'msg_type': 'stream'}, 'content': {'text': text, 'name': 'stderr'}}
+                        self.message_arrived.emit(KernelMessage(msg, from_here=True))
+                else:
+                    self.kernel_client.hb_channel.unpause()
+
+            else:
+                text = 'Cannot restart a Kernel I did not start'
+                msg = {'header': {'msg_type': 'stream'}, 'content': {'text': text, 'name': 'stderr'}}
+                self.message_arrived.emit(KernelMessage(msg, from_here=True))
+
+        # FrontendWidget
+        def request_restart_kernel(self):
+            message = 'Are you sure you want to restart the kernel?'
+            self._restart_kernel(message, now=False)
+
+        def interrupt_kernel(self):
+            """ Attempts to interrupt the running kernel.
+            """
+            if self.kernel_manager:
+                self.kernel_manager.interrupt_kernel()
+            else:
+                text = 'Cannot interrupt a kernel I did not start'
+                msg = {'header': {'msg_type': 'stream'}, 'content': {'text': text, 'name': 'stderr'}}
+                self.message_arrived.emit(KernelMessage(msg, from_here=True))
+
+        # FrontendWidget
+        def request_interrupt_kernel(self):
+            self.interrupt_kernel()
 
         @QtCore.Slot(bool)
         def _on_exit_request(self, keep_kernel_on_exit):

@@ -136,10 +136,10 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     clear_on_kernel_restart = Bool(True, config=True,
         help="Whether to clear the console when the kernel is restarted")
 
+# <done>
     confirm_restart = Bool(True, config=True,
         help="Whether to ask for user confirmation when restarting kernel")
 
-# <done>
     lexer_class = DottedObjectName(config=True,
         help="The pygments lexer class to use."
     )
@@ -352,6 +352,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
                 break
         return menu
 
+# <done>
     def request_interrupt_kernel(self):
         if self._executing:
             self.interrupt_kernel()
@@ -359,6 +360,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     def request_restart_kernel(self):
         message = 'Are you sure you want to restart the kernel?'
         self.restart_kernel(message, now=False)
+# </done>
 
     def _event_filter_console_keypress(self, event):
         """ Reimplemented for execution interruption and smart backspace.
@@ -641,6 +643,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         """
         self._control.copy()
 
+# <done>
     def interrupt_kernel(self):
         """ Attempts to interrupt the running kernel.
         
@@ -655,6 +658,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
             self.kernel_manager.interrupt_kernel()
         else:
             self._append_plain_text('Cannot interrupt a kernel I did not start.\n')
+# </done>
 
     def reset(self, clear=False):
         """ Resets the widget to its initial state if ``clear`` parameter
@@ -682,6 +686,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         self._append_before_prompt_pos = self._get_cursor().position()
         self._show_interpreter_prompt()
 
+# <done>
     def restart_kernel(self, message, now=False):
         """ Attempts to restart the running kernel.
         """
@@ -731,6 +736,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
                 'Cannot restart a Kernel I did not start\n',
                 before_prompt=True
             )
+# </done>
 
     def append_stream(self, text):
         """Appends text to the output stream."""

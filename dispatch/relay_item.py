@@ -102,6 +102,12 @@ class Banner(Stream):
                       ansi_codes=self.ansi_codes)
 
 
+class HtmlStream(Stream):
+    def __init__(self, text='', name='stdout', clearable=True, head=True, empty=False):
+        super(HtmlStream, self).__init__(text=text, name=name, clearable=clearable, head=head, empty=empty,
+                                         ansi_codes=False)
+
+
 class PageDoc(Stream):
     html = ''  # html version of text if available
 
@@ -109,6 +115,15 @@ class PageDoc(Stream):
         super(PageDoc, self).__init__(
             text=text, name='stdout', clearable=False, head=head, empty=empty, ansi_codes=ansi_codes)
         self.html = html
+
+    @property
+    def text_stream(self):
+        return Stream(text=self.text, name=self.name, clearable=self.clearable, head=self.head, empty=self.empty,
+                      ansi_codes=self.ansi_codes)
+
+    @property
+    def html_stream(self):
+        return HtmlStream(text=self.html, name=self.name, clearable=self.clearable, head=self.html, empty=self.empty)
 
 
 class ExecuteText(OutText):

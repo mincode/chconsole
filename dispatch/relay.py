@@ -23,10 +23,10 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
         LoggingConfigurable.__init__(self, **kwargs)
 
         self._payload_handlers = {
-            self._payload_source_edit : self._handle_payload_edit,
-            self._payload_source_exit : self._handle_payload_exit,
-            self._payload_source_page : self._handle_payload_page,
-            self._payload_source_next_input : self._handle_payload_next_input }
+            self._payload_source_edit: self._handle_payload_edit,
+            self._payload_source_exit: self._handle_payload_exit,
+            self._payload_source_page: self._handle_payload_page,
+            self._payload_source_next_input: self._handle_payload_next_input}
 
     def dispatch(self, msg):
         print('dispatch: ' + msg.type)

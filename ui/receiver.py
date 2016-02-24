@@ -5,7 +5,7 @@ from traitlets import Integer, Unicode
 from qtconsole.qt import QtCore, QtGui
 from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.rich_text import HtmlExporter
-from dispatch.relay_item import RelayItem, Stream, Input, ClearOutput, ExecuteResult, Banner
+from dispatch.relay_item import RelayItem, Stream, Input, ClearOutput, ExecuteResult, Banner, PageDoc, HtmlStream
 from dispatch.outbuffer import OutBuffer
 from ui.text_config import TextConfig
 from _version import __version__
@@ -69,18 +69,34 @@ def _(item, receiver):
         receiver.setTextCursor(receiver.data_stream_end)
     receiver.insert_ansi_text(item.text, item.ansi_codes)
     receiver.ansi_processor.reset_sgr()
-    cursor = receiver.textCursor()
     if item.clearable:
+        cursor = receiver.textCursor()
         if item.text[-1] == '\n':
             cursor.movePosition(QtGui.QTextCursor.Up)
             cursor.movePosition(QtGui.QTextCursor.EndOfLine)
-        receiver.data_stream_end = cursor if item.clearable else None
+        receiver.data_stream_end = cursor
     else:
         receiver.data_stream_end = None
 
 
+@_receive.register(HtmlStream)
+def _(item, receiver):
+    receiver.insert_html(item.text)
+    receiver.data_stream_end = receiver.textCursor() if item.clearable else None
+
+
+@_receive.register(PageDoc)
+def _(item, receiver):
+    receiver.data_stream_end = None
+    if hasattr(receiver, 'insertHtml') and item.html != '':
+        _receive(item.html_stream, receiver)
+    else:
+        _receive(item.text_stream, receiver)
+
+
 @_receive.register(Banner)
 def _(item, receiver):
+    receiver.data_stream_end = None
     stream = item.stream
     stream.text = receiver.banner + stream.text
     _receive(stream, receiver)
