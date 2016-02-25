@@ -61,7 +61,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         non-positive number disables text truncation (not recommended).
         """
     )
-# </done>
     execute_on_complete_input = Bool(True, config=True,
         help="""Whether to automatically execute on syntactically complete input.
         
@@ -85,7 +84,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
                     """
     )
 
-# <done>
     # NOTE: this value can only be specified during initialization.
     kind = Enum(['plain', 'rich'], default_value='plain', config=True,
         help="""
@@ -254,6 +252,8 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         # Initialize protected variables. Some variables contain useful state
         # information for subclasses; they should be considered read-only.
         self._append_before_prompt_pos = 0
+
+# <done>
         self._ansi_processor = QtAnsiCodeProcessor()
         if self.gui_completion == 'ncurses':
             self._completion_widget = CompletionHtml(self)
@@ -261,6 +261,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             self._completion_widget = CompletionWidget(self)
         elif self.gui_completion == 'plain':
             self._completion_widget = CompletionPlain(self)
+# </done>
 
         self._continuation_prompt = '> '
         self._continuation_prompt_html = None
@@ -570,6 +571,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         if self.can_cut():
             self._control.textCursor().removeSelectedText()
 
+# <done>
     def execute(self, source=None, hidden=False, interactive=False):
         """ Executes source or the input buffer, possibly prompting for more
         input.
@@ -664,6 +666,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
                 self._control.moveCursor(QtGui.QTextCursor.End)
 
         return complete
+# </done>
 
     def export_html(self):
         """ Shows a dialog to export HTML/XML in various formats.
@@ -950,10 +953,12 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         """
         self._append_custom(self._insert_plain_text, text, before_prompt)
 
+# <done>
     def _cancel_completion(self):
         """ If text completion is progress, cancel it.
         """
         self._completion_widget.cancel_completion()
+# </done>
 
     def _clear_temporary_buffer(self):
         """ Clears the "temporary text" buffer, i.e. all the text following
@@ -1142,7 +1147,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         control.setUndoRedoEnabled(False)
         control.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         return control
-# </done>
 
     def _event_filter_console_keypress(self, event):
         """ Filter key events for the underlying text widget to create a
@@ -1451,7 +1455,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
 
         return intercepted
 
-# <done>
     def _event_filter_page_keypress(self, event):
         """ Filter key events for the paging widget to create console-like
             interface.

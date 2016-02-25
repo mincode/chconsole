@@ -322,6 +322,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         if not self._reading:
             self._highlighter.highlighting_on = False
 
+# <done>
     def _tab_pressed(self):
         """ Called when the tab key is pressed. Returns whether to continue
             processing the event.
@@ -336,6 +337,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         if complete:
             self._complete()
         return not complete
+# </done>
 
     #---------------------------------------------------------------------------
     # 'ConsoleWidget' protected interface
@@ -360,7 +362,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     def request_restart_kernel(self):
         message = 'Are you sure you want to restart the kernel?'
         self.restart_kernel(message, now=False)
-# </done>
 
     def _event_filter_console_keypress(self, event):
         """ Reimplemented for execution interruption and smart backspace.
@@ -393,6 +394,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
                         return True
 
         return super(FrontendWidget, self)._event_filter_console_keypress(event)
+# </done>
 
     def _insert_continuation_prompt(self, cursor, indent=''):
         """ Reimplemented for auto-indentation.

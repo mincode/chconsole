@@ -1,7 +1,10 @@
+from traitlets import Bool, Enum
+from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from traitlets import Bool
-from traitlets.config.configurable import LoggingConfigurable
+from qtconsole.completion_html import CompletionHtml
+from qtconsole.completion_widget import CompletionWidget
+from qtconsole.completion_plain import CompletionPlain
 
 from dispatch.source import Source
 
@@ -10,6 +13,17 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 code_active_color = QtCore.Qt.black  # color used for widget's frame if in code mode
 chat_active_color = QtCore.Qt.red  # color used for the widget's frame if in chat mode
+
+
+def completer(who, kind):
+    if kind == 'ncurses':
+        return CompletionHtml(who)
+    elif kind == 'droplist':
+        return CompletionWidget(who)
+    elif kind == 'plain':
+        return CompletionPlain(who)
+    else:
+        return None
 
 
 def entry_template(edit_class):
@@ -24,6 +38,29 @@ def entry_template(edit_class):
         accepting code to be executed or arbitrary text (chat messages).
         """
         code = Bool(True)  # True if document contains code to be executed; rather than a chat message
+
+        gui_completion = Enum(['plain', 'droplist', 'ncurses'], config=True, default_value = 'ncurses',
+                             help="""
+                                The type of completer to use. Valid values are:
+
+                                'plain'   : Show the available completion as a text list
+                                            Below the editing area.
+                                'droplist': Show the completion in a drop down list navigable
+                                by the arrow keys, and from which you can select
+                                completion by pressing Return.
+                                'ncurses' : Show the completion as a text list which is navigable by
+                                `tab` and arrow keys.
+                                """)
+        _completer = None
+
+        execute_on_complete_input = Bool(True, config=True,
+            help="""Whether to automatically execute on syntactically complete input.
+
+            If False, Shift-Enter is required to submit each execution.
+            Disabling this is mainly useful for non-Python kernels,
+            where the completion check would be wrong.
+            """
+        )
 
         def __init__(self, code=True, text='', parent=None, **kwargs):
             """
@@ -44,6 +81,8 @@ def entry_template(edit_class):
                 self.update_code(code)
                 # will initiate change traitlets handler
             self.setAcceptDrops(True)
+
+            self.completer = completer(self, self.gui_completion)
 
         def update_code(self, code):
             """
