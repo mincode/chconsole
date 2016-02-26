@@ -268,6 +268,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     # 'ConsoleWidget' abstract interface
     #---------------------------------------------------------------------------
 
+# <done>
     def _is_complete(self, source, interactive):
         """ Returns whether 'source' can be completely processed and a new
             prompt created. When triggered by an Enter/Return key press,
@@ -296,6 +297,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
                 status = reply['content'].get('status', u'complete')
                 indent = reply['content'].get('indent', u'')
                 return status != 'incomplete', indent
+# </done>
 
     def _execute(self, source, hidden):
         """ Execute 'source'. If 'hidden', do not show any output.

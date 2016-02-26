@@ -5,8 +5,9 @@ from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.completion_html import CompletionHtml
 from qtconsole.completion_widget import CompletionWidget
 from qtconsole.completion_plain import CompletionPlain
-
 from dispatch.source import Source
+from .entry_filter import EntryFilter
+from .text_config import TextConfig, get_block_plain_text
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -26,18 +27,28 @@ def completer(who, kind):
         return None
 
 
+def to_complete(cursor):
+    """
+    Determine whether there is text before the cursor position that may be completed.
+    :param cursor: position.
+    :return: True if there is non-whitespace text immediately before the cursor.
+    """
+    text = get_block_plain_text(cursor.block())
+    return bool(text[:cursor.columnNumber()].strip())
+
+
 def entry_template(edit_class):
     """
     Template for Entry.
     :param edit_class: QTGui.QTextEdit or QtGui.QPlainTextEdit
     :return: Instantiated class.
     """
-    class Entry(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, edit_class), {})):
+    class Entry(MetaQObjectHasTraits('NewBase', (TextConfig, edit_class), {})):
         """
         Text edit that has two modes, code and chat mode,
         accepting code to be executed or arbitrary text (chat messages).
         """
-        code = Bool(True)  # True if document contains code to be executed; rather than a chat message
+        code_mode = Bool(True)  # True if document contains code to be executed; rather than a chat message
 
         gui_completion = Enum(['plain', 'droplist', 'ncurses'], config=True, default_value = 'ncurses',
                              help="""
@@ -62,35 +73,51 @@ def entry_template(edit_class):
             """
         )
 
-        def __init__(self, code=True, text='', parent=None, **kwargs):
+        is_complete = None  # function str->(bool, str) that checks whether the input is complete code
+        please_execute = QtCore.Signal()  # ask for execution of source
+
+        viewport_filter = None
+        entry_filter = None
+        text_area_filter = None
+        release_focus = QtCore.Signal()
+
+        def __init__(self, is_complete=None, code=True, text='', parent=None, **kwargs):
             """
             Initialize.
+            :param is_complete: function str->(bool, str) that checks whether the input is complete code
             :param code: True if object should initially expect code to be executed; otherwise arbitrary text.
             :param text: initial text.
             :param parent: parent widget.
+            :param kwargs: arguments for LoggingConfigurable
             :return:
             """
             edit_class.__init__(self, text, parent)
-            LoggingConfigurable.__init__(self, **kwargs)
+            TextConfig.__init__(self, **kwargs)
             self.setFrameStyle(QtGui.QFrame.Box | QtGui.QFrame.Plain)
             self.setLineWidth(2)
-            if self.code == code:
-                self._code_changed(new=self.code)
+            if self.code_mode == code:
+                self._code_changed(new=self.code_mode)
                 # ensure that the frame color is set, even without change traitlets handler
             else:
-                self.update_code(code)
+                self.update_code_mode(code)
                 # will initiate change traitlets handler
             self.setAcceptDrops(True)
 
+            self._control = self  # required for completer
+            self._clear_temporary_buffer = lambda: None
             self.completer = completer(self, self.gui_completion)
+            self.is_complete = is_complete
 
-        def update_code(self, code):
+            self.entry_filter = EntryFilter(self)
+            self.installEventFilter(self.entry_filter)
+
+        def update_code_mode(self, code_mode):
             """
             Update code flag that indicates whether coding mode is active.
-            :param code: to update code flag with.
+            :param code_mode: to update code flag with.
             :return:
             """
-            self.code = code
+            self.code_mode = code_mode
 
         @property
         def source(self):

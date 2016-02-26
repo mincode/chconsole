@@ -34,7 +34,7 @@ def _set_top_cursor(receiver, cursor):
 
 
 # ConsoleWidget
-def _get_block_plain_text(block):
+def get_block_plain_text(block):
     """ Given a QTextBlock, return its unformatted text.
     """
     cursor = QtGui.QTextCursor(block)
@@ -42,7 +42,6 @@ def _get_block_plain_text(block):
     cursor.movePosition(QtGui.QTextCursor.EndOfBlock,
                         QtGui.QTextCursor.KeepAnchor)
     return cursor.selection().toPlainText()
-
 
 # FrontendWidget
 class FrontendHighlighter(PygmentsHighlighter):
@@ -68,7 +67,7 @@ class FrontendHighlighter(PygmentsHighlighter):
         # paragraph break characters, non-breaking spaces, etc. Here we acquire
         # the string as plain text so we can compare it.
         current_block = self.currentBlock()
-        string = _get_block_plain_text(current_block)
+        string = get_block_plain_text(current_block)
 
 # Potentially handle prompt differently
         # # Decide whether to check for the regular or continuation prompt.

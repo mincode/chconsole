@@ -296,6 +296,7 @@ def receiver_template(edit_class):
             self.receive_time = stamp.elapsed()
             if self.timing_guard:
                 self.timing_guard.release()
+            self.ensureCursorVisible()
 
         def post(self, item):
             self.output_q.put(item)

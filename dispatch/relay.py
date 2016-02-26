@@ -139,7 +139,7 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
     # JupyterWidget
     def _process_execute_error(self, msg):
         """Handle an execute_error message"""
-        content = msg['content']
+        content = msg.content
         traceback = '\n'.join(content['traceback']) + '\n'
         if False:
             # FIXME: For now, tracebacks come as plain text, so we can't use

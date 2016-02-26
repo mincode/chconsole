@@ -32,7 +32,7 @@ class ExpandedMainWindow(mainwindow.MainWindow):
         active = self.active_frontend
         if self._entry_update_code:
             self.status_bar.code_toggled.disconnect(self._entry_update_code)
-        self._entry_update_code = active.main_content.entry.update_code
+        self._entry_update_code = active.main_content.entry.update_code_mode
 
         self.status_bar.code_toggled.connect(self._entry_update_code)
         self.status_bar.update_code(active.main_content.entry.code)

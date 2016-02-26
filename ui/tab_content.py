@@ -120,7 +120,13 @@ def tab_content_template(edit_class):
         # Signal when exit is requested
         exit_requested = QtCore.Signal(bool)
 
-        def __init__(self, **kwargs):
+        def __init__(self, is_complete, **kwargs):
+            """
+            Initialize
+            :param is_complete: function str->(bool, str) that checks whether the input is complete code
+            :param kwargs: arguments for LoggingConfigurable
+            :return:
+            """
             QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
             LoggingConfigurable.__init__(self, **kwargs)
             # Layout overview:
@@ -137,7 +143,8 @@ def tab_content_template(edit_class):
             self._console_area = QtGui.QSplitter(QtCore.Qt.Vertical)
             self._console_stack_layout.addWidget(self._console_area)
 
-            self.entry = entry_template(edit_class)()
+            self.entry = entry_template(edit_class)(is_complete=is_complete)
+            self.entry.please_execute.connect(self.on_send_clicked)
             self.receiver = receiver_template(edit_class)()
             self._console_area.addWidget(self.receiver)
             self._console_area.addWidget(self.entry)

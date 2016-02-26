@@ -1,11 +1,15 @@
 from traitlets.config.configurable import LoggingConfigurable
-from traitlets import Bool
+from traitlets import Bool, Float
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
 from qtconsole.util import MetaQObjectHasTraits
 from ui.tab_content import tab_content_template
 from dispatch.message import KernelMessage
 from dispatch.source import Source
+try:
+    from queue import Empty
+except ImportError:
+    from Queue import Empty
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -57,6 +61,7 @@ def tab_main_template(edit_class):
                                                 # emits itself as an argument to the signal
 
         confirm_restart = Bool(True, config=True, help="Whether to ask for user confirmation when restarting kernel")
+        is_complete_timeout = Float(0.25, config=True, help="Seconds to wait for is_complete replies from the kernel.")
 
         def __init__(self, parent=None, **kw):
             """
@@ -66,7 +71,7 @@ def tab_main_template(edit_class):
             :return:
             """
             super(TabMain, self).__init__(parent, **kw)
-            self.main_content = tab_content_template(edit_class)()
+            self.main_content = tab_content_template(edit_class)(self.is_complete)
             self.main_content.please_execute.connect(self._execute)
             self.message_arrived.connect(self.main_content.dispatch)
             self.main_content.exit_requested.connect(self._on_exit_request)
@@ -146,6 +151,7 @@ def tab_main_template(edit_class):
             message = 'Are you sure you want to restart the kernel?'
             self._restart_kernel(message, now=False)
 
+        # FrontendWidget
         def interrupt_kernel(self):
             """ Attempts to interrupt the running kernel.
             """
@@ -159,6 +165,37 @@ def tab_main_template(edit_class):
         # FrontendWidget
         def request_interrupt_kernel(self):
             self.interrupt_kernel()
+
+        # FrontendWidget
+        def is_complete(self, source):
+            """ Returns whether 'source' can be completely processed and a new
+                prompt created. When triggered by an Enter/Return key press,
+                'interactive' is True; otherwise, it is False.
+
+                Returns
+                -------
+
+                (complete, indent): (bool, str)
+                complete is a bool, indicating whether the input is complete or not.
+                indent is the current indentation string for autoindent.
+                If complete is True, indent will be '', and should be ignored.
+            """
+            kc = self.blocking_client
+            if kc is None:
+                self.log.warn("No blocking client to make is_complete requests")
+                return False, u''
+            msg_id = kc.is_complete(source)
+            while True:
+                try:
+                    reply = kc.shell_channel.get_msg(block=True, timeout=self.is_complete_timeout)
+                except Empty:
+                    # assume incomplete output if we get no reply in time
+                    return False, u''
+                if reply['parent_header'].get('msg_id', None) == msg_id:
+                    status = reply['content'].get('status', u'complete')
+                    indent = reply['content'].get('indent', u'')
+                    return status != 'incomplete', indent
+
 
         @QtCore.Slot(bool)
         def _on_exit_request(self, keep_kernel_on_exit):

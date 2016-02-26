@@ -1592,7 +1592,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         cursor = self._control.textCursor()
         cursor.movePosition(QtGui.QTextCursor.End)
         return cursor
-# </done>
 
     def _get_input_buffer_cursor_column(self):
         """ Returns the column of the cursor in the input buffer, excluding the
@@ -1616,7 +1615,8 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             cursor = self._control.textCursor()
             text = self._get_block_plain_text(cursor.block())
             return text[len(prompt):]
-    
+# </done>
+
     def _get_input_buffer_cursor_pos(self):
         """Return the cursor position within the input buffer."""
         cursor = self._control.textCursor()
@@ -1922,6 +1922,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             self._control.setTextCursor(cursor)
         return moved
 
+# <done>
     def _keyboard_quit(self):
         """ Cancels the current editing task ala Ctrl-G in Emacs.
         """
@@ -1931,7 +1932,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         else:
             self.input_buffer = ''
 
-# <done>
     def _page(self, text, html=False):
         """ Displays text using the pager if it exceeds the height of the
         viewport.
