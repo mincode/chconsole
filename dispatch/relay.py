@@ -2,7 +2,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from .relay_item import RelayItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested, \
-    InText, ExecuteResult, Banner
+    InText, ExecuteResult, Banner, CompleteItems
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -78,6 +78,14 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
         # metadata = msg.content['metadata']
         if 'text/plain' in data:
             self.please_process.emit(Stream(data['text/plain'], name='stdout'))
+
+    def _handle_complete_reply(self, msg):
+        self.log.debug("complete: %s", msg.content)
+        if msg.from_here:
+            matches = msg.content['matches']
+            start = msg.content['cursor_start']
+            end = msg.content['cursor_end']
+            self.please_process.emit(CompleteItems(matches=matches, start=start, end=end))
 
     # frontend_widget
     def _handle_execute_reply(self, msg):

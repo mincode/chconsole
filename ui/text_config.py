@@ -446,7 +446,7 @@ class TextConfig(LoggingConfigurable):
             cursor.insertText(text)
         cursor.endEditBlock()
 
-    # adopted from ConsoleWidget
+    # ConsoleWidget
     def insert_html(self, html, cursor=None):
         """
         Inserts HTML using the specified cursor in such a way that future

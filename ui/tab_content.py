@@ -7,7 +7,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from dispatch.message import KernelMessage, Message
 from dispatch.relay import Relay
 from dispatch.source import Source
-from dispatch.relay_item import RelayItem, PageDoc, EditFile, Stream, ExitRequested, InText
+from dispatch.relay_item import RelayItem, PageDoc, EditFile, Stream, ExitRequested, InText, CompleteItems
 from .entry import entry_template
 from .pager import pager_template
 from .receiver import receiver_template
@@ -118,7 +118,10 @@ def tab_content_template(edit_class):
             """)
 
         # Signal when exit is requested
-        exit_requested = QtCore.Signal(bool)
+        please_exit = QtCore.Signal(bool)
+
+        # Signal requesting completing code str ad cursor position int.
+        please_complete = QtCore.Signal(str, int)
 
         def __init__(self, is_complete, **kwargs):
             """
@@ -145,6 +148,7 @@ def tab_content_template(edit_class):
 
             self.entry = entry_template(edit_class)(is_complete=is_complete)
             self.entry.please_execute.connect(self.on_send_clicked)
+            self.entry.please_complete.connect(self.please_complete)
             self.receiver = receiver_template(edit_class)()
             self._console_area.addWidget(self.receiver)
             self._console_area.addWidget(self.entry)
@@ -215,8 +219,18 @@ def tab_content_template(edit_class):
 
         @QtCore.Slot(RelayItem)
         def post(self, item):
+            # To external
+            if isinstance(item, ExitRequested):
+                self.please_exit.emit(item.keep_kernel_on_exit)
+            # Pager
             if isinstance(item, PageDoc) and self.receiver.covers(item):
                 self.pager.post(item)
+            # Entry
+            elif isinstance(item, InText):
+                self.entry.post(item)
+            elif isinstance(item, CompleteItems):
+                self.entry.post(item)
+            # Receiver
             elif isinstance(item, EditFile):
                 try:
                     self._edit(item.filename, item.line_number)
@@ -231,10 +245,6 @@ def tab_content_template(edit_class):
                 except CommandError as e:
                     text = 'Opening editor with command "%s" failed.' % e.command
                     self.receiver.post(Stream(text=text, name='stderr', clearable=False))
-            elif isinstance(item, ExitRequested):
-                self.exit_requested.emit(item.keep_kernel_on_exit)
-            elif isinstance(item, InText):
-                self.entry.post(item)
             else:
                 self.receiver.post(item)
 

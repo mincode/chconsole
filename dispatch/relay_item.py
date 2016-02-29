@@ -49,6 +49,18 @@ class RelayItem:
         return count, first_item, rest_item
 
 
+class CompleteItems(RelayItem):
+    matches = None  # list of items that match for completion
+    start = 0  # start position of cursor
+    end = 0  # end position of cursor where to complete
+
+    def __init__(self, matches, start=0, end=0, head=True, empty=False):
+        super(CompleteItems, self).__init__(head=head, empty=empty)
+        self.matches = matches
+        self.start = start
+        self.end = end
+
+
 class ClearOutput(RelayItem):
     wait = False  # Wait to clear the output until new output is available
 

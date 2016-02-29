@@ -73,8 +73,9 @@ def tab_main_template(edit_class):
             super(TabMain, self).__init__(parent, **kw)
             self.main_content = tab_content_template(edit_class)(self.is_complete)
             self.main_content.please_execute.connect(self._execute)
+            self.main_content.please_exit.connect(self._on_exit_request)
+            self.main_content.please_complete.connect(self._on_complete_request)
             self.message_arrived.connect(self.main_content.dispatch)
-            self.main_content.exit_requested.connect(self._on_exit_request)
 
             layout = QtGui.QHBoxLayout(self)
             layout.setContentsMargins(0, 0, 0, 0)
@@ -196,6 +197,15 @@ def tab_main_template(edit_class):
                     indent = reply['content'].get('indent', u'')
                     return status != 'incomplete', indent
 
+        @QtCore.Slot(str, int)
+        def _on_complete_request(self, code, position):
+            """
+            Handle a complete request.
+            :param code: string to be completed.
+            :param position: cursor position where to complete.
+            :return:
+            """
+            self.kernel_client.complete(code=code, cursor_pos=position)
 
         @QtCore.Slot(bool)
         def _on_exit_request(self, keep_kernel_on_exit):

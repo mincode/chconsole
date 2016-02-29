@@ -958,7 +958,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         """ If text completion is progress, cancel it.
         """
         self._completion_widget.cancel_completion()
-# </done>
 
     def _clear_temporary_buffer(self):
         """ Clears the "temporary text" buffer, i.e. all the text following
@@ -1012,7 +1011,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
             cursor.movePosition(QtGui.QTextCursor.Left, n=len(prefix))
             self._completion_widget.show_items(cursor, items)
 
-
     def _fill_temporary_buffer(self, cursor, text, html=False):
         """fill the area below the active editting zone with text"""
 
@@ -1028,6 +1026,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         self._control.setTextCursor(cursor)
 
         self._temp_buffer_filled = True
+# </done>
 
 
     def _context_menu_make(self, pos):

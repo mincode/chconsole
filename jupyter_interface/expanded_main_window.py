@@ -35,7 +35,7 @@ class ExpandedMainWindow(mainwindow.MainWindow):
         self._entry_update_code = active.main_content.entry.update_code_mode
 
         self.status_bar.code_toggled.connect(self._entry_update_code)
-        self.status_bar.update_code(active.main_content.entry.code)
+        self.status_bar.update_code(active.main_content.entry.code_mode)
 
         if self._act_on_send:
             self.status_bar.send_clicked.disconnect(self._act_on_send)

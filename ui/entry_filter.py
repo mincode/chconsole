@@ -1,8 +1,18 @@
 from qtconsole.qt import QtCore, QtGui
 from .base_event_filter import BaseEventFilter
-from .entry import to_complete
-
+from .text_config import get_block_plain_text
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
+
+
+def complete_possible(cursor):
+    """
+    Determine whether there is text before the cursor position that may be completed.
+    :param cursor: position.
+    :return: True if there is non-whitespace text immediately before the cursor.
+    """
+    text = get_block_plain_text(cursor.block())
+    return bool(text[:cursor.columnNumber()].strip())
+
 
 
 #      #------ Control/Cmd modifier -------------------------------------------
@@ -351,8 +361,8 @@ class EntryFilter(BaseEventFilter):
                 anchor_mode = QtGui.QTextCursor.KeepAnchor if shift_down else QtGui.QTextCursor.MoveAnchor
 
                 if key == QtCore.Qt.Key_Tab:
-                    if self.target.code_mode and self.target.to_complete(self.target.textCursor()):
-                        self.target.complete()  # complete request
+                    if self.target.code_mode and complete_possible(self.target.textCursor()):
+                        self.target.request_complete(self.target.textCursor())  # complete request
                     else:
                         self.target.insertPlainText(' '*self.target.tab_width)
 

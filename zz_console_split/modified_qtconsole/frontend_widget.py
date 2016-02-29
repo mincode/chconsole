@@ -795,6 +795,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         self._request_info['call_tip'] = self._CallTipRequest(msg_id, pos)
         return True
 
+# <done>
     def _complete(self):
         """ Performs completion at the current cursor location.
         """
@@ -807,7 +808,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         info = self._CompletionRequest(msg_id, pos)
         self._request_info['complete'] = info
 
-# <done>
     def _process_execute_abort(self, msg):
         """ Process a reply for an aborted execution request.
         """
