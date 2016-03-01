@@ -3,9 +3,7 @@ from functools import singledispatch
 from traitlets import Bool, Enum
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from qtconsole.completion_html import CompletionHtml
 from qtconsole.completion_widget import CompletionWidget
-from qtconsole.completion_plain import CompletionPlain
 from dispatch.source import Source
 from .entry_filter import EntryFilter
 from .text_config import TextConfig
@@ -16,23 +14,6 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 code_active_color = QtCore.Qt.black  # color used for widget's frame if in code mode
 chat_active_color = QtCore.Qt.red  # color used for the widget's frame if in chat mode
-
-
-def completer(target, kind):
-    """
-    Provide the widget used for completing code.
-    :param target: QWidget where completion is needed
-    :param kind: type of completer: 'ncurses', 'droplist', 'plain'
-    :return: CompletionHtml, CompletionWidget or CompletionPlain object associated with target.
-    """
-    if kind == 'ncurses':
-        return CompletionHtml(target)
-    elif kind == 'droplist':
-        return CompletionWidget(target)
-    elif kind == 'plain':
-        return CompletionPlain(target)
-    else:
-        return None
 
 
 @singledispatch
@@ -65,20 +46,6 @@ def entry_template(edit_class):
         """
         code_mode = Bool(True)  # True if document contains code to be executed; rather than a chat message
 
-        gui_completion = Enum(['plain', 'droplist', 'ncurses'], config=True, default_value = 'ncurses',
-                             help="""
-                                The type of completer to use. Valid values are:
-
-                                'plain'   : Show the available completion as a text list
-                                            Below the editing area.
-                                'droplist': Show the completion in a drop down list navigable
-                                by the arrow keys, and from which you can select
-                                completion by pressing Return.
-                                'ncurses' : Show the completion as a text list which is navigable by
-                                `tab` and arrow keys.
-                                """)
-        _completer = None
-
         execute_on_complete_input = Bool(True, config=True,
             help="""Whether to automatically execute on syntactically complete input.
 
@@ -98,6 +65,8 @@ def entry_template(edit_class):
 
         # Signal requesting completing code str ad cursor position int.
         please_complete = QtCore.Signal(str, int)
+
+        completer = None  # completion object
 
         def __init__(self, is_complete=None, code=True, text='', parent=None, **kwargs):
             """
@@ -123,7 +92,7 @@ def entry_template(edit_class):
 
             self._control = self  # required for completer
             self._clear_temporary_buffer = lambda: None
-            self.completer = completer(self, self.gui_completion)
+            self.completer = CompletionWidget(self)
             self.is_complete = is_complete
 
             self.entry_filter = EntryFilter(self)
@@ -227,63 +196,5 @@ def entry_template(edit_class):
 
                 cursor.movePosition(QtGui.QTextCursor.Left, n=len(prefix))
                 self.completer.show_items(cursor, items)
-
-        # ConsoleWidget
-        _temp_buffer_filled = False
-
-        def _fill_temporary_buffer(self, cursor, text, html=False):
-            """
-            Fill the area below the active editing zone with text, for completion.
-            :param cursor: cursor where to fill in the text.
-            :param text: text to be filled in.
-            :param html: whether the text is in html format.
-            :return:
-            """
-            current_pos = self.textCursor().position()
-
-            cursor.beginEditBlock()
-            self.insertPlainText('\n')
-            if html:
-                self.insert_html(text, cursor)
-            else:
-                cursor.insertText(text)
-            cursor.endEditBlock()
-
-            cursor.setPosition(current_pos)
-            self.moveCursor(QtGui.QTextCursor.End)
-            self.setTextCursor(cursor)
-
-            self._temp_buffer_filled = True
-
-        # ConsoleWidget
-        def _clear_temporary_buffer(self):
-            """ Clears the "temporary text" buffer, i.e. all the text following
-                the prompt region; by definition the region under the text cursor.
-            """
-            # Select and remove all text below the input buffer.
-            cursor = self.textCursor()
-            if self._temp_buffer_filled:
-                self._temp_buffer_filled = False
-                while cursor.movePosition(QtGui.QTextCursor.NextBlock):
-                    temp_cursor = QtGui.QTextCursor(cursor)
-                    temp_cursor.select(QtGui.QTextCursor.BlockUnderCursor)
-                    text = temp_cursor.selection().toPlainText().lstrip()
-            else:
-                # We've reached the end of the input buffer and no text follows.
-                return
-
-            # Remove trailing \n
-            cursor.movePosition(QtGui.QTextCursor.Left) # Grab the newline.
-            cursor.movePosition(QtGui.QTextCursor.End,
-                                QtGui.QTextCursor.KeepAnchor)
-            cursor.removeSelectedText()
-
-            # After doing this, we have no choice but to clear the undo/redo
-            # history. Otherwise, the text is not "temporary" at all, because it
-            # can be recalled with undo/redo. Unfortunately, Qt does not expose
-            # fine-grained control to the undo/redo system.
-            if self.isUndoRedoEnabled():
-                self.setUndoRedoEnabled(False)
-                self.setUndoRedoEnabled(True)
 
     return Entry
