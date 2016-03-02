@@ -7,9 +7,9 @@ from .relay_item import RelayItem, Stream, Input, ClearOutput, PageDoc, EditFile
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject), {})):
+class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject), {})):
     """
-    Relay messages from the kernel.
+    Import messages into objects handled by the ui.
     """
     please_process = QtCore.Signal(RelayItem)
 
@@ -28,7 +28,7 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
             self._payload_source_page: self._handle_payload_page,
             self._payload_source_next_input: self._handle_payload_next_input}
 
-    def dispatch(self, msg):
+    def convert(self, msg):
         print('dispatch: ' + msg.type)
         print(msg.whole)
         handler = getattr(self, '_handle_' + msg.type, None)

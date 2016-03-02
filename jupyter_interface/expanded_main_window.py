@@ -57,6 +57,61 @@ class ExpandedMainWindow(mainwindow.MainWindow):
             self.active_frontend.main_content.pager.location = paging
         return set_paging
 
+    def init_edit_menu(self):
+        self.edit_menu = self.menuBar().addMenu("&Edit")
+
+        self.undo_action = QtGui.QAction("&Undo",
+            self,
+            shortcut=QtGui.QKeySequence.Undo,
+            statusTip="Undo last action if possible",
+            triggered=self.undo_active_frontend
+            )
+        self.add_menu_action(self.edit_menu, self.undo_action)
+
+        self.redo_action = QtGui.QAction("&Redo",
+            self,
+            shortcut=QtGui.QKeySequence.Redo,
+            statusTip="Redo last action if possible",
+            triggered=self.redo_active_frontend)
+        self.add_menu_action(self.edit_menu, self.redo_action)
+
+        self.edit_menu.addSeparator()
+
+        self.cut_action = QtGui.QAction("&Cut",
+            self,
+            shortcut=QtGui.QKeySequence.Cut,
+            triggered=self.cut_active_frontend
+            )
+        self.add_menu_action(self.edit_menu, self.cut_action, True)
+
+        self.copy_action = QtGui.QAction("&Copy",
+            self,
+            shortcut=QtGui.QKeySequence.Copy,
+            triggered=self.copy_active_frontend
+            )
+        self.add_menu_action(self.edit_menu, self.copy_action, True)
+
+        self.paste_action = QtGui.QAction("&Paste",
+            self,
+            shortcut=QtGui.QKeySequence.Paste,
+            triggered=self.paste_active_frontend
+            )
+        self.add_menu_action(self.edit_menu, self.paste_action, True)
+
+        self.edit_menu.addSeparator()
+
+        selectall = QtGui.QKeySequence(QtGui.QKeySequence.SelectAll)
+        if selectall.matches("Ctrl+A") and sys.platform != 'darwin':
+            # Only override the default if there is a collision.
+            # Qt ctrl = cmd on OSX, so the match gets a false positive on OSX.
+            selectall = "Ctrl+Shift+A"
+        self.select_all_action = QtGui.QAction("Select &All",
+            self,
+            shortcut=selectall,
+            triggered=self.select_all_active_frontend
+            )
+        self.add_menu_action(self.edit_menu, self.select_all_action, True)
+
     def init_view_menu(self):
         """
         Initialize the view menu.
@@ -127,63 +182,42 @@ class ExpandedMainWindow(mainwindow.MainWindow):
 
     # The following depend on where the focus is in the active frontend.
     def print_action_active_frontend(self):
-        self.active_frontend.main_content.print_action.trigger()
+        self.active_frontend.main_content.call_focus_method('print_action.trigger')
 
     def export_action_active_frontend(self):
-        self.active_frontend.main_content.export_action.trigger()
+        self.active_frontend.main_content.call_focus_method('export_action.trigger')
 
     def select_all_active_frontend(self):
-        self.active_frontend.main_content.select_all_action.trigger()
+        self.active_frontend.main_content.call_focus_method('select_all_action.trigger')
 
     def increase_font_size_active_frontend(self):
-        self.active_frontend.main_content.increase_font_size.trigger()
+        self.active_frontend.main_content.call_focus_method('increase_font_size.trigger')
 
     def decrease_font_size_active_frontend(self):
-        self.active_frontend.main_content.decrease_font_size.trigger()
+        self.active_frontend.main_content.call_focus_method('decrease_font_size.trigger')
 
     def reset_font_size_active_frontend(self):
-        self.active_frontend.main_content.reset_font_size.trigger()
+        self.active_frontend.main_content.call_focus_method('reset_font_size.trigger')
 
     def clear_active_frontend(self):
-        self.active_frontend.main_content.clear()
+        self.active_frontend.main_content.call_focus_method('clear')
 
     def cut_active_frontend(self):
         widget = self.active_frontend
-        if widget.main_content.can_cut():
-            widget.main_content.cut()
+        if widget.main_content.call_focus_method('can_cut'):
+            widget.main_content.call_focus_method('cut')
 
     def copy_active_frontend(self):
         widget = self.active_frontend
-        widget.main_content.copy()
-
-    def copy_raw_active_frontend(self):
-        self.active_frontend.main_content.copy_raw_action.trigger()
+        widget.main_content.call_focus_method('copy')
 
     def paste_active_frontend(self):
         widget = self.active_frontend
-        if widget.main_content.can_paste():
-            widget.main_content.paste()
+        if widget.main_content.call_focus_method('can_paste'):
+            widget.main_content.call_focus_method('paste')
 
     def undo_active_frontend(self):
-        self.active_frontend.main_content.undo()
+        self.active_frontend.main_content.call_focus_method('undo')
 
     def redo_active_frontend(self):
-        self.active_frontend.main_content.redo()
-
-    def print_action_active_frontend(self):
-        self.active_frontend.main_content.print_action.trigger()
-
-    def export_action_active_frontend(self):
-        self.active_frontend.main_content.export_action.trigger()
-
-    def select_all_active_frontend(self):
-        self.active_frontend.main_content.select_all_action.trigger()
-
-    def increase_font_size_active_frontend(self):
-        self.active_frontend.main_content.increase_font_size.trigger()
-
-    def decrease_font_size_active_frontend(self):
-        self.active_frontend.main_content.decrease_font_size.trigger()
-
-    def reset_font_size_active_frontend(self):
-        self.active_frontend.main_content.reset_font_size.trigger()
+        self.active_frontend.main_content.call_focus_method('redo')

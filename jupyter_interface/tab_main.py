@@ -4,7 +4,7 @@ from qtconsole.qt import QtGui, QtCore
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
 from qtconsole.util import MetaQObjectHasTraits
 from ui.tab_content import tab_content_template
-from dispatch.message import KernelMessage
+from dispatch.kernel_message import KernelMessage
 from dispatch.source import Source
 try:
     from queue import Empty
@@ -75,7 +75,7 @@ def tab_main_template(edit_class):
             self.main_content.please_execute.connect(self._execute)
             self.main_content.please_exit.connect(self._on_exit_request)
             self.main_content.please_complete.connect(self._on_complete_request)
-            self.message_arrived.connect(self.main_content.dispatch)
+            self.message_arrived.connect(self.main_content.augment)
 
             layout = QtGui.QHBoxLayout(self)
             layout.setContentsMargins(0, 0, 0, 0)

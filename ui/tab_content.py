@@ -5,7 +5,7 @@ from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Integer, Unicode, Bool
 from traitlets.config.configurable import LoggingConfigurable
 from dispatch.message import KernelMessage, Message
-from dispatch.relay import Relay
+from dispatch.importer import Importer
 from dispatch.source import Source
 from dispatch.relay_item import RelayItem, PageDoc, EditFile, Stream, ExitRequested, InText, CompleteItems
 from .entry import entry_template
@@ -13,6 +13,29 @@ from .pager import pager_template
 from .receiver import receiver_template
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
+
+
+def get_member(obj, dotted, default=None):
+    """
+    Return member or member of a member of the object specified.
+    :param obj: object to get member from.
+    :param dotted: dotted string representing the member or member of a member.
+    :param default: any object.
+    :return: whatever the method returns or default if non-existent.
+    """
+    if dotted:
+        parts = dotted.split('.')
+        sub_objects = parts[:-1]
+        for p in sub_objects:
+            if obj:
+                obj = getattr(obj, p, None)
+            else:
+                break
+        if obj:
+            cmd = parts[len(parts)-1]
+            member = getattr(obj, cmd, None)
+            return member
+    return default
 
 
 def _resize_last(splitter, fraction=4):
@@ -81,7 +104,7 @@ def tab_content_template(edit_class):
         _console_stack_layout = None  # QStackedLayout
         _console_area = None  # QSplitter
 
-        _relay = None  # Relay
+        _importer = None  # Relay
 
         show_other = Bool(True, config=True, help='True if messages from other clients are to be included.')
 
@@ -170,19 +193,17 @@ def tab_content_template(edit_class):
                                                     'This is the pager!')
             self.pager.hide()
 
-            self._relay = Relay(self)
-            self._relay.please_process.connect(self.post)
-            self.message_arrived.connect(self._relay.dispatch)
-
             self.pager.release_focus.connect(self.entry.set_focus)
             self.receiver.release_focus.connect(self.entry.set_focus)
             self.entry.release_focus.connect(self.receiver.set_focus)
 
-        def clear(self):
-            self.receiver.clear()
+            # Import and handle kernel messages
+            self._importer = Importer(self)
+            self._importer.please_process.connect(self.post)
+            self.message_arrived.connect(self._importer.convert)
 
         @property
-        def focus_text_component(self):
+        def _focus_text_component(self):
             """
             Text component widget that has focus; none if there is no focus on the text components.
             :return:
@@ -193,6 +214,19 @@ def tab_content_template(edit_class):
                 return self.receiver
             elif self.entry.hasFocus():
                 return self.entry
+            else:
+                return None
+
+        def call_focus_method(self, dotted):
+            """
+            Execute method of the widget with focus if there is focus and the method exists;
+            otherwise do nothing.
+            :param dotted: dotted string representing the method None->None to be executed.
+            :return: whatever the method returns.
+            """
+            focus_method = get_member(self._focus_text_component, dotted)
+            if focus_method:
+                return focus_method()
             else:
                 return None
 
@@ -297,7 +331,12 @@ def tab_content_template(edit_class):
             self.dispatch(Message(eval(self.entry.source.code), from_here=True))
 
         @QtCore.Slot(KernelMessage)
-        def dispatch(self, msg):
+        def augment(self, msg):
+            """
+            Augment the KernelMessage with ui information and emit as Message through message_arrived.
+            :param msg: KernelMessage
+            :return:
+            """
             msg = Message(msg)
             msg.show_other = self.show_other
             msg.ansi_codes = self.ansi_codes

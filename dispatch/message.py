@@ -1,30 +1,30 @@
+from .kernel_message import KernelMessage
+
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class KernelMessage:
-    whole = None  # dict, kernel message
-    from_here = True  # whether the message is from the current session
-
-    def __init__(self, msg, from_here=True):
-        self.whole = msg
-        self.from_here = from_here
-
-    @property
-    def type(self):
-        return self.whole['header']['msg_type']
-
-    @property
-    def content(self):
-        return self.whole['content']
-
-
-class Message(KernelMessage):
+class Message(object):
+    kernel_message = None  # KernelMessage
     show_other = True  # whether the current client wants to show other clients' messages
     ansi_codes = True  # whether the current client should process ansi codes
 
-    def __init__(self, msg):
-        self.whole = msg.whole
-        self.from_here = msg.from_here
+    def __init__(self, kernel_message, show_other=True, ansi_codes=True):
+        """
+        Initialize.
+        :param msg: KernelMessage
+        :return:
+        """
+        self.kernel_message = kernel_message
+        self.show_other = show_other
+        self.ansi_codes = ansi_codes
+
+    @property
+    def whole(self):
+        return self.kernel_message.whole
+
+    @property
+    def from_here(self):
+        return self.kernel_message.from_here
 
     @property
     def show_me(self):
@@ -32,12 +32,12 @@ class Message(KernelMessage):
         Determine if message is to be shown.
         :return: True if message is to be shown.
         """
-        return self.from_here or self.show_other
+        return self.kernel_message.from_here or self.show_other
 
     @property
     def type(self):
-        return self.whole['header']['msg_type']
+        return self.kernel_message.whole['header']['msg_type']
 
     @property
     def content(self):
-        return self.whole.get('content', '')
+        return self.kernel_message.whole.get('content', '')
