@@ -121,6 +121,11 @@ class ExpandedMainWindow(mainwindow.MainWindow):
                     triggered=self.set_paging_active_frontend(location))
                 self.pager_menu.addAction(pager_action)
 
+    # MM: This method does not seem to be in use.
+    def _set_active_frontend_focus(self):
+        QtCore.QTimer.singleShot(200, self.active_frontend.main_content.entry.setFocus)
+
+    # The following depend on where the focus is in the active frontend.
     def print_action_active_frontend(self):
         self.active_frontend.main_content.print_action.trigger()
 
@@ -142,6 +147,43 @@ class ExpandedMainWindow(mainwindow.MainWindow):
     def clear_active_frontend(self):
         self.active_frontend.main_content.clear()
 
-    # MM: This method does not seem to be in use.
-    def _set_active_frontend_focus(self):
-        QtCore.QTimer.singleShot(200, self.active_frontend.main_content.entry.setFocus)
+    def cut_active_frontend(self):
+        widget = self.active_frontend
+        if widget.main_content.can_cut():
+            widget.main_content.cut()
+
+    def copy_active_frontend(self):
+        widget = self.active_frontend
+        widget.main_content.copy()
+
+    def copy_raw_active_frontend(self):
+        self.active_frontend.main_content.copy_raw_action.trigger()
+
+    def paste_active_frontend(self):
+        widget = self.active_frontend
+        if widget.main_content.can_paste():
+            widget.main_content.paste()
+
+    def undo_active_frontend(self):
+        self.active_frontend.main_content.undo()
+
+    def redo_active_frontend(self):
+        self.active_frontend.main_content.redo()
+
+    def print_action_active_frontend(self):
+        self.active_frontend.main_content.print_action.trigger()
+
+    def export_action_active_frontend(self):
+        self.active_frontend.main_content.export_action.trigger()
+
+    def select_all_active_frontend(self):
+        self.active_frontend.main_content.select_all_action.trigger()
+
+    def increase_font_size_active_frontend(self):
+        self.active_frontend.main_content.increase_font_size.trigger()
+
+    def decrease_font_size_active_frontend(self):
+        self.active_frontend.main_content.decrease_font_size.trigger()
+
+    def reset_font_size_active_frontend(self):
+        self.active_frontend.main_content.reset_font_size.trigger()

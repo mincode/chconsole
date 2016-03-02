@@ -57,6 +57,20 @@ def _covers(edit_widget, text):
     return re.match("(?:[^\n]*\n){%i}" % min_lines, text)
 
 
+def _valid_text_cursor(receiver):
+    """
+    Return the text cursor of receiver to add new text, either data_stream_end or end of the document.
+    :param receiver: target object where to set the cursor.
+    :return:
+    """
+    if receiver.data_stream_end:
+        cursor = receiver.data_stream_end
+    else:
+        cursor = receiver.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+    return cursor
+
+
 @singledispatch
 def _receive(item, receiver):
     pass
@@ -65,8 +79,9 @@ def _receive(item, receiver):
 
 @_receive.register(Stream)
 def _(item, receiver):
-    if receiver.data_stream_end:
-        receiver.setTextCursor(receiver.data_stream_end)
+    old_text_cursor = receiver.textCursor()
+    receiver.setTextCursor(_valid_text_cursor(receiver))
+
     receiver.insert_ansi_text(item.text, item.ansi_codes)
     receiver.ansi_processor.reset_sgr()
     if item.clearable:
@@ -78,25 +93,40 @@ def _(item, receiver):
     else:
         receiver.data_stream_end = None
 
+    receiver.setTextCursor(old_text_cursor)
+
 
 @_receive.register(HtmlStream)
 def _(item, receiver):
+    old_text_cursor = receiver.textCursor()
+    receiver.setTextCursor(_valid_text_cursor(receiver))
+
     receiver.insert_html(item.text)
     receiver.data_stream_end = receiver.textCursor() if item.clearable else None
+
+    receiver.setTextCursor(old_text_cursor)
 
 
 @_receive.register(PageDoc)
 def _(item, receiver):
+    old_text_cursor = receiver.textCursor()
     receiver.data_stream_end = None
+    receiver.setTextCursor(_valid_text_cursor(receiver))
+
     if hasattr(receiver, 'insertHtml') and item.html != '':
         _receive(item.html_stream, receiver)
     else:
         _receive(item.text_stream, receiver)
 
+    receiver.setTextCursor(old_text_cursor)
+
 
 @_receive.register(Banner)
 def _(item, receiver):
+    old_text_cursor = receiver.textCursor()
     receiver.data_stream_end = None
+    receiver.setTextCursor(_valid_text_cursor(receiver))
+
     stream = item.stream
     stream.text = receiver.banner + stream.text
     _receive(stream, receiver)
@@ -108,10 +138,15 @@ def _(item, receiver):
             receiver.insert_html('<a href="' + url + '">' + url + '</a>')
     receiver.insertPlainText('\n')
 
+    receiver.setTextCursor(old_text_cursor)
+
 
 @_receive.register(Input)
 def _(item, receiver):
+    old_text_cursor = receiver.textCursor()
     receiver.data_stream_end = None
+    receiver.setTextCursor(_valid_text_cursor(receiver))
+
     receiver.insertPlainText('\n')
     receiver.insert_html(_make_in_prompt(receiver.in_prompt, item.execution_count))
     receiver.insert_ansi_text(item.code, item.ansi_codes)
@@ -119,10 +154,15 @@ def _(item, receiver):
     if item.code[-1] != '\n':
         receiver.insertPlainText('\n')
 
+    receiver.setTextCursor(old_text_cursor)
+
 
 @_receive.register(ExecuteResult)
 def _(item, receiver):
+    old_text_cursor = receiver.textCursor()
     receiver.data_stream_end = None
+    receiver.setTextCursor(_valid_text_cursor(receiver))
+
     receiver.insertPlainText(receiver.output_sep)
     receiver.insert_html(_make_out_prompt(receiver.out_prompt, item.execution_count))
     # JupyterWidget: If the repr is multiline, make sure we start on a new line,
@@ -130,6 +170,8 @@ def _(item, receiver):
     if "\n" in item.text and not receiver.output_sep.endswith("\n"):
         receiver.insertPlainText('\n')
     receiver.insertPlainText(item.text + receiver.output_sep2)
+
+    receiver.setTextCursor(old_text_cursor)
 
 
 @_receive.register(ClearOutput)
@@ -259,6 +301,15 @@ def receiver_template(edit_class):
             if self.timing_guard:
                 self.timing_guard.release()
             self.ensureCursorVisible()
+
+        @QtCore.Slot()
+        def set_focus(self):
+            """
+            Set the focus to this widget.
+            :return:
+            """
+            self.setFocus()
+
 
         def post(self, item):
             self.output_q.put(item)

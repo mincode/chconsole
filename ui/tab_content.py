@@ -176,9 +176,25 @@ def tab_content_template(edit_class):
 
             self.pager.release_focus.connect(self.entry.set_focus)
             self.receiver.release_focus.connect(self.entry.set_focus)
+            self.entry.release_focus.connect(self.receiver.set_focus)
 
         def clear(self):
             self.receiver.clear()
+
+        @property
+        def focus_text_component(self):
+            """
+            Text component widget that has focus; none if there is no focus on the text components.
+            :return:
+            """
+            if self.pager.hasFocus():
+                return self.pager
+            elif self.receiver.hasFocus():
+                return self.receiver
+            elif self.entry.hasFocus():
+                return self.entry
+            else:
+                return None
 
         # JupyterWidget
         def _edit(self, filename, line=None):

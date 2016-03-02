@@ -127,6 +127,10 @@ def entry_template(edit_class):
 
         @QtCore.Slot()
         def set_focus(self):
+            """
+            Set the focus to this widget.
+            :return:
+            """
             self.setFocus()
 
         # traitlets handler
