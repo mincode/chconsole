@@ -42,12 +42,11 @@ class Relay(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject
     def _handle_kernel_info_reply(self, msg):
         to_show = msg.content['banner']
         help_links = msg.content['help_links']
-        if help_links:
-            to_show += '\nHelp Links'
-            for helper in help_links:
-                to_show += '\n' + helper['text'] + ': ' + helper['url']
-            to_show += '\n'
-            self.please_process.emit(Banner(to_show))
+        banner = Banner(text=to_show, help_links=help_links.copy())
+        self.please_process.emit(banner)
+
+    # def _handle_history_reply(self, msg):
+    #     print('history reply dropped')
 
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""

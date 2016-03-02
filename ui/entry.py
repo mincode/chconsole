@@ -126,7 +126,7 @@ def entry_template(edit_class):
         def set_focus(self):
             self.setFocus()
 
-        # traitlets handlers
+        # traitlets handler
         def _code_mode_changed(self, name=None, old=None, new=None):
             """
             Set the frame color according to self.code.

@@ -1104,11 +1104,11 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         # mouse events.
         control.installEventFilter(self)
         control.viewport().installEventFilter(self)
-# </done>
 
         # Connect signals.
         control.customContextMenuRequested.connect(
             self._custom_context_menu_requested)
+# </done>
         control.copyAvailable.connect(self.copy_available)
         control.redoAvailable.connect(self.redo_available)
         control.undoAvailable.connect(self.undo_available)
@@ -2153,6 +2153,7 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
 
     #------ Signal handlers ----------------------------------------------------
 
+# <done>
     def _adjust_scrollbars(self):
         """ Expands the vertical scrollbar beyond the range set by Qt.
         """
@@ -2184,3 +2185,4 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         """
         menu = self._context_menu_make(pos)
         menu.exec_(self._control.mapToGlobal(pos))
+# </done>

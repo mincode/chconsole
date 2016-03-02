@@ -223,7 +223,7 @@ def tab_content_template(edit_class):
             if isinstance(item, ExitRequested):
                 self.please_exit.emit(item.keep_kernel_on_exit)
             # Pager
-            if isinstance(item, PageDoc) and self.receiver.covers(item):
+            elif isinstance(item, PageDoc) and self.receiver.covers(item):
                 self.pager.post(item)
             # Entry
             elif isinstance(item, InText):

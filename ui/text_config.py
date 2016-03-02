@@ -9,6 +9,7 @@ from qtconsole.ansi_code_processor import QtAnsiCodeProcessor
 from qtconsole.util import get_font
 from qtconsole import styles
 from qtconsole.pygments_highlighter import PygmentsHighlighter
+from .context_menu import ContextMenu
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -220,6 +221,10 @@ class TextConfig(LoggingConfigurable):
 
         # Set a monospaced font.
         self.reset_font()
+
+        # Context menu
+        self.customContextMenuRequested.connect(
+            self._custom_context_menu_requested)
 
     # ConsoleWidget
     def adjust_scrollbars(self):
@@ -509,3 +514,31 @@ class TextConfig(LoggingConfigurable):
         cursor = self.textCursor()
         cursor.setPosition(position)
         return cursor
+
+    # ConsoleWidget
+    def can_copy(self):
+        """ Returns whether text can be copied to the clipboard.
+        """
+        return self.textCursor().hasSelection()
+
+    # ConsoleWidget
+    def can_cut(self):
+        """ Returns whether text can be cut to the clipboard.
+        """
+        return self.textCursor().hasSelection()
+
+    # ConsoleWidget
+    def can_paste(self):
+        """ Returns whether text can be pasted from the clipboard.
+        """
+        paste_able = False
+        if self.textInteractionFlags() & QtCore.Qt.TextEditable:
+            paste_able = bool(QtGui.QApplication.clipboard().text())
+        return paste_able
+
+    # ConsoleWidget
+    def _custom_context_menu_requested(self, pos):
+        """ Shows a context menu at the given QPoint (in widget coordinates).
+        """
+        menu = ContextMenu(self, pos, self, allow_paste=True)
+        menu.exec_(self._control.mapToGlobal(pos))

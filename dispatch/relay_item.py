@@ -104,9 +104,20 @@ class Stream(OutText):
 
 
 class Banner(Stream):
-    def __init__(self, text='', head=True, empty=False, ansi_codes=True):
+    help_links = None  # list of dict: ('text', 'url')
+
+    def __init__(self, text='', help_links=None, head=True, empty=False, ansi_codes=True):
         super(Banner, self).__init__(text=text, name='stdout', clearable=False, head=head, empty=empty,
                                      ansi_codes=ansi_codes)
+        self.help_links = help_links
+
+    def split(self, num_lines):
+        count, first, rest = super(Banner, self).split(num_lines)
+        if rest.empty:
+            first.help_links = self.help_links
+        else:
+            rest.help_links = self.help_links
+        return count, first, rest
 
     @property
     def stream(self):

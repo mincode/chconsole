@@ -14,7 +14,6 @@ from .receiver_filter import ReceiverFilter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
-
 default_in_prompt = 'In [<span class="in-prompt-number">%i</span>]: '
 default_out_prompt = 'Out[<span class="out-prompt-number">%i</span>]: '
 default_output_sep = ''
@@ -62,7 +61,7 @@ def _covers(edit_widget, text):
 @singledispatch
 def _receive(item, receiver):
     pass
-    #raise NotImplementedError
+    # raise NotImplementedError
 
 
 @_receive.register(Stream)
@@ -102,6 +101,13 @@ def _(item, receiver):
     stream = item.stream
     stream.text = receiver.banner + stream.text
     _receive(stream, receiver)
+    if item.help_links:
+        receiver.insertPlainText('Help Links')
+        for helper in item.help_links:
+            receiver.insert_ansi_text('\n' + helper['text'] + ': ', item.ansi_codes)
+            url = helper['url']
+            receiver.insert_html('<a href="' + url + '">' + url + '</a>')
+    receiver.insertPlainText('\n')
 
 
 @_receive.register(Input)
@@ -141,12 +147,13 @@ def receiver_template(edit_class):
     :param edit_class: QTGui.QTextEdit or QtGui.QPlainTextEdit
     :return: Instantiated class.
     """
+
     class Receiver(MetaQObjectHasTraits('NewBase', (TextConfig, edit_class), {})):
         """
         Text edit that shows input and output.
         """
         max_blocks = Integer(500, config=True,
-            help="""
+                             help="""
             The maximum number of blocks in the document before truncating the document.
             Specifying a non-positive number disables truncation (not recommended).
             """)
@@ -162,12 +169,12 @@ def receiver_template(edit_class):
         data_stream_end = None  # QTextCursor, end of the last output line of stream or data
 
         width = Integer(81, config=True,
-            help="""The width of the command display at start time in number
+                        help="""The width of the command display at start time in number
             of characters (will double with `right` paging)
             """)
 
         height = Integer(25, config=True,
-            help="""The height of the commmand display at start time in number
+                         help="""The height of the commmand display at start time in number
             of characters (will double with `top` paging)
             """)
 
@@ -246,6 +253,13 @@ def receiver_template(edit_class):
             self.installEventFilter(self.receiver_filter)
             self.text_area_filter = TextAreaFilter(self)
             self.installEventFilter(self.text_area_filter)
+
+            # Text interaction
+            self.setTextInteractionFlags(
+                QtCore.Qt.TextSelectableByMouse |
+                QtCore.Qt.TextSelectableByKeyboard |
+                QtCore.Qt.LinksAccessibleByMouse |
+                QtCore.Qt.LinksAccessibleByKeyboard)
 
         def _banner_default(self):
             return "Chat Console {version}\n".format(version=__version__)
