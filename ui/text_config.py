@@ -9,6 +9,7 @@ from qtconsole.ansi_code_processor import QtAnsiCodeProcessor
 from qtconsole.util import get_font
 from qtconsole import styles
 from qtconsole.pygments_highlighter import PygmentsHighlighter
+from qtconsole.rich_text import HtmlExporter
 from .context_menu import ContextMenu
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -149,6 +150,12 @@ class TextConfig(LoggingConfigurable):
     decrease_font_size = None  # action for decreasing font size
     reset_font_size = None  # action for resetting font size
 
+    _html_exporter = None
+    print_action = None  # action for printing
+    export_action = None  # action for exporting
+    select_all_action = None  # action for selecting all
+
+
     def __init__(self, **kwargs):
         """
         Initialize.
@@ -218,6 +225,40 @@ class TextConfig(LoggingConfigurable):
                 statusTip="Restore the Normal font size",
                 triggered=self.reset_font)
         self.addAction(self.reset_font_size)
+
+        action = QtGui.QAction('Print', None)
+        action.setEnabled(True)
+        print_key = QtGui.QKeySequence(QtGui.QKeySequence.Print)
+        if print_key.matches("Ctrl+P") and sys.platform != 'darwin':
+            # Only override the default if there is a collision.
+            # Qt ctrl = cmd on OSX, so the match gets a false positive on OSX.
+            print_key = "Ctrl+Shift+P"
+        action.setShortcut(print_key)
+        action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        action.triggered.connect(self._print_doc)
+        self.addAction(action)
+        self.print_action = action
+
+        self._html_exporter = HtmlExporter(self)
+        action = QtGui.QAction('Save as HTML/XML', None)
+        action.setShortcut(QtGui.QKeySequence.Save)
+        action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        action.triggered.connect(self._html_exporter.export)
+        self.addAction(action)
+        self.export_action = action
+
+        action = QtGui.QAction('Select All', None)
+        action.setEnabled(True)
+        select_all = QtGui.QKeySequence(QtGui.QKeySequence.SelectAll)
+        if select_all.matches("Ctrl+A") and sys.platform != 'darwin':
+            # Only override the default if there is a collision.
+            # Qt ctrl = cmd on OSX, so the match gets a false positive on OSX.
+            select_all = "Ctrl+Shift+A"
+        action.setShortcut(select_all)
+        action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        action.triggered.connect(self.selectAll)
+        self.addAction(action)
+        self.select_all_action = action
 
         # Set a monospaced font.
         self.reset_font()
@@ -525,20 +566,37 @@ class TextConfig(LoggingConfigurable):
     def can_cut(self):
         """ Returns whether text can be cut to the clipboard.
         """
-        return self.textCursor().hasSelection()
+        if not self.isReadOnly():
+            return self.textCursor().hasSelection()
 
     # ConsoleWidget
     def can_paste(self):
         """ Returns whether text can be pasted from the clipboard.
         """
         paste_able = False
-        if self.textInteractionFlags() & QtCore.Qt.TextEditable:
+        if not self.isReadOnly():
             paste_able = bool(QtGui.QApplication.clipboard().text())
         return paste_able
+
+    # ConsoleWidget
+    def export_html(self):
+        """ Shows a dialog to export HTML/XML in various formats.
+        """
+        self._html_exporter.export()
+
+    # ConsoleWidget
+    def _print_doc(self, printer=None):
+        """ Print the contents of the ConsoleWidget to the specified QPrinter.
+        """
+        if not printer:
+            printer = QtGui.QPrinter()
+            if QtGui.QPrintDialog(printer).exec_() != QtGui.QDialog.Accepted:
+                return
+        self.print_(printer)
 
     # ConsoleWidget
     def _custom_context_menu_requested(self, pos):
         """ Shows a context menu at the given QPoint (in widget coordinates).
         """
-        menu = ContextMenu(self, pos, self, allow_paste=True)
-        menu.exec_(self._control.mapToGlobal(pos))
+        menu = ContextMenu(self, pos)
+        menu.exec_(self.mapToGlobal(pos))

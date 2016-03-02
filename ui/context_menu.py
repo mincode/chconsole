@@ -4,12 +4,12 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
 class ContextMenu(QtGui.QMenu):
-    def __init__(self, parent, pos, input_target, allow_paste=True):
+    def __init__(self, parent, pos):
         """ Creates a context menu for the given QPoint (in widget coordinates).
         """
         super(ContextMenu, self).__init__(parent)
 
-        if parent == input_target:
+        if not parent.isReadOnly():
             parent.cut_action = self.addAction('Cut', parent.cut)
             parent.cut_action.setEnabled(parent.can_cut())
             parent.cut_action.setShortcut(QtGui.QKeySequence.Cut)
@@ -18,9 +18,9 @@ class ContextMenu(QtGui.QMenu):
         parent.copy_action.setEnabled(parent.can_copy())
         parent.copy_action.setShortcut(QtGui.QKeySequence.Copy)
 
-        if allow_paste and input_target:
-            parent.paste_action = self.addAction('Paste', input_target.paste)
-            parent.paste_action.setEnabled(input_target.can_paste())
+        if not parent.isReadOnly():
+            parent.paste_action = self.addAction('Paste', parent.paste)
+            parent.paste_action.setEnabled(parent.can_paste())
             parent.paste_action.setShortcut(QtGui.QKeySequence.Paste)
 
         anchor = parent.anchorAt(pos)

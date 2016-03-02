@@ -1,10 +1,9 @@
-import sys, re
+import re
 from queue import Queue
 from functools import singledispatch
 from traitlets import Integer, Unicode
 from qtconsole.qt import QtCore, QtGui
 from qtconsole.util import MetaQObjectHasTraits
-from qtconsole.rich_text import HtmlExporter
 from dispatch.relay_item import RelayItem, Stream, Input, ClearOutput, ExecuteResult, Banner, PageDoc, HtmlStream
 from dispatch.outbuffer import OutBuffer
 from ui.text_config import TextConfig
@@ -178,11 +177,6 @@ def receiver_template(edit_class):
             of characters (will double with `top` paging)
             """)
 
-        _html_exporter = None
-        print_action = None  # action for printing
-        export_action = None  # action for exporting
-        select_all_action = None  # action for selecting all
-
         output_sep = Unicode(default_output_sep, config=True)  # to be included before an execute result
         output_sep2 = Unicode(default_output_sep2, config=True)  # to be included after an execute result
 
@@ -211,40 +205,6 @@ def receiver_template(edit_class):
             self._flush.item_ready.connect(self.on_item_ready)
             self._flush.start()
 
-            action = QtGui.QAction('Print', None)
-            action.setEnabled(True)
-            print_key = QtGui.QKeySequence(QtGui.QKeySequence.Print)
-            if print_key.matches("Ctrl+P") and sys.platform != 'darwin':
-                # Only override the default if there is a collision.
-                # Qt ctrl = cmd on OSX, so the match gets a false positive on OSX.
-                print_key = "Ctrl+Shift+P"
-            action.setShortcut(print_key)
-            action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
-            action.triggered.connect(self._print_doc)
-            self.addAction(action)
-            self.print_action = action
-
-            self._html_exporter = HtmlExporter(self)
-            action = QtGui.QAction('Save as HTML/XML', None)
-            action.setShortcut(QtGui.QKeySequence.Save)
-            action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
-            action.triggered.connect(self._html_exporter.export)
-            self.addAction(action)
-            self.export_action = action
-
-            action = QtGui.QAction('Select All', None)
-            action.setEnabled(True)
-            select_all = QtGui.QKeySequence(QtGui.QKeySequence.SelectAll)
-            if select_all.matches("Ctrl+A") and sys.platform != 'darwin':
-                # Only override the default if there is a collision.
-                # Qt ctrl = cmd on OSX, so the match gets a false positive on OSX.
-                select_all = "Ctrl+Shift+A"
-            action.setShortcut(select_all)
-            action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
-            action.triggered.connect(self.selectAll)
-            self.addAction(action)
-            self.select_all_action = action
-
             self.setAcceptDrops(True)
 
             self.viewport_filter = ViewportFilter(self)
@@ -255,30 +215,18 @@ def receiver_template(edit_class):
             self.installEventFilter(self.text_area_filter)
 
             # Text interaction
+            self.setReadOnly(True)
             self.setTextInteractionFlags(
                 QtCore.Qt.TextSelectableByMouse |
                 QtCore.Qt.TextSelectableByKeyboard |
                 QtCore.Qt.LinksAccessibleByMouse |
                 QtCore.Qt.LinksAccessibleByKeyboard)
 
+        # ConsoleWidget
         def _banner_default(self):
             return "Chat Console {version}\n".format(version=__version__)
 
-        def _print_doc(self, printer=None):
-            """ Print the contents of the ConsoleWidget to the specified QPrinter.
-            """
-            if not printer:
-                printer = QtGui.QPrinter()
-                if QtGui.QPrintDialog(printer).exec_() != QtGui.QDialog.Accepted:
-                    return
-            self.print_(printer)
-
-        def export_html(self):
-            """ Shows a dialog to export HTML/XML in various formats.
-            """
-            self._html_exporter.export()
-
-        # adopted from qtconsole.console_widget
+        # ConsoleWidget
         def sizeHint(self):
             """ Reimplemented to suggest a size that is 80 characters wide and
                 25 lines high.

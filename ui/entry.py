@@ -98,6 +98,9 @@ def entry_template(edit_class):
             self.entry_filter = EntryFilter(self)
             self.installEventFilter(self.entry_filter)
 
+            # Text interaction
+            self.setTextInteractionFlags(QtCore.Qt.TextEditable | QtCore.Qt.TextEditorInteraction)
+
         def update_code_mode(self, code_mode):
             """
             Update code flag that indicates whether coding mode is active.

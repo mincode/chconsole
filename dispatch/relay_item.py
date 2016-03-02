@@ -112,7 +112,7 @@ class Banner(Stream):
         self.help_links = help_links
 
     def split(self, num_lines):
-        count, first, rest = super(Banner, self).split(num_lines)
+        count, first, rest = RelayItem.split(self, num_lines)
         if rest.empty:
             first.help_links = self.help_links
         else:

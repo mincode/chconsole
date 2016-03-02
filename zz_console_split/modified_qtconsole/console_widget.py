@@ -666,12 +666,12 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
                 self._control.moveCursor(QtGui.QTextCursor.End)
 
         return complete
-# </done>
 
     def export_html(self):
         """ Shows a dialog to export HTML/XML in various formats.
         """
         self._html_exporter.export()
+# </done>
 
     def _get_input_buffer(self, force=False):
         """ The text that the user has entered entered at the current prompt.

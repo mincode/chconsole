@@ -57,6 +57,15 @@ def pager_template(edit_class):
             self.text_area_filter = TextAreaFilter(self)
             self.installEventFilter(self.text_area_filter)
 
+            # Text interaction
+            self.setReadOnly(True)
+            self.setTextInteractionFlags(
+                QtCore.Qt.TextSelectableByMouse |
+                QtCore.Qt.TextSelectableByKeyboard |
+                QtCore.Qt.LinksAccessibleByMouse |
+                QtCore.Qt.LinksAccessibleByKeyboard)
+
+
         # Traitlets handler
         def _location_changed(self, changed=None):
             """
