@@ -2,7 +2,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from .relay_item import RelayItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested, \
-    InText, ExecuteResult, Banner, CompleteItems
+    InText, ExecuteResult, Banner, CompleteItems, CallTip
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -149,7 +149,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         content = msg.content
         traceback = '\n'.join(content['traceback']) + '\n'
         if False:
-            # FIXME: For now, tracebacks come as plain text, so we can't use
+            # For now, tracebacks come as plain text, so we can't use
             # the html renderer yet.  Once we refactor ultratb to produce
             # properly styled tracebacks, this branch should be the default
             traceback = traceback.replace(' ', '&nbsp;')
@@ -170,3 +170,10 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         """ Process a reply for an aborted execution request.
         """
         self.please_process.emit(Stream('ERROR: execution aborted', name='stderr', clearable=False))
+
+    # FrontendWidget
+    def _handle_inspect_reply(self, msg):
+        """Handle replies for call tips."""
+        self.log.debug("info: %s", msg.get('content', ''))
+        if msg.from_here and msg.content.get('status') == 'ok' and msg.content.get('found', False):
+            self.please_process.emit(CallTip(msg.content))

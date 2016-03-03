@@ -129,6 +129,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     custom_restart_kernel_died = QtCore.Signal(float)
     custom_restart_requested = QtCore.Signal()
 
+# <done>
     # Whether to automatically show calltips on open-parentheses.
     enable_calltips = Bool(True, config=True,
         help="Whether to draw information calltips on open-parentheses.")
@@ -136,7 +137,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     clear_on_kernel_restart = Bool(True, config=True,
         help="Whether to clear the console when the kernel is restarted")
 
-# <done>
     confirm_restart = Bool(True, config=True,
         help="Whether to ask for user confirmation when restarting kernel")
 
@@ -181,7 +181,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     _local_kernel = False
 # </done>
     _highlighter = Instance(FrontendHighlighter, allow_none=True)
-# </done>
 
     #---------------------------------------------------------------------------
     # 'object' interface
@@ -189,6 +188,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
 
     def __init__(self, *args, **kw):
         super(FrontendWidget, self).__init__(*args, **kw)
+
         # FIXME: remove this when PySide min version is updated past 1.0.7
         # forcefully disable calltips if PySide is < 1.0.7, because they crash
         if qt.QT_API == qt.QT_API_PYSIDE:
@@ -200,6 +200,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         # FrontendWidget protected variables.
         self._bracket_matcher = BracketMatcher(self._control)
         self._call_tip_widget = CallTipWidget(self._control)
+# </done>
         self._copy_raw_action = QtGui.QAction('Copy (Raw Text)', None)
         self._hidden = False
         self._highlighter = FrontendHighlighter(self, lexer=self.lexer)
@@ -228,10 +229,11 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         self.copy_available.connect(action.setEnabled)
         self.addAction(action)
 
+# <done>
         # Connect signal handlers.
         document = self._control.document()
         document.contentsChange.connect(self._document_contents_change)
-
+# </done>
         # Set flag for whether we are connected via localhost.
         self._local_kernel = kw.get('local_kernel',
                                     FrontendWidget._local_kernel)
@@ -561,6 +563,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         self._kernel_restarted_message(died=died)
         self.reset()
 
+# <done>
     def _handle_inspect_reply(self, rep):
         """Handle replies for call tips."""
         self.log.debug("oinfo: %s", rep.get('content', ''))
@@ -571,6 +574,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
             content = rep['content']
             if content.get('status') == 'ok' and content.get('found', False):
                 self._call_tip_widget.show_inspect_data(content)
+# </done>
 
     def _handle_execute_result(self, msg):
         """ Handle display hook output.
@@ -765,7 +769,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         cursor.movePosition(cursor.StartOfLine, cursor.KeepAnchor)
         cursor.insertText('')
         cursor.endEditBlock()
-# </done>
 
     #---------------------------------------------------------------------------
     # 'FrontendWidget' protected interface
@@ -795,7 +798,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         self._request_info['call_tip'] = self._CallTipRequest(msg_id, pos)
         return True
 
-# <done>
     def _complete(self):
         """ Performs completion at the current cursor location.
         """
@@ -856,6 +858,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         """
         self._show_interpreter_prompt()
 
+# <done>
     #------ Signal handlers ----------------------------------------------------
 
     def _document_contents_change(self, position, removed, added):
@@ -877,3 +880,5 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         banner = 'Python %s on %s\nType "help", "copyright", "credits" or ' \
             '"license" for more information.'
         return banner % (sys.version, sys.platform)
+
+# </done>

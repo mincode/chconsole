@@ -61,6 +61,14 @@ class CompleteItems(RelayItem):
         self.end = end
 
 
+class CallTip(RelayItem):
+    content = None  # content of the call tip reply message
+
+    def __init__(self, content, head=True, empty=False):
+        super(CallTip, self).__init__(head=head, empty=empty)
+        self.content = content
+
+
 class ClearOutput(RelayItem):
     wait = False  # Wait to clear the output until new output is available
 

@@ -143,7 +143,6 @@ class TextConfig(LoggingConfigurable):
     export_action = None  # action for exporting
     select_all_action = None  # action for selecting all
 
-
     def __init__(self, **kwargs):
         """
         Initialize.
@@ -308,25 +307,20 @@ class TextConfig(LoggingConfigurable):
         font.setStyleHint(QtGui.QFont.TypeWriter)
         self._set_font(font)
 
-    def _get_font(self):
+    def get_font(self):
         """ The base font being used.
         """
         return self.document().defaultFont()
 
-    def _set_font(self, font):
+    def set_font(self, font):
         """ Sets the base font for the ConsoleWidget to the specified QFont.
         """
         font_metrics = QtGui.QFontMetrics(font)
         self.setTabStopWidth(self.tab_width * font_metrics.width(' '))
 
-        # self._completion_widget.setFont(font)
         self.document().setDefaultFont(font)
-        # if self._page_control:
-        #     self._page_control.document().setDefaultFont(font)
 
-        # self.font_changed.emit(font)
-
-    font = property(_get_font, _set_font)
+    font = property(get_font, set_font)
 
     def change_font_size(self, delta):
         """Change the font size by the specified amount (in points).

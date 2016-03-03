@@ -164,11 +164,9 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
     redo_available = QtCore.Signal(bool)
     undo_available = QtCore.Signal(bool)
 
-# <done>
     # Signal emitted when paging is needed and the paging style has been
     # specified as 'custom'.
     custom_page_requested = QtCore.Signal(object)
-# </done>
 
     # Signal emitted when the font is changed.
     font_changed = QtCore.Signal(QtGui.QFont)

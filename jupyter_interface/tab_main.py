@@ -73,6 +73,7 @@ def tab_main_template(edit_class):
             super(TabMain, self).__init__(parent, **kw)
             self.main_content = tab_content_template(edit_class)(self.is_complete)
             self.main_content.please_execute.connect(self._execute)
+            self.main_content.please_inspect.connect(self._inspect)
             self.main_content.please_exit.connect(self._on_exit_request)
             self.main_content.please_complete.connect(self._on_complete_request)
             self.message_arrived.connect(self.main_content.augment)
@@ -211,6 +212,11 @@ def tab_main_template(edit_class):
         def _on_exit_request(self, keep_kernel_on_exit):
             self.keep_kernel_on_exit = True if keep_kernel_on_exit else None
             self.exit_requested.emit(self)
+
+        @QtCore.Slot(Source, int)
+        def _execute(self, source, position):
+            if self.kernel_client.shell_channel.is_alive():
+                self.kernel_client.inspect(source.code, position)
 
         @QtCore.Slot(Source)
         def _execute(self, source):

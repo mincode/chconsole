@@ -1,14 +1,17 @@
 import os
 from functools import singledispatch
-from traitlets import Bool, Enum
+from traitlets import Bool
+from qtconsole import qt
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.completion_widget import CompletionWidget
 from qtconsole.kill_ring import QtKillRing
+from qtconsole.call_tip_widget import CallTipWidget
+from qtconsole.bracket_matcher import BracketMatcher
 from dispatch.source import Source
 from .entry_filter import EntryFilter
 from .text_config import TextConfig
-from dispatch.relay_item import InText, CompleteItems
+from dispatch.relay_item import InText, CompleteItems, CallTip
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -18,20 +21,26 @@ chat_active_color = QtCore.Qt.red  # color used for the widget's frame if in cha
 
 
 @singledispatch
-def _post(item, receiver):
+def _post(item, target):
     pass
     #raise NotImplementedError
 
 
 @_post.register(InText)
-def _(item, receiver):
-    receiver.clear()
-    receiver.insertPlainText(item.text)
+def _(item, target):
+    target.clear()
+    target.insertPlainText(item.text)
 
 
 @_post.register(CompleteItems)
-def _(item, receiver):
-    receiver.process_complete(item)
+def _(item, target):
+    target.process_complete(item)
+
+
+@_post.register(CallTip)
+def _(item, target):
+    if target.textCursor().position() == target.call_tip_position:
+        target.entry.call_tip_widget.show_inspect_data(item.content)
 
 
 def entry_template(edit_class):
@@ -47,6 +56,10 @@ def entry_template(edit_class):
         """
         code_mode = Bool(True)  # True if document contains code to be executed; rather than a chat message
 
+        # Signal emitted when the font is changed.
+        font_changed = QtCore.Signal(QtGui.QFont)
+
+
         execute_on_complete_input = Bool(True, config=True,
             help="""Whether to automatically execute on syntactically complete input.
 
@@ -55,6 +68,18 @@ def entry_template(edit_class):
             where the completion check would be wrong.
             """
         )
+
+        # Whether to automatically show calltips on open-parentheses.
+        enable_call_tips = Bool(True, config=True,
+                                help="Whether to draw information calltips on open-parentheses.")
+
+        call_tip_widget = None  # CallTipWidget
+        _bracket_matcher = None  # BracketMatcher
+        call_tip_position = 0  # cursor position where a call tip should be shown
+        please_inspect = QtCore.Signal(int)  # ask for inspection of source at cursor position int
+
+        clear_on_kernel_restart = Bool(True, config=True,
+            help="Whether to clear the console when the kernel is restarted")
 
         is_complete = None  # function str->(bool, str) that checks whether the input is complete code
         please_execute = QtCore.Signal()  # ask for execution of source
@@ -85,6 +110,21 @@ def entry_template(edit_class):
             """
             edit_class.__init__(self, text, parent)
             TextConfig.__init__(self, **kwargs)
+
+            # Call tips
+            # forcefully disable calltips if PySide is < 1.0.7, because they crash
+            if qt.QT_API == qt.QT_API_PYSIDE:
+                import PySide
+                if PySide.__version_info__ < (1,0,7):
+                    self.log.warn("PySide %s < 1.0.7 detected, disabling calltips" % PySide.__version__)
+                    self.enable_call_tips = False
+            self.call_tip_widget = CallTipWidget(self)
+            self.call_tip_widget.setFont(self.font)
+            self.font_changed.connect(self.call_tip_widget.setFont)
+
+            self._bracket_matcher = BracketMatcher(self)
+            self.document().contentsChange.connect(self._document_contents_change)
+
             self.setFrameStyle(QtGui.QFrame.Box | QtGui.QFrame.Plain)
             self.setLineWidth(2)
             if self.code_mode == code:
@@ -98,6 +138,7 @@ def entry_template(edit_class):
             self._control = self  # required for completer
             self._clear_temporary_buffer = lambda: None
             self.completer = CompletionWidget(self)
+            self.completer.setFont(self.font)
             self.is_complete = is_complete
 
             self.entry_filter = EntryFilter(self)
@@ -115,6 +156,12 @@ def entry_template(edit_class):
             :return:
             """
             self.code_mode = code_mode
+
+        def _set_font(self, font):
+            TextConfig.set_font(self, font)
+            if hasattr(self, 'completer') and self.completer:
+                self.completer.setFont(font)
+            self.font_changed.emit(font)
 
         @property
         def source(self):
@@ -210,5 +257,47 @@ def entry_template(edit_class):
 
                 cursor.movePosition(QtGui.QTextCursor.Left, n=len(prefix))
                 self.completer.show_items(cursor, items)
+
+        # FrontendWidget
+        def _auto_call_tip(self):
+            """Trigger call tip automatically on open parenthesis
+
+            Call tips can be requested explcitly with `_call_tip`.
+            """
+            cursor = self.textCursor()
+            cursor.movePosition(QtGui.QTextCursor.Left)
+            if cursor.document().characterAt(cursor.position()) == '(':
+                # trigger auto call tip on open paren
+                self._call_tip()
+
+        # FrontendWidget
+        def _call_tip(self):
+            """Shows a call tip, if appropriate, at the current cursor location."""
+            # Decide if it makes sense to show a call tip
+            # if not self.enable_calltips or not self.kernel_client.shell_channel.is_alive():
+            #     return False
+            # cursor_pos = self._get_input_buffer_cursor_pos()
+            # code = self.toPlainText()
+            # # Send the metadata request to the kernel
+            # msg_id = self.kernel_client.inspect(code, cursor_pos)
+
+            if not self.enable_calltips:
+                return False
+            cursor_pos = self.textCursor().position()
+            code = self.toPlainText()
+            self.please_inspect.emit(cursor_pos)
+            return True
+
+        # FrontendWidget
+        def _document_contents_change(self, position, removed, added):
+            """ Called whenever the document's content changes. Display a call tip
+                if appropriate.
+            """
+            # Calculate where the cursor should be *after* the change:
+            position += added
+
+            if position == self.textCursor().position():
+                self.call_tip_position = position
+                self._auto_call_tip()
 
     return Entry

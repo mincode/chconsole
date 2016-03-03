@@ -1,5 +1,6 @@
 import sys
 from subprocess import Popen
+from functools import singledispatch
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Integer, Unicode, Bool
@@ -7,7 +8,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from dispatch.message import KernelMessage, Message
 from dispatch.importer import Importer
 from dispatch.source import Source
-from dispatch.relay_item import RelayItem, PageDoc, EditFile, Stream, ExitRequested, InText, CompleteItems
+from dispatch.relay_item import RelayItem, PageDoc, EditFile, Stream, ExitRequested, InText, CompleteItems, CallTip
 from .entry import entry_template
 from .pager import pager_template
 from .receiver import receiver_template
@@ -79,6 +80,50 @@ class CommandError(Exception):
         self.command = command
 
 
+# Receiver
+@singledispatch
+def _post(item, target):
+    target.receiver.post(item)
+
+
+# Process here
+@_post.register(ExitRequested)
+def _(item, target):
+    target.please_exit.emit(item.keep_kernel_on_exit)
+
+
+@_post.register(EditFile)
+def _(item, target):
+    try:
+        target.external_edit(item.filename, item.line_number)
+    except NoDefaultEditor:
+        text = ('No default editor available. '
+                'Specify a GUI text editor in the `TabContent.editor` configurable '
+                'to enable the %edit magic')
+        target.receiver.post(Stream(text=text, name='stderr', clearable=False))
+    except KeyError:
+        text = 'Invalid editor command.'
+        target.receiver.post(Stream(text=text, name='stderr', clearable=False))
+    except CommandError as e:
+        text = 'Opening editor with command "%s" failed.' % e.command
+        target.receiver.post(Stream(text=text, name='stderr', clearable=False))
+
+
+# Pager
+@_post.register(PageDoc)
+def _(item, target):
+    if target.receiver.covers(item):
+        target.pager.post(item)
+
+
+# Entry
+@_post.register(InText)
+@_post.register(CompleteItems)
+@_post.register(CallTip)
+def _(item, target):
+    target.entry.post(item)
+
+
 def tab_content_template(edit_class):
     """
     Template for TabWidget.
@@ -110,6 +155,7 @@ def tab_content_template(edit_class):
 
         message_arrived = QtCore.Signal(Message)  # to signal a message from the kernel
         please_execute = QtCore.Signal(Source)  # source to be executed
+        please_inspect = QtCore.Signal(Source, int) # source to be inspected at cursor position int
 
         print_action = None  # action for printing
         export_action = None # action for exporting
@@ -172,8 +218,9 @@ def tab_content_template(edit_class):
 
             self.entry = entry_template(edit_class)(is_complete=is_complete)
             self.entry.please_execute.connect(self.on_send_clicked)
+            self.entry.please_inspect.connect(self.on_please_inspect)
             self.entry.please_complete.connect(self.please_complete)
-            self.entry.please_restart_kernel.connect(self.please_restart_kernel)
+            self.entry.please_restart_kernel.connect(self._on_please_restart_kernel)
             self.entry.please_interrupt_kernel.connect(self.please_interrupt_kernel)
             self.receiver = receiver_template(edit_class)()
             self._console_area.addWidget(self.receiver)
@@ -235,8 +282,8 @@ def tab_content_template(edit_class):
                 return None
 
         # JupyterWidget
-        def _edit(self, filename, line=None):
-            """ Opens a Python script for editing.
+        def external_edit(self, filename, line=None):
+            """ Opens an external editor.
 
             Parameters
             ----------
@@ -273,34 +320,7 @@ def tab_content_template(edit_class):
 
         @QtCore.Slot(RelayItem)
         def post(self, item):
-            # To external
-            if isinstance(item, ExitRequested):
-                self.please_exit.emit(item.keep_kernel_on_exit)
-            # Pager
-            elif isinstance(item, PageDoc) and self.receiver.covers(item):
-                self.pager.post(item)
-            # Entry
-            elif isinstance(item, InText):
-                self.entry.post(item)
-            elif isinstance(item, CompleteItems):
-                self.entry.post(item)
-            # Receiver
-            elif isinstance(item, EditFile):
-                try:
-                    self._edit(item.filename, item.line_number)
-                except NoDefaultEditor:
-                    text = ('No default editor available. '
-                            'Specify a GUI text editor in the `TabContent.editor` configurable '
-                            'to enable the %edit magic')
-                    self.receiver.post(Stream(text=text, name='stderr', clearable=False))
-                except KeyError:
-                    text = 'Invalid editor command.'
-                    self.receiver.post(Stream(text=text, name='stderr', clearable=False))
-                except CommandError as e:
-                    text = 'Opening editor with command "%s" failed.' % e.command
-                    self.receiver.post(Stream(text=text, name='stderr', clearable=False))
-            else:
-                self.receiver.post(item)
+            _post(item, self)
 
         @property
         def pager_locations(self):
@@ -345,5 +365,17 @@ def tab_content_template(edit_class):
             msg.show_other = self.show_other
             msg.ansi_codes = self.ansi_codes
             self.message_arrived.emit(msg)
+
+        @QtCore.Slot()
+        def _on_please_restart_kernel(self):
+            if self.entry.clear_on_kernel_restart:
+                self.entry.clear()
+                self.receiver.clear()
+                self.pager.clear()
+            self.please_restart_kernel.emit()
+
+        @QtCore.Slot(int)
+        def _on_please_inspect(self, position):
+            self.please_inspect.emit(self.entry.code, position)
 
     return TabContent

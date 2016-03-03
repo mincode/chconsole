@@ -199,7 +199,7 @@ class EntryFilter(BaseEventFilter):
                 # 2) the target.tabwidth characters immediately left of the cursor are spaces
                 # There is a slight inconsistency because for indentation the suggested indent blanks replied
                 # by the kernel are used which are not coordinated with target.tabwidth. It would be better if
-                # the indents by the kernel are multples of target.tabwidth.
+                # the indents by the kernel are multiples of target.tabwidth.
                 elif key == QtCore.Qt.Key_Backspace:
                     remove_smart = self.target.tab_width
                     cursor = self.target.textCursor()
