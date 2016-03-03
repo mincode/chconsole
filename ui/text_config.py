@@ -23,7 +23,7 @@ def is_letter_or_number(char):
     return cat.startswith('L') or cat.startswith('N')
 
 
-# adopted from ConsoleWidget
+# ConsoleWidget
 def _set_top_cursor(receiver, cursor):
     """ Scrolls the viewport so that the specified cursor is at the top.
     """
@@ -71,18 +71,6 @@ class FrontendHighlighter(PygmentsHighlighter):
         current_block = self.currentBlock()
         string = get_block_plain_text(current_block)
 
-# Potentially handle prompt differently
-        # # Decide whether to check for the regular or continuation prompt.
-        # if current_block.contains(self._frontend._prompt_pos):
-        #     prompt = self._frontend._prompt
-        # else:
-        #     prompt = self._frontend._continuation_prompt
-        #
-        # # Only highlight if we can identify a prompt, but make sure not to
-        # # highlight the prompt.
-        # if string.startswith(prompt):
-        #    self._current_offset = len(prompt)
-        #    string = string[len(prompt):]
         super(FrontendHighlighter, self).highlightBlock(string)
 
     def rehighlightBlock(self, block):
@@ -115,7 +103,7 @@ class TextConfig(LoggingConfigurable):
     font_size = Integer(
         config=True, help="The font size. If unconfigured, Qt will be entrusted with the size of the font.")
 
-    standard_tab_width = Integer(8, config=True, help="Number of spaces used for tab.")
+    standard_tab_width = Integer(4, config=True, help="Number of spaces used for tab.")
 
     style_sheet = Unicode(config=True,
         help="""
@@ -163,6 +151,7 @@ class TextConfig(LoggingConfigurable):
         """
         super(LoggingConfigurable, self).__init__(**kwargs)
 
+        # Text interaction
         self.setMouseTracking(True)
         if hasattr(self, 'setAcceptRichText'):
             self.setAcceptRichText(False)

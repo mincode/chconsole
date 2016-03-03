@@ -228,7 +228,8 @@ def receiver_template(edit_class):
         viewport_filter = None
         receiver_filter = None
         text_area_filter = None
-        release_focus = QtCore.Signal()
+        release_focus = QtCore.Signal()  # signal to release the focus
+        please_exit = QtCore.Signal(bool)  # Signal when exit is requested
 
         def __init__(self, text='', parent=None, **kwargs):
             """

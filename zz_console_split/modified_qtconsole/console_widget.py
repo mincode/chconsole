@@ -197,7 +197,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
     _shortcuts = set(_ctrl_down_remap.keys()) | \
                      { QtCore.Qt.Key_C, QtCore.Qt.Key_G, QtCore.Qt.Key_O,
                        QtCore.Qt.Key_V }
-# </done>
 
     _temp_buffer_filled = False
 
@@ -216,7 +215,6 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
         QtGui.QWidget.__init__(self, parent)
         LoggingConfigurable.__init__(self, **kw)
 
-# <done>
         # While scrolling the pager on Mac OS X, it tears badly.  The
         # NativeGesture is platform and perhaps build-specific hence
         # we take adequate precautions here.
@@ -247,13 +245,11 @@ class ConsoleWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.
                 self._splitter.addWidget(self._page_control)
             else:
                 layout.addWidget(self._page_control)
-# </done>
 
         # Initialize protected variables. Some variables contain useful state
         # information for subclasses; they should be considered read-only.
         self._append_before_prompt_pos = 0
 
-# <done>
         self._ansi_processor = QtAnsiCodeProcessor()
         if self.gui_completion == 'ncurses':
             self._completion_widget = CompletionHtml(self)

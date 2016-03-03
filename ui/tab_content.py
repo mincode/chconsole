@@ -140,8 +140,9 @@ def tab_content_template(edit_class):
             magic will be ignored.
             """)
 
-        # Signal when exit is requested
-        please_exit = QtCore.Signal(bool)
+        please_exit = QtCore.Signal(bool)  # Signal when exit is requested
+        please_restart_kernel = QtCore.Signal()  # Signal when exit is requested
+        please_interrupt_kernel = QtCore.Signal()  # Signal when exit is requested
 
         # Signal requesting completing code str ad cursor position int.
         please_complete = QtCore.Signal(str, int)
@@ -172,6 +173,8 @@ def tab_content_template(edit_class):
             self.entry = entry_template(edit_class)(is_complete=is_complete)
             self.entry.please_execute.connect(self.on_send_clicked)
             self.entry.please_complete.connect(self.please_complete)
+            self.entry.please_restart_kernel.connect(self.please_restart_kernel)
+            self.entry.please_interrupt_kernel.connect(self.please_interrupt_kernel)
             self.receiver = receiver_template(edit_class)()
             self._console_area.addWidget(self.receiver)
             self._console_area.addWidget(self.entry)
@@ -196,6 +199,7 @@ def tab_content_template(edit_class):
             self.pager.release_focus.connect(self.entry.set_focus)
             self.receiver.release_focus.connect(self.entry.set_focus)
             self.entry.release_focus.connect(self.receiver.set_focus)
+            self.receiver.please_exit.connect(self.please_exit)
 
             # Import and handle kernel messages
             self._importer = Importer(self)

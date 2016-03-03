@@ -4,6 +4,7 @@ from traitlets import Bool, Enum
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.completion_widget import CompletionWidget
+from qtconsole.kill_ring import QtKillRing
 from dispatch.source import Source
 from .entry_filter import EntryFilter
 from .text_config import TextConfig
@@ -17,18 +18,18 @@ chat_active_color = QtCore.Qt.red  # color used for the widget's frame if in cha
 
 
 @singledispatch
-def _receive(item, receiver):
+def _post(item, receiver):
     pass
     #raise NotImplementedError
 
 
-@_receive.register(InText)
+@_post.register(InText)
 def _(item, receiver):
     receiver.clear()
     receiver.insertPlainText(item.text)
 
 
-@_receive.register(CompleteItems)
+@_post.register(CompleteItems)
 def _(item, receiver):
     receiver.process_complete(item)
 
@@ -65,8 +66,12 @@ def entry_template(edit_class):
 
         # Signal requesting completing code str ad cursor position int.
         please_complete = QtCore.Signal(str, int)
-
         completer = None  # completion object
+
+        kill_ring = None  # QKillRing
+
+        please_restart_kernel = QtCore.Signal()  # Signal when exit is requested
+        please_interrupt_kernel = QtCore.Signal()  # Signal when exit is requested
 
         def __init__(self, is_complete=None, code=True, text='', parent=None, **kwargs):
             """
@@ -100,6 +105,8 @@ def entry_template(edit_class):
 
             # Text interaction
             self.setTextInteractionFlags(QtCore.Qt.TextEditable | QtCore.Qt.TextEditorInteraction)
+            self.setUndoRedoEnabled(True)
+            self.kill_ring = QtKillRing(self)
 
         def update_code_mode(self, code_mode):
             """
@@ -123,7 +130,7 @@ def entry_template(edit_class):
             :param item: RelayItem for the input area.
             :return:
             """
-            _receive(item, self)
+            _post(item, self)
 
         @QtCore.Slot()
         def set_focus(self):
