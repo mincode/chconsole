@@ -174,6 +174,6 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
     # FrontendWidget
     def _handle_inspect_reply(self, msg):
         """Handle replies for call tips."""
-        self.log.debug("info: %s", msg.get('content', ''))
+        self.log.debug("info: %s", msg.content)
         if msg.from_here and msg.content.get('status') == 'ok' and msg.content.get('found', False):
             self.please_process.emit(CallTip(msg.content))

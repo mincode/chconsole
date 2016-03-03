@@ -214,7 +214,7 @@ def tab_main_template(edit_class):
             self.exit_requested.emit(self)
 
         @QtCore.Slot(Source, int)
-        def _execute(self, source, position):
+        def _inspect(self, source, position):
             if self.kernel_client.shell_channel.is_alive():
                 self.kernel_client.inspect(source.code, position)
 

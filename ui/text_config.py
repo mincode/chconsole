@@ -305,7 +305,7 @@ class TextConfig(LoggingConfigurable):
         else:
             font.setPointSize(QtGui.qApp.font().pointSize())
         font.setStyleHint(QtGui.QFont.TypeWriter)
-        self._set_font(font)
+        self.set_font(font)
 
     def get_font(self):
         """ The base font being used.

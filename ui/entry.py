@@ -40,7 +40,7 @@ def _(item, target):
 @_post.register(CallTip)
 def _(item, target):
     if target.textCursor().position() == target.call_tip_position:
-        target.entry.call_tip_widget.show_inspect_data(item.content)
+        target.call_tip_widget.show_inspect_data(item.content)
 
 
 def entry_template(edit_class):
@@ -281,7 +281,7 @@ def entry_template(edit_class):
             # # Send the metadata request to the kernel
             # msg_id = self.kernel_client.inspect(code, cursor_pos)
 
-            if not self.enable_calltips:
+            if not self.enable_call_tips:
                 return False
             cursor_pos = self.textCursor().position()
             code = self.toPlainText()

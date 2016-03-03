@@ -218,7 +218,7 @@ def tab_content_template(edit_class):
 
             self.entry = entry_template(edit_class)(is_complete=is_complete)
             self.entry.please_execute.connect(self.on_send_clicked)
-            self.entry.please_inspect.connect(self.on_please_inspect)
+            self.entry.please_inspect.connect(self._on_please_inspect)
             self.entry.please_complete.connect(self.please_complete)
             self.entry.please_restart_kernel.connect(self._on_please_restart_kernel)
             self.entry.please_interrupt_kernel.connect(self.please_interrupt_kernel)
@@ -376,6 +376,6 @@ def tab_content_template(edit_class):
 
         @QtCore.Slot(int)
         def _on_please_inspect(self, position):
-            self.please_inspect.emit(self.entry.code, position)
+            self.please_inspect.emit(self.entry.source, position)
 
     return TabContent
