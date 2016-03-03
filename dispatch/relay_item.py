@@ -200,10 +200,12 @@ class EditFile(RelayItem):
 
 class ExitRequested(RelayItem):
     keep_kernel_on_exit = False  # keep kernel when exit main widget
+    confirm = False  # whether exit should be confirmed from the user
 
-    def __init__(self, keep_kernel_on_exit, head=True, empty=False):
+    def __init__(self, keep_kernel_on_exit, confirm=False, head=True, empty=False):
         super(ExitRequested, self).__init__(head=head, empty=empty)
         self.keep_kernel_on_exit = keep_kernel_on_exit
+        self.confirm = confirm
 
 
 class InText(RelayItem):

@@ -89,7 +89,15 @@ def _post(item, target):
 # Process here
 @_post.register(ExitRequested)
 def _(item, target):
-    target.please_exit.emit(item.keep_kernel_on_exit)
+    reply = QtGui.QMessageBox.Yes
+    if item.confirm:
+        title = target.window().windowTitle()
+        reply = QtGui.QMessageBox.question(target, title,
+                        "Kernel has been shutdown permanently. "
+                        "Close the Console?",
+                        QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+    if reply == QtGui.QMessageBox.Yes:
+        target.please_exit.emit(item.keep_kernel_on_exit)
 
 
 @_post.register(EditFile)

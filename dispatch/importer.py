@@ -2,7 +2,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from .relay_item import RelayItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested, \
-    InText, ExecuteResult, Banner, CompleteItems, CallTip
+    InText, ExecuteResult, Banner, CompleteItems, CallTip, HtmlStream
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -44,6 +44,47 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         help_links = msg.content['help_links']
         banner = Banner(text=to_show, help_links=help_links.copy())
         self.please_process.emit(banner)
+
+    # FrontendWidget
+    def _kernel_restarted(self, died=True):
+        """Notice that the autorestarter restarted the kernel.
+
+        There's nothing to do but show a message.
+        """
+        self.log.warn("kernel restarted")
+        msg = "Kernel died, restarting" if died else "Kernel restarting"
+        text = "<br>%s<hr><br>" % msg
+        self.please_process.emit(HtmlStream(text, name='stderr', clearable=False))
+
+    # FrontendWidget
+    def _handle_shutdown_reply(self, msg):
+        """ Handle shutdown signal, only if from other console.
+        """
+        self.log.debug("shutdown: %s", msg.content)
+        restart = msg.content.get('restart', False)
+        if not msg.from_here:
+            # got shutdown reply, request came from session other than ours
+            if restart:
+                # someone restarted the kernel, handle it
+                self._kernel_restarted(died=False)
+            else:
+                # kernel was shutdown permanently
+                # this triggers exit_requested if the kernel was local,
+                # and a dialog if the kernel was remote,
+                # so we don't suddenly clear the console without asking.
+                self.please_process.emit(ExitRequested(False, confirm=not msg.local_kernel))
+
+    def _handle_status(self, msg):
+        """Handle status message"""
+        # This is where a busy/idle indicator would be triggered,
+        # when we make one.
+        state = msg.content.get('execution_state', '')
+        if state == 'starting':
+            self._kernel_restarted(died=True)
+        elif state == 'idle':
+            pass
+        elif state == 'busy':
+            pass
 
     # def _handle_history_reply(self, msg):
     #     print('history reply dropped')

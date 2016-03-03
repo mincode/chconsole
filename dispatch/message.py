@@ -27,17 +27,21 @@ class Message(object):
         return self.kernel_message.from_here
 
     @property
+    def local_kernel(self):
+        return self.kernel_message.local_kernel
+
+    @property
     def show_me(self):
         """
         Determine if message is to be shown.
         :return: True if message is to be shown.
         """
-        return self.kernel_message.from_here or self.show_other
+        return self.from_here or self.show_other
 
     @property
     def type(self):
-        return self.kernel_message.whole['header']['msg_type']
+        return self.whole['header']['msg_type']
 
     @property
     def content(self):
-        return self.kernel_message.whole.get('content', '')
+        return self.whole.get('content', '')

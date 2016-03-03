@@ -212,12 +212,16 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         self._display_banner = True
 
         # Configure the ConsoleWidget.
+# <done>
         self.tab_width = 4
+# </done>
         self._set_continuation_prompt('... ')
 
+# <done>
         # Configure the CallTipWidget.
         self._call_tip_widget.setFont(self.font)
         self.font_changed.connect(self._call_tip_widget.setFont)
+# </done>
 
         # Configure actions.
         action = self._copy_raw_action
@@ -233,10 +237,10 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         # Connect signal handlers.
         document = self._control.document()
         document.contentsChange.connect(self._document_contents_change)
-# </done>
         # Set flag for whether we are connected via localhost.
         self._local_kernel = kw.get('local_kernel',
                                     FrontendWidget._local_kernel)
+# </done>
 
         # Whether or not a clear_output call is pending new output.
         self._pending_clearoutput = False
@@ -341,7 +345,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         if complete:
             self._complete()
         return not complete
-# </done>
 
     #---------------------------------------------------------------------------
     # 'ConsoleWidget' protected interface
@@ -358,7 +361,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
                 break
         return menu
 
-# <done>
     def request_interrupt_kernel(self):
         if self._executing:
             self.interrupt_kernel()
@@ -538,6 +540,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
             self._reading = False
         self._readline(msg['content']['prompt'], callback=callback, password=msg['content']['password'])
 
+# <done>
     def _kernel_restarted_message(self, died=True):
         msg = "Kernel died, restarting" if died else "Kernel restarting"
         self._append_html("<br>%s<hr><br>" % msg,
@@ -563,7 +566,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         self._kernel_restarted_message(died=died)
         self.reset()
 
-# <done>
     def _handle_inspect_reply(self, rep):
         """Handle replies for call tips."""
         self.log.debug("oinfo: %s", rep.get('content', ''))
@@ -574,7 +576,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
             content = rep['content']
             if content.get('status') == 'ok' and content.get('found', False):
                 self._call_tip_widget.show_inspect_data(content)
-# </done>
 
     def _handle_execute_result(self, msg):
         """ Handle display hook output.
@@ -633,13 +634,11 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         elif state == 'busy':
             pass
 
-# <done>
     def _started_channels(self):
         """ Called when the KernelManager channels have started listening or
             when the frontend is assigned an already listening KernelManager.
         """
         self.reset(clear=True)
-# </done>
 
     #---------------------------------------------------------------------------
     # 'FrontendWidget' public interface
@@ -651,7 +650,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         """
         self._control.copy()
 
-# <done>
     def interrupt_kernel(self):
         """ Attempts to interrupt the running kernel.
         
@@ -666,7 +664,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
             self.kernel_manager.interrupt_kernel()
         else:
             self._append_plain_text('Cannot interrupt a kernel I did not start.\n')
-# </done>
 
     def reset(self, clear=False):
         """ Resets the widget to its initial state if ``clear`` parameter
@@ -694,7 +691,6 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
         self._append_before_prompt_pos = self._get_cursor().position()
         self._show_interpreter_prompt()
 
-# <done>
     def restart_kernel(self, message, now=False):
         """ Attempts to restart the running kernel.
         """

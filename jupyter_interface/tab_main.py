@@ -55,6 +55,8 @@ def tab_main_template(edit_class):
 
         message_arrived = QtCore.Signal(KernelMessage)  # signal to send a message that has arrived from the kernel
 
+        local_kernel = False  # whether kernel is on the local machine
+
         # Mechanism for keeping kernel on exit required by MainWindow
         keep_kernel_on_exit = None
         exit_requested = QtCore.Signal(object)  # signal to be sent when exit is requested through the kernel
@@ -82,6 +84,9 @@ def tab_main_template(edit_class):
             layout.setContentsMargins(0, 0, 0, 0)
             layout.addWidget(self.main_content)
 
+            # Set flag for whether we are connected via localhost.
+            self.local_kernel = kw.get('local_kernel', TabMain.local_kernel)
+
         def _started_channels(self):
             """Make a history request and load %guiref, if possible."""
             # 1) send clear
@@ -100,14 +105,14 @@ def tab_main_template(edit_class):
             :param msg: Incoming message.
             :return:
             """
-            self.message_arrived.emit(KernelMessage(msg, self.from_here(msg)))
+            self.message_arrived.emit(KernelMessage(msg, from_here=self.from_here(msg), local_kernel=self.local_kernel))
 
         # FrontendWidget
         def _restart_kernel(self, message, now=False):
             """ Attempts to restart the running kernel.
             """
             # FrontendWidget:
-            # FIXME: now should be configurable via a checkbox in the dialog.  Right
+            # now should be configurable via a checkbox in the dialog.  Right
             # now at least the heartbeat path sets it to True and the manual restart
             # to False.  But those should just be the pre-selected states of a
             # checkbox that the user could override if so desired.  But I don't know
@@ -167,6 +172,17 @@ def tab_main_template(edit_class):
         # FrontendWidget
         def request_interrupt_kernel(self):
             self.interrupt_kernel()
+
+        # FrontendWidget
+        def _handle_kernel_died(self, since_last_heartbeat):
+            """
+            Handle the kernel's death (if we do not own the kernel).
+            """
+            self.log.warn("kernel died: %s", since_last_heartbeat)
+            text = 'Kernel died'
+            msg = {'header': {'msg_type': 'stream'}, 'content': {'text': text, 'name': 'stderr'}}
+            self.message_arrived.emit(KernelMessage(msg, from_here=True))
+
 
         # FrontendWidget
         def is_complete(self, source):

@@ -154,7 +154,6 @@ class JupyterWidget(IPythonWidget):
             self.set_default_style()
 
         self._guiref_loaded = False
-# </done>
 
     #---------------------------------------------------------------------------
     # 'BaseFrontendMixin' abstract interface
@@ -192,7 +191,6 @@ class JupyterWidget(IPythonWidget):
             cursor.movePosition(QtGui.QTextCursor.Left, n=offset)
             self._complete_with_items(cursor, matches)
 
-# <done>
     def _handle_execute_reply(self, msg):
         """ Reimplemented to support prompt requests.
         """
@@ -312,14 +310,11 @@ class JupyterWidget(IPythonWidget):
         self.kernel_client.kernel_info()
 
         self.kernel_client.history(hist_access_type='tail', n=1000)
-# </done>
-
 
     #---------------------------------------------------------------------------
     # 'FrontendWidget' protected interface
     #---------------------------------------------------------------------------
 
-# <done>
     def _process_execute_error(self, msg):
         """Handle an execute_error message"""
         content = msg['content']
