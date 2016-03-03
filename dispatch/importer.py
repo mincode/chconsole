@@ -2,7 +2,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from .relay_item import RelayItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested, \
-    InText, ExecuteResult, Banner, CompleteItems, CallTip, HtmlStream
+    InText, ExecuteResult, Banner, CompleteItems, CallTip, HtmlStream, InputRequest
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -218,3 +218,6 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         self.log.debug("info: %s", msg.content)
         if msg.from_here and msg.content.get('status') == 'ok' and msg.content.get('found', False):
             self.please_process.emit(CallTip(msg.content))
+
+    def _handle_input_request(self, msg):
+        self.please_process.emit(InputRequest(msg.content.get('prompt', ''), msg.content.get('password', False)))

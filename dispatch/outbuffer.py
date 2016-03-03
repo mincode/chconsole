@@ -65,8 +65,7 @@ class OutBuffer(QtCore.QThread):
                         precede_output = None
                     self.item_ready.emit(item_first)
                     self._target.timing_guard.acquire()
-                    if not isinstance(item_first, InputRequest):
-                        total_time += self._target.receive_time
+                    total_time += self._target.receive_time
                     if not carry_over:
                         self._target.output_q.task_done()
                     carry_over = None if item_rest.empty else item_rest

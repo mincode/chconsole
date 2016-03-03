@@ -8,10 +8,12 @@ from traitlets.config.configurable import LoggingConfigurable
 from dispatch.message import KernelMessage, Message
 from dispatch.importer import Importer
 from dispatch.source import Source
-from dispatch.relay_item import RelayItem, PageDoc, EditFile, Stream, ExitRequested, InText, CompleteItems, CallTip
+from dispatch.relay_item import RelayItem, PageDoc, EditFile, Stream, ExitRequested, \
+    InText, CompleteItems, CallTip, InputRequest
 from .entry import entry_template
 from .pager import pager_template
 from .receiver import receiver_template
+from .input_request.line_prompt import LinePrompt
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -117,6 +119,17 @@ def _(item, target):
         target.receiver.post(Stream(text=text, name='stderr', clearable=False))
 
 
+@_post.register(InputRequest)
+def _(item, target):
+    print('next input request')
+    # target.entry.setReadOnly(True)
+    # target.line_prompt.set_prompt(item.prompt)
+    # target.line_prompt.set_password(item.password)
+    # target.line_prompt.setParent(target.entry)
+    # target.line_prompt.set_focus()
+    # target.line_prompt.show()
+
+
 # Pager
 @_post.register(PageDoc)
 def _(item, target):
@@ -201,6 +214,8 @@ def tab_content_template(edit_class):
         # Signal requesting completing code str ad cursor position int.
         please_complete = QtCore.Signal(str, int)
 
+        line_prompt = None  # LinePrompt for entering input requested by the kernel
+
         def __init__(self, is_complete, **kwargs):
             """
             Initialize
@@ -260,6 +275,9 @@ def tab_content_template(edit_class):
             self._importer = Importer(self)
             self._importer.please_process.connect(self.post)
             self.message_arrived.connect(self._importer.convert)
+
+            self.line_prompt = LinePrompt()
+            self.line_prompt.text_input.connect(self.on_text_input)
 
         @property
         def _focus_text_component(self):
@@ -385,5 +403,13 @@ def tab_content_template(edit_class):
         @QtCore.Slot(int)
         def _on_please_inspect(self, position):
             self.please_inspect.emit(self.entry.source, position)
+
+        @QtCore.Slot(str)
+        def on_text_input(self, text):
+            print('Input: ' + text)
+            self.line_prompt.hide()
+            self.line_prompt.setParent(None)
+            self.entry.setFocus()
+            self.entry.setReadOnly(False)
 
     return TabContent

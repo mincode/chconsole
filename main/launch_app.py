@@ -1,4 +1,4 @@
-from jupyter_interface.chat_console_app import ChatConsoleApp
+from main.chat_console_app import ChatConsoleApp
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 

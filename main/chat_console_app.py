@@ -1,11 +1,11 @@
 import qtconsole.qtconsoleapp
-import jupyter_interface.expanded_main_window
+import main.expanded_main_window
 from qtconsole.qtconsoleapp import JupyterQtConsoleApp
-from jupyter_interface.tab_main import RichTabMain, PlainTabMain
+from main.tab_main import RichTabMain, PlainTabMain
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
-qtconsole.qtconsoleapp.MainWindow = jupyter_interface.expanded_main_window.ExpandedMainWindow
+qtconsole.qtconsoleapp.MainWindow = main.expanded_main_window.ExpandedMainWindow
 
 
 class ChatConsoleApp(JupyterQtConsoleApp):

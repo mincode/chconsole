@@ -219,13 +219,14 @@ class InText(RelayItem):
 class InputRequest(OutText):
     password = False  # whether the request is for a password; if True the input should not be echoed
 
-    def __init__(self, text='', password=False, head=True, empty=False, ansi_codes=True):
+    def __init__(self, text='', password=False, head=True, empty=False):
         super(InputRequest, self).__init__(text=text, head=head, empty=empty)
         self.password = password
-        self.ansi_codes = ansi_codes
+        self.ansi_codes = False
 
     @property
     def prompt(self):
         return self.text
 
-    # input request splits into stream out + input request
+    def split(self, num_lines):
+        return RelayItem.split(self, num_lines)
