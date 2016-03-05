@@ -89,6 +89,7 @@ def tab_main_template(edit_class):
 
         def _started_channels(self):
             """Make a history request and load %guiref, if possible."""
+            self.main_content.input_reply.connect(self.kernel_client.input)
             # 1) send clear
             ansi_clear = {'header': {'msg_type': 'stream'}, 'content': {'text': '\x0c\n', 'name': 'stdout'}}
             self.message_arrived.emit(KernelMessage(ansi_clear, from_here=True))

@@ -86,7 +86,7 @@ def _(item, receiver):
     receiver.ansi_processor.reset_sgr()
     if item.clearable:
         cursor = receiver.textCursor()
-        if item.text[-1] == '\n':
+        if item.text and item.text[-1] == '\n':
             cursor.movePosition(QtGui.QTextCursor.Up)
             cursor.movePosition(QtGui.QTextCursor.EndOfLine)
         receiver.data_stream_end = cursor
@@ -162,6 +162,10 @@ def _(item, receiver):
     old_text_cursor = receiver.textCursor()
     receiver.data_stream_end = None
     receiver.setTextCursor(_valid_text_cursor(receiver))
+
+    # Ensure that execute results start at the beginning of a new line
+    if receiver.textCursor().position():
+        receiver.insertPlainText('\n')
 
     receiver.insertPlainText(receiver.output_sep)
     receiver.insert_html(_make_out_prompt(receiver.out_prompt, item.execution_count))

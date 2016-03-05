@@ -169,8 +169,10 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
     # arguments.
 
     def _handle_payload_page(self, item):
+        print('payload page message')
         data = item['data']
         text = data.get('text/plain', '')
+        print(text)
         html = data.get('text/html', '')
         self.please_process.emit(PageDoc(text=text, html=html))
 

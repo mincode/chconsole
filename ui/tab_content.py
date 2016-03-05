@@ -121,13 +121,14 @@ def _(item, target):
 
 @_post.register(InputRequest)
 def _(item, target):
-    print('next input request')
-    # target.entry.setReadOnly(True)
-    # target.line_prompt.set_prompt(item.prompt)
-    # target.line_prompt.set_password(item.password)
-    # target.line_prompt.setParent(target.entry)
-    # target.line_prompt.set_focus()
-    # target.line_prompt.show()
+    target.entry.setReadOnly(True)
+    target.line_prompt.setParent(target.entry)
+    target.line_prompt.clear()
+    target.line_prompt.prompt = item.prompt
+    target.line_prompt.password = item.password
+    target.line_prompt.setEnabled(True)
+    target.line_prompt.set_focus()
+    target.line_prompt.show()
 
 
 # Pager
@@ -135,6 +136,8 @@ def _(item, target):
 def _(item, target):
     if target.receiver.covers(item):
         target.pager.post(item)
+    else:
+        target.receiver.post(item)
 
 
 # Entry
@@ -176,7 +179,8 @@ def tab_content_template(edit_class):
 
         message_arrived = QtCore.Signal(Message)  # to signal a message from the kernel
         please_execute = QtCore.Signal(Source)  # source to be executed
-        please_inspect = QtCore.Signal(Source, int) # source to be inspected at cursor position int
+        please_inspect = QtCore.Signal(Source, int)  # source to be inspected at cursor position int
+        input_reply = QtCore.Signal(str)  # text given by the user to an input request
 
         print_action = None  # action for printing
         export_action = None # action for exporting
@@ -406,9 +410,11 @@ def tab_content_template(edit_class):
 
         @QtCore.Slot(str)
         def on_text_input(self, text):
-            print('Input: ' + text)
+            self.line_prompt.setEnabled(False)
             self.line_prompt.hide()
-            self.line_prompt.setParent(None)
+            self.input_reply.emit(text)
+            out = self.line_prompt.prompt + text
+            self.post(Stream(out, name='stdout'))
             self.entry.setFocus()
             self.entry.setReadOnly(False)
 
