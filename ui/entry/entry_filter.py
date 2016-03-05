@@ -1,6 +1,6 @@
 from qtconsole.qt import QtCore, QtGui
-from .base_event_filter import BaseEventFilter
-from .text_config import get_block_plain_text
+from ui.base_event_filter import BaseEventFilter
+from ui.text_config import get_block_plain_text
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
@@ -43,17 +43,6 @@ class EntryFilter(BaseEventFilter):
                     # Special handling when tab completing in text mode.
                     self.target.completer.cancel_completion()
 
-        #MM: later
-                    # Special handling when a reading a line of raw input.
-                    # if self._reading:
-                    #     self._append_plain_text('\n')
-                    #     self._reading = False
-                    #     if self._reading_callback:
-                    #         self._reading_callback()
-
-                    # If the input buffer is a single line or there is only
-                    # whitespace after the cursor, execute. Otherwise, split the
-                    # line with a continuation prompt.
                     cursor = self.target.textCursor()
                     cursor.movePosition(QtGui.QTextCursor.End,
                                         QtGui.QTextCursor.KeepAnchor)
@@ -69,11 +58,13 @@ class EntryFilter(BaseEventFilter):
                     elif shift_down:
                         # force execute source
                         self.target.please_execute.emit()
+                        self.target.history.store(self.target.source)
                         self.target.clear()
                     elif self.target.execute_on_complete_input and (at_end or single_line):
                         complete, indent = self.target.is_complete(self.target.source.code)
                         if complete:
                             self.target.please_execute.emit()
+                            self.target.history.store(self.target.source)
                             self.target.clear()
                         else:
                             self.target.insertPlainText('\n')

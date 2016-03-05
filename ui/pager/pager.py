@@ -1,9 +1,10 @@
-from traitlets import Unicode
-from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.qt import QtGui, QtCore
-from .text_config import TextConfig
-from .standard_filters import ViewportFilter, TextAreaFilter
-from .pager_filter import PagerFilter
+from qtconsole.util import MetaQObjectHasTraits
+from traitlets import Unicode
+
+from ui.pager.pager_filter import PagerFilter
+from ui.standard_filters import ViewportFilter, TextAreaFilter
+from ui.text_config import TextConfig
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 

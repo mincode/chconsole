@@ -1,17 +1,20 @@
 import os
 from functools import singledispatch
-from traitlets import Bool
+
 from qtconsole import qt
-from qtconsole.qt import QtGui, QtCore
-from qtconsole.util import MetaQObjectHasTraits
+from qtconsole.bracket_matcher import BracketMatcher
+from qtconsole.call_tip_widget import CallTipWidget
 from qtconsole.completion_widget import CompletionWidget
 from qtconsole.kill_ring import QtKillRing
-from qtconsole.call_tip_widget import CallTipWidget
-from qtconsole.bracket_matcher import BracketMatcher
-from dispatch.source import Source
-from .entry_filter import EntryFilter
-from .text_config import TextConfig
+from qtconsole.qt import QtGui, QtCore
+from qtconsole.util import MetaQObjectHasTraits
+from traitlets import Bool
+
 from dispatch.relay_item import InText, CompleteItems, CallTip
+from dispatch.source import Source
+from ui.entry.entry_filter import EntryFilter
+from ui.text_config import TextConfig
+from .history import History
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -94,6 +97,7 @@ def entry_template(edit_class):
         completer = None  # completion object
 
         kill_ring = None  # QKillRing
+        history = None  # History object
 
         please_restart_kernel = QtCore.Signal()  # Signal when exit is requested
         please_interrupt_kernel = QtCore.Signal()  # Signal when exit is requested
@@ -148,6 +152,7 @@ def entry_template(edit_class):
             self.setTextInteractionFlags(QtCore.Qt.TextEditable | QtCore.Qt.TextEditorInteraction)
             self.setUndoRedoEnabled(True)
             self.kill_ring = QtKillRing(self)
+            self.history = History()
 
         def update_code_mode(self, code_mode):
             """

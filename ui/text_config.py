@@ -1,16 +1,18 @@
 import sys
 from unicodedata import category
-from traitlets.config.configurable import LoggingConfigurable
-from traitlets import Integer, Unicode, Instance, DottedObjectName, Any, Float
+
 from ipython_genutils import py3compat
 from ipython_genutils.importstring import import_item
-from qtconsole.qt import QtGui, QtCore
-from qtconsole.ansi_code_processor import QtAnsiCodeProcessor
-from qtconsole.util import get_font
 from qtconsole import styles
+from qtconsole.ansi_code_processor import QtAnsiCodeProcessor
 from qtconsole.pygments_highlighter import PygmentsHighlighter
+from qtconsole.qt import QtGui, QtCore
 from qtconsole.rich_text import HtmlExporter
-from .context_menu import ContextMenu
+from qtconsole.util import get_font
+from traitlets import Integer, Unicode, Instance, DottedObjectName, Any, Float
+from traitlets.config.configurable import LoggingConfigurable
+
+from ui.menus.context_menu import ContextMenu
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 

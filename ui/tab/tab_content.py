@@ -1,19 +1,21 @@
 import sys
-from subprocess import Popen
 from functools import singledispatch
+from subprocess import Popen
+
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Integer, Unicode, Bool
 from traitlets.config.configurable import LoggingConfigurable
-from dispatch.message import KernelMessage, Message
+
 from dispatch.importer import Importer
-from dispatch.source import Source
+from dispatch.message import KernelMessage, Message
 from dispatch.relay_item import RelayItem, PageDoc, EditFile, Stream, ExitRequested, \
     InText, CompleteItems, CallTip, InputRequest
-from .entry import entry_template
-from .pager import pager_template
-from .receiver import receiver_template
-from .input_request.line_prompt import LinePrompt
+from dispatch.source import Source
+from ui.entry.line_prompt import LinePrompt
+from ui.entry import entry_template
+from ui.pager import pager_template
+from ui.receiver import receiver_template
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 

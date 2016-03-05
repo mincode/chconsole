@@ -41,6 +41,7 @@ class HistoryConsoleWidget(ConsoleWidget):
     # 'ConsoleWidget' public interface
     #---------------------------------------------------------------------------
 
+# <done>
     def execute(self, source=None, hidden=False, interactive=False):
         """ Reimplemented to the store history.
         """
@@ -64,6 +65,7 @@ class HistoryConsoleWidget(ConsoleWidget):
             self._history_index = len(self._history)
 
         return executed
+# </done>
 
     #---------------------------------------------------------------------------
     # 'ConsoleWidget' abstract interface

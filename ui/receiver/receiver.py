@@ -1,15 +1,17 @@
 import re
-from queue import Queue
 from functools import singledispatch
-from traitlets import Integer, Unicode
+from queue import Queue
+
 from qtconsole.qt import QtCore, QtGui
 from qtconsole.util import MetaQObjectHasTraits
-from dispatch.relay_item import RelayItem, Stream, Input, ClearOutput, ExecuteResult, Banner, PageDoc, HtmlStream
-from dispatch.outbuffer import OutBuffer
-from ui.text_config import TextConfig
+from traitlets import Integer, Unicode
+
 from _version import __version__
-from .standard_filters import ViewportFilter, TextAreaFilter
-from .receiver_filter import ReceiverFilter
+from dispatch.outbuffer import OutBuffer
+from dispatch.relay_item import RelayItem, Stream, Input, ClearOutput, ExecuteResult, Banner, PageDoc, HtmlStream
+from ui.receiver.receiver_filter import ReceiverFilter
+from ui.standard_filters import ViewportFilter, TextAreaFilter
+from ui.text_config import TextConfig
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -314,7 +316,6 @@ def receiver_template(edit_class):
             :return:
             """
             self.setFocus()
-
 
         def post(self, item):
             self.output_q.put(item)

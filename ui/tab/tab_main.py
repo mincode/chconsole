@@ -1,11 +1,13 @@
-from traitlets.config.configurable import LoggingConfigurable
-from traitlets import Bool, Float
-from qtconsole.qt import QtGui, QtCore
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
+from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from ui.tab_content import tab_content_template
+from traitlets import Bool, Float
+from traitlets.config.configurable import LoggingConfigurable
+
 from dispatch.kernel_message import KernelMessage
 from dispatch.source import Source
+from ui.tab.tab_content import tab_content_template
+
 try:
     from queue import Empty
 except ImportError:

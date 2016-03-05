@@ -1,5 +1,6 @@
 import unittest
-from ui.tab_content import get_member
+
+from ui.tab.tab_content import get_member
 
 __author__ = 'minimair'
 
