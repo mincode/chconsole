@@ -415,6 +415,8 @@ def tab_content_template(edit_class):
             self.line_prompt.setEnabled(False)
             self.line_prompt.hide()
             self.input_reply.emit(text)
+            if self.line_prompt.password:
+                text = '****'
             out = self.line_prompt.prompt + text
             self.post(Stream(out, name='stdout'))
             self.entry.setFocus()
