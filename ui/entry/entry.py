@@ -13,7 +13,7 @@ from traitlets import Bool
 from dispatch.relay_item import InText, CompleteItems, CallTip
 from dispatch.source import Source
 from ui.entry.entry_filter import EntryFilter
-from ui.text_config import TextConfig
+from ui.standards.text_config import TextConfig
 from .history import History
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -152,7 +152,7 @@ def entry_template(edit_class):
             self.setTextInteractionFlags(QtCore.Qt.TextEditable | QtCore.Qt.TextEditorInteraction)
             self.setUndoRedoEnabled(True)
             self.kill_ring = QtKillRing(self)
-            self.history = History()
+            self.history = History(self)
 
         def update_code_mode(self, code_mode):
             """

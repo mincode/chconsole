@@ -1,6 +1,8 @@
 from qtconsole.qt import QtCore, QtGui
-from ui.base_event_filter import BaseEventFilter
-from ui.text_config import get_block_plain_text
+
+from ui.standards.base_event_filter import BaseEventFilter
+from ui.standards.text_config import get_block_plain_text
+
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
@@ -39,38 +41,37 @@ class EntryFilter(BaseEventFilter):
             #------ Special modifier logic -----------------------------------------
 
             elif key in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
-                if self.target.code_mode:
-                    # Special handling when tab completing in text mode.
-                    self.target.completer.cancel_completion()
+                # Special handling when tab completing in text mode.
+                self.target.completer.cancel_completion()
 
-                    cursor = self.target.textCursor()
-                    cursor.movePosition(QtGui.QTextCursor.End,
-                                        QtGui.QTextCursor.KeepAnchor)
-                    at_end = len(cursor.selectedText().strip()) == 0
+                cursor = self.target.textCursor()
+                cursor.movePosition(QtGui.QTextCursor.End,
+                                    QtGui.QTextCursor.KeepAnchor)
+                at_end = len(cursor.selectedText().strip()) == 0
 
-                    single_line = self.target.document().blockCount() == 1
+                single_line = self.target.document().blockCount() == 1
 
-                    if ctrl_down:
-                        # no indent, no execute
-                        self.target.insertPlainText('\n')
-                        self.target.moveCursor(QtGui.QTextCursor.End)
-                        self.target.ensureCursorVisible()
-                    elif shift_down:
-                        # force execute source
+                if ctrl_down:
+                    # no indent, no execute
+                    self.target.insertPlainText('\n')
+                    self.target.moveCursor(QtGui.QTextCursor.End)
+                    self.target.ensureCursorVisible()
+                elif shift_down:
+                    # force execute source
+                    self.target.please_execute.emit()
+                    self.target.history.store(self.target.source)
+                    self.target.clear()
+                elif self.target.execute_on_complete_input and (at_end or single_line):
+                    complete, indent = self.target.is_complete(self.target.source.code)
+                    if complete:
                         self.target.please_execute.emit()
                         self.target.history.store(self.target.source)
                         self.target.clear()
-                    elif self.target.execute_on_complete_input and (at_end or single_line):
-                        complete, indent = self.target.is_complete(self.target.source.code)
-                        if complete:
-                            self.target.please_execute.emit()
-                            self.target.history.store(self.target.source)
-                            self.target.clear()
-                        else:
-                            self.target.insertPlainText('\n')
-                            self.target.insertPlainText(indent)
-                            self.target.moveCursor(QtGui.QTextCursor.End)
-                            self.target.ensureCursorVisible()
+                    else:
+                        self.target.insertPlainText('\n')
+                        self.target.insertPlainText(indent)
+                        self.target.moveCursor(QtGui.QTextCursor.End)
+                        self.target.ensureCursorVisible()
 
             elif alt_down:
                 if key == QtCore.Qt.Key_Greater:
@@ -165,7 +166,7 @@ class EntryFilter(BaseEventFilter):
                 anchor_mode = QtGui.QTextCursor.KeepAnchor if shift_down else QtGui.QTextCursor.MoveAnchor
 
                 if key == QtCore.Qt.Key_Tab:
-                    if self.target.code_mode and complete_possible(self.target.textCursor()):
+                    if complete_possible(self.target.textCursor()):
                         self.target.request_complete(self.target.textCursor())  # complete request
                     else:
                         self.target.insertPlainText(' '*self.target.tab_width)

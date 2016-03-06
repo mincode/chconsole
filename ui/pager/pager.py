@@ -2,9 +2,9 @@ from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Unicode
 
-from ui.pager.pager_filter import PagerFilter
-from ui.standard_filters import ViewportFilter, TextAreaFilter
-from ui.text_config import TextConfig
+from ui.pager import PagerFilter
+from ui.standards import TextAreaFilter, ViewportFilter
+from ui.standards.text_config import TextConfig
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 

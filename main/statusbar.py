@@ -77,7 +77,7 @@ class StatusBar(QtGui.QStatusBar):
     kernel_clicked = QtCore.Signal()
 
     def __init__(self, coding_checked=True, code_checked_color=QtCore.Qt.black, chat_checked_color=QtCore.Qt.red,
-                 front_end_msg=True, kernel_msg=False,
+                 front_end_msg=False, kernel_msg=False,
                  parent=None):
         super(StatusBar, self).__init__(parent)
         self.chat_button = _ToggleButton()
@@ -105,7 +105,7 @@ class StatusBar(QtGui.QStatusBar):
             self.kernel_button.clicked.connect(self.kernel_clicked)
             self.addPermanentWidget(self.kernel_button)
 
-        self.send_button = _PushButton('Send')
+        self.send_button = _PushButton('Enter')
         self.send_button.clicked.connect(self.send_clicked)
         self.addPermanentWidget(self.send_button)
 

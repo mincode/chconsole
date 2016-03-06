@@ -5,11 +5,11 @@ from ui.entry.line_prompt_filter import LinePromptFilter
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class DecorativeFrame(QtGui.QFrame):
+class _DecorativeFrame(QtGui.QFrame):
     content = None
 
     def __init__(self, parent=None):
-        super(DecorativeFrame, self).__init__(parent)
+        super(_DecorativeFrame, self).__init__(parent)
         self.setFrameShape(QtGui.QFrame.Box)
         self.setLineWidth(2)
         self.setFrameShadow(QtGui.QFrame.Plain)
@@ -22,7 +22,7 @@ class DecorativeFrame(QtGui.QFrame):
         self.content.setFrameShadow(QtGui.QFrame.Sunken)
 
 
-class LinePrompt(DecorativeFrame):
+class LinePrompt(_DecorativeFrame):
     _prompt = None  # QLabel, prompt label
     _line = None  # QLineEdit for input requests
 

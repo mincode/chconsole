@@ -65,7 +65,6 @@ class HistoryConsoleWidget(ConsoleWidget):
             self._history_index = len(self._history)
 
         return executed
-# </done>
 
     #---------------------------------------------------------------------------
     # 'ConsoleWidget' abstract interface
@@ -220,6 +219,7 @@ class HistoryConsoleWidget(ConsoleWidget):
             self.input_buffer = history
 
         return replace
+# </done>
 
     def history_tail(self, n=10):
         """ Get the local history list.
@@ -244,6 +244,7 @@ class HistoryConsoleWidget(ConsoleWidget):
                 (self._get_prompt_cursor().blockNumber() !=
                  self._get_end_cursor().blockNumber()))
 
+# <done>
     def _get_edited_history(self, index):
         """ Retrieves a history item, possibly with temporary edits.
         """
@@ -252,6 +253,7 @@ class HistoryConsoleWidget(ConsoleWidget):
         elif index == len(self._history):
             return unicode_type()
         return self._history[index]
+# </done>
 
     def _set_history(self, history):
         """ Replace the current history with a sequence of history items.
@@ -260,6 +262,7 @@ class HistoryConsoleWidget(ConsoleWidget):
         self._history_edits = {}
         self._history_index = len(self._history)
 
+# <done>
     def _store_edits(self):
         """ If there are edits to the current input buffer, store them.
         """
@@ -267,3 +270,4 @@ class HistoryConsoleWidget(ConsoleWidget):
         if self._history_index == len(self._history) or \
                 self._history[self._history_index] != current:
             self._history_edits[self._history_index] = current
+# </done>
