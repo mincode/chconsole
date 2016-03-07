@@ -2,7 +2,7 @@ from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Unicode
 
-from ui.pager import PagerFilter
+from .pager_filter import PagerFilter
 from ui.standards import TextAreaFilter, ViewportFilter
 from ui.standards.text_config import TextConfig
 

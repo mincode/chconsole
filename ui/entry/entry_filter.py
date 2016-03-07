@@ -206,7 +206,6 @@ class EntryFilter(BaseEventFilter):
                         else:
                             cursor.movePosition(cursor.StartOfLine, cursor.KeepAnchor)
                             text = cursor.selectedText()
-                            print(str(text.endswith(' '*remove_smart)))
                             if text.endswith(' '*remove_smart) and not text.strip():
                                 chars = remove_smart
                             else:

@@ -9,7 +9,7 @@ from traitlets import Integer, Unicode
 from _version import __version__
 from dispatch.outbuffer import OutBuffer
 from dispatch.relay_item import RelayItem, Stream, Input, ClearOutput, ExecuteResult, Banner, PageDoc, HtmlStream
-from ui.receiver import ReceiverFilter
+from .receiver_filter import ReceiverFilter
 from ui.standards import ViewportFilter, TextAreaFilter
 from ui.standards import TextConfig
 
