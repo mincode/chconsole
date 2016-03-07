@@ -1,7 +1,7 @@
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from .relay_item import RelayItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested, \
+from .import_item import ImportItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested, \
     InText, ExecuteResult, Banner, CompleteItems, CallTip, HtmlStream, InputRequest
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -11,7 +11,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
     """
     Import messages into objects handled by the ui.
     """
-    please_process = QtCore.Signal(RelayItem)
+    please_process = QtCore.Signal(ImportItem)
 
     _payload_source_edit = 'edit_magic'
     _payload_source_exit = 'ask_exit'

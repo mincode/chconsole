@@ -20,7 +20,7 @@ def _split_lines(num_lines, text):
     return num_lines, text[:location], text[location:]
 
 
-class RelayItem:
+class ImportItem:
     head = True
     # True if this is the beginning of a new item for output.
     # False if this is a part of the item previously sent to output.
@@ -49,7 +49,7 @@ class RelayItem:
         return count, first_item, rest_item
 
 
-class CompleteItems(RelayItem):
+class CompleteItems(ImportItem):
     matches = None  # list of items that match for completion
     start = 0  # start position of cursor
     end = 0  # end position of cursor where to complete
@@ -61,7 +61,7 @@ class CompleteItems(RelayItem):
         self.end = end
 
 
-class CallTip(RelayItem):
+class CallTip(ImportItem):
     content = None  # content of the call tip reply message
 
     def __init__(self, content, head=True, empty=False):
@@ -69,7 +69,7 @@ class CallTip(RelayItem):
         self.content = content
 
 
-class ClearOutput(RelayItem):
+class ClearOutput(ImportItem):
     wait = False  # Wait to clear the output until new output is available
 
     def __init__(self, wait=False, head=True, empty=False):
@@ -77,7 +77,7 @@ class ClearOutput(RelayItem):
         self.wait = wait
 
 
-class OutText(RelayItem):
+class OutText(ImportItem):
     text = ''
     ansi_codes = True  # whether text has ansi_codes
 
@@ -120,7 +120,7 @@ class Banner(Stream):
         self.help_links = help_links
 
     def split(self, num_lines):
-        count, first, rest = RelayItem.split(self, num_lines)
+        count, first, rest = ImportItem.split(self, num_lines)
         if rest.empty:
             first.help_links = self.help_links
         else:
@@ -188,7 +188,7 @@ class ExecuteResult(ExecuteText):
             text=text, execution_count=execution_count, head=head, empty=empty, ansi_codes=ansi_codes)
 
 
-class EditFile(RelayItem):
+class EditFile(ImportItem):
     filename = ''
     line_number = None  # line number
 
@@ -198,7 +198,7 @@ class EditFile(RelayItem):
         self.line_number = line_number
 
 
-class ExitRequested(RelayItem):
+class ExitRequested(ImportItem):
     keep_kernel_on_exit = False  # keep kernel when exit main widget
     confirm = False  # whether exit should be confirmed from the user
 
@@ -208,7 +208,7 @@ class ExitRequested(RelayItem):
         self.confirm = confirm
 
 
-class InText(RelayItem):
+class InText(ImportItem):
     text = ''
 
     def __init__(self, text='', head=True, empty=False):
@@ -229,4 +229,4 @@ class InputRequest(OutText):
         return self.text
 
     def split(self, num_lines):
-        return RelayItem.split(self, num_lines)
+        return ImportItem.split(self, num_lines)

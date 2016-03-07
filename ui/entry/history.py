@@ -116,7 +116,9 @@ class History:
     def key_up(self, shift_down):
         """
         History on up key.
-        :param shift_down:
+        :param shift_down: If shift_down is True, the first previous item will be found that anywhere matches the part
+            of the current line from the beginning to the text cursor. If shift_down is False, standard history
+            prefix search is performed.
         :return:
         """
         # Set a search prefix based on the cursor position.
@@ -153,8 +155,7 @@ class History:
         # search.
         cursor.movePosition(QtGui.QTextCursor.Start)
         if self._prefix:
-            cursor.movePosition(QtGui.QTextCursor.Right,
-                                n=len(self._prefix))
+            cursor.movePosition(QtGui.QTextCursor.Right, n=len(self._prefix))
         else:
             cursor.movePosition(QtGui.QTextCursor.EndOfLine)
         self._target.setTextCursor(cursor)
@@ -179,3 +180,11 @@ class History:
             cursor.movePosition(QtGui.QTextCursor.Right,
                                 n=len(self._prefix))
             self._target.setTextCursor(cursor)
+
+    # HistoryConsoleWidget
+    def set_history(self, history):
+        """ Replace the current history with a sequence of history items.
+        """
+        self._items = list(history)
+        self._edits = {}
+        self._index = len(self._items)

@@ -10,7 +10,7 @@ from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool
 
-from dispatch.relay_item import InText, CompleteItems, CallTip
+from dispatch.import_item import InText, CompleteItems, CallTip
 from dispatch.source import Source
 from ui.entry.entry_filter import EntryFilter
 from ui.standards.text_config import TextConfig

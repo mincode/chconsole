@@ -9,7 +9,7 @@ from traitlets.config.configurable import LoggingConfigurable
 
 from dispatch.importer import Importer
 from dispatch.message import KernelMessage, Message
-from dispatch.relay_item import RelayItem, PageDoc, EditFile, Stream, ExitRequested, \
+from dispatch.import_item import ImportItem, PageDoc, EditFile, Stream, ExitRequested, \
     InText, CompleteItems, CallTip, InputRequest
 from dispatch.source import Source
 from ui.entry.line_prompt import LinePrompt
@@ -350,7 +350,7 @@ def tab_content_template(edit_class):
                     except OSError:
                         raise CommandError(command)
 
-        @QtCore.Slot(RelayItem)
+        @QtCore.Slot(ImportItem)
         def post(self, item):
             _post(item, self)
 

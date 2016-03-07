@@ -1,5 +1,5 @@
 import unittest
-from dispatch.relay_item import _split_lines
+from dispatch.import_item import _split_lines
 
 __author__ = 'minimair'
 

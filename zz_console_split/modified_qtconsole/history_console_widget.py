@@ -253,7 +253,6 @@ class HistoryConsoleWidget(ConsoleWidget):
         elif index == len(self._history):
             return unicode_type()
         return self._history[index]
-# </done>
 
     def _set_history(self, history):
         """ Replace the current history with a sequence of history items.
@@ -262,7 +261,6 @@ class HistoryConsoleWidget(ConsoleWidget):
         self._history_edits = {}
         self._history_index = len(self._history)
 
-# <done>
     def _store_edits(self):
         """ If there are edits to the current input buffer, store them.
         """

@@ -1,5 +1,5 @@
 from qtconsole.qt import QtCore
-from .relay_item import RelayItem, ClearOutput, InputRequest
+from .import_item import ImportItem, ClearOutput, InputRequest
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -13,7 +13,7 @@ class OutBuffer(QtCore.QThread):
     default_sleep = 100  # default sleep interval, in msec
     _sleep_time = 0  # sleep time in msec., updated by the thread
 
-    item_ready = QtCore.Signal(RelayItem)
+    item_ready = QtCore.Signal(ImportItem)
 
     def __init__(self, target, parent=None):
         """
