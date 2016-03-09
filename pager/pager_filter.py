@@ -24,6 +24,7 @@ class PagerFilter(BaseEventFilter):
             intercepted = True  # eat the key
             key = event.key()
             alt_down = event.modifiers() & QtCore.Qt.AltModifier
+            ctrl_down = self.control_key_down(event.modifiers())
 
             if alt_down:
                 if key == QtCore.Qt.Key_Greater:
@@ -31,6 +32,10 @@ class PagerFilter(BaseEventFilter):
 
                 elif key == QtCore.Qt.Key_Less:
                     self.target.moveCursor(QtGui.QTextCursor.Start)
+
+            elif ctrl_down:
+                if key == QtCore.Qt.Key_O:
+                    self.target.release_focus.emit()
 
             elif key in (QtCore.Qt.Key_Q, QtCore.Qt.Key_Escape):
                 self.target.hide()

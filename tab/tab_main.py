@@ -4,7 +4,7 @@ from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool, Float
 from traitlets.config.configurable import LoggingConfigurable
 
-from entry.source import Source
+from messages.source import Source
 from tab import KernelMessage
 from tab import tab_content_template
 

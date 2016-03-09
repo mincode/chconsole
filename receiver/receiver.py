@@ -6,11 +6,10 @@ from qtconsole.qt import QtCore, QtGui
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Integer, Unicode
 
-import tab
 from _version import __version__
 
-# from tab import Stderr, Stdout, HtmlText, PageDoc, Banner, Input, Result, ClearOutput
-from receiver.outbuffer import OutBuffer
+from messages import Stderr, Stdout, HtmlText, PageDoc, Banner, Input, Result, ClearOutput, SplitItem
+from .outbuffer import OutBuffer
 from standards import TextConfig
 from standards import ViewportFilter, TextAreaFilter
 from .receiver_filter import ReceiverFilter
@@ -20,7 +19,7 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 default_in_prompt = 'In [<span class="in-prompt-number">%i</span>]: '
 default_out_prompt = 'Out[<span class="out-prompt-number">%i</span>]: '
 default_output_sep = ''
-default_output_sep2 = ''
+default_output_sep2 = '|'
 
 
 # JupyterWidget
@@ -61,127 +60,86 @@ def _covers(edit_widget, text):
     return re.match("(?:[^\n]*\n){%i}" % min_lines, text)
 
 
-def _valid_text_cursor(receiver):
-    """
-    Return the text cursor of receiver to add new text, either data_stream_end or end of the document.
-    :param receiver: target object where to set the cursor.
-    :return:
-    """
-    if receiver.data_stream_end:
-        cursor = receiver.data_stream_end
-    else:
-        cursor = receiver.textCursor()
-        cursor.movePosition(QtGui.QTextCursor.End)
-    return cursor
-
-
 @singledispatch
 def _receive(item, target):
     pass
     # raise NotImplementedError
 
 
-@_receive.register(tab.Stdout)
-@_receive.register(tab.Stderr)
+@_receive.register(Stdout)
+@_receive.register(Stderr)
 def _(item, target):
-    old_text_cursor = target.textCursor()
-    target.setTextCursor(_valid_text_cursor(target))
-
-    if isinstance(item.content, tab.HtmlText):
-        target.insert_html(item.content.text)
-        target.data_stream_end = target.textCursor() if item.clearable else None
+    cursor = target.end_cursor
+    target.clear_cursor = cursor if item.clearable else None
+    cursor.beginEditBlock()
+    if isinstance(item.content, HtmlText):
+        target.insert_html(item.content.text, cursor)
     else:
-        target.insert_ansi_text(item.content.text, item.ansi_codes and target.use_ansi)
+        target.insert_ansi_text(item.content.text, item.ansi_codes and target.use_ansi, cursor)
         target.ansi_processor.reset_sgr()
-        if item.clearable:
-            cursor = target.textCursor()
-            if item.content.text and item.content.text[-1] == '\n':
-                cursor.movePosition(QtGui.QTextCursor.Up)
-                cursor.movePosition(QtGui.QTextCursor.EndOfLine)
-            target.data_stream_end = cursor
-        else:
-            target.data_stream_end = None
-
-    target.setTextCursor(old_text_cursor)
+    cursor.endEditBlock()
 
 
-@_receive.register(tab.PageDoc)
+@_receive.register(PageDoc)
 def _(item, target):
-    old_text_cursor = target.textCursor()
-    target.data_stream_end = None
-    target.setTextCursor(_valid_text_cursor(target))
-
     if hasattr(target, 'insertHtml') and item.html_stream:
         _receive(item.html_stream, target)
     else:
         _receive(item.text_stream, target)
 
-    target.setTextCursor(old_text_cursor)
 
-
-@_receive.register(tab.Banner)
+@_receive.register(Banner)
 def _(item, target):
-    old_text_cursor = target.textCursor()
-    target.data_stream_end = None
-    target.setTextCursor(_valid_text_cursor(target))
-
+    cursor = target.end_cursor
+    target.clear_cursor = cursor if item.clearable else None
+    cursor.beginEditBlock()
     stream = item.stream
     stream.content.text = target.banner + stream.content.text
     _receive(stream, target)
     if item.help_links:
-        target.insertPlainText('Help Links')
+        cursor.insertText('Help Links')
         for helper in item.help_links:
-            target.insert_ansi_text('\n' + helper['text'] + ': ', item.ansi_codes and target.use_ansi)
+            target.insert_ansi_text('\n' + helper['text'] + ': ', item.ansi_codes and target.use_ansi, cursor)
             url = helper['url']
-            target.insert_html('<a href="' + url + '">' + url + '</a>')
-    target.insertPlainText('\n')
+            target.insert_html('<a href="' + url + '">' + url + '</a>', cursor)
+    cursor.insertText('\n')
+    cursor.endEditBlock()
 
-    target.setTextCursor(old_text_cursor)
 
-
-@_receive.register(tab.Input)
+@_receive.register(Input)
 def _(item, target):
-    old_text_cursor = target.textCursor()
-    target.data_stream_end = None
-    target.setTextCursor(_valid_text_cursor(target))
-
-    target.insertPlainText('\n')
-    target.insert_html(_make_in_prompt(target.in_prompt, item.execution_count))
-    target.insert_ansi_text(item.code, item.ansi_codes and target.use_ansi)
+    cursor = target.end_cursor
+    target.clear_cursor = cursor if item.clearable else None
+    cursor.beginEditBlock()
+    cursor.insertText('\n')
+    target.insert_html(_make_in_prompt(target.in_prompt, item.execution_count), cursor)
+    target.insert_ansi_text(item.code, item.ansi_codes and target.use_ansi, cursor)
     target.ansi_processor.reset_sgr()
     if item.code[-1] != '\n':
-        target.insertPlainText('\n')
+        cursor.insertText('\n')
+    cursor.endEditBlock()
 
-    target.setTextCursor(old_text_cursor)
 
-
-@_receive.register(tab.Result)
+@_receive.register(Result)
 def _(item, target):
-    old_text_cursor = target.textCursor()
-    target.data_stream_end = None
-    target.setTextCursor(_valid_text_cursor(target))
-
-    # Ensure that execute results start at the beginning of a new line
-    if target.textCursor().position():
-        target.insertPlainText('\n')
-
-    target.insertPlainText(target.output_sep)
-    target.insert_html(_make_out_prompt(target.out_prompt, item.execution_count))
+    cursor = target.end_cursor
+    target.clear_cursor = cursor if item.clearable else None
+    cursor.beginEditBlock()
+    cursor.insertText(target.output_sep, cursor)
+    target.insert_html(_make_out_prompt(target.out_prompt, item.execution_count), cursor)
     # JupyterWidget: If the repr is multiline, make sure we start on a new line,
     # so that its lines are aligned.
     if "\n" in item.content.text and not target.output_sep.endswith("\n"):
-        target.insertPlainText('\n')
-    target.insertPlainText(item.content.text + target.output_sep2)
+        cursor.insertText('\n')
+    cursor.insertText(item.content.text + target.output_sep2)
+    cursor.endEditBlock()
 
-    target.setTextCursor(old_text_cursor)
 
-
-@_receive.register(tab.ClearOutput)
+@_receive.register(ClearOutput)
 def _(item, target):
-    if target.data_stream_end:
-        cursor = target.data_stream_end
-        clear_to_beginning_of_line(cursor)
-        target.data_stream_end = cursor
+    if target.clear_cursor:
+        target.clear_cursor.undo()
+        target.clear_cursor = None
 
 
 def receiver_template(edit_class):
@@ -209,7 +167,7 @@ def receiver_template(edit_class):
         timing_guard = None  # QSemaphore
         receive_time = 0
 
-        data_stream_end = None  # QTextCursor, end of the last output line of stream or data
+        clear_cursor = None  # QTextCursor, used for clearing previous item received
 
         width = Integer(81, config=True,
                         help="""The width of the command display at start time in number
@@ -321,9 +279,9 @@ def receiver_template(edit_class):
         # Adopted from ConsoleWidget
         def covers(self, page_doc):
             if hasattr(self, 'insertHtml') and page_doc.html_stream:
-                doc = page_doc.html_stream.text
+                doc = page_doc.html_stream.content.text
             else:
-                doc = page_doc.text_stream.text
+                doc = page_doc.text_stream.content.text
             return _covers(self, doc)
 
     return Receiver

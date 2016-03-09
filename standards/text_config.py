@@ -422,6 +422,18 @@ class TextConfig(LoggingConfigurable):
         lexer_class = import_item(self.lexer_class)
         return lexer_class()
 
+    @property
+    def end_cursor(self):
+        """
+        Return a text cursor at the end of the document.
+        :param target: target editor object to get the cursor.
+        :return: text cursor at the end of target.
+        """
+        cursor = self.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+        return cursor
+
+
     # adopted from ConsoleWidget
     def insert_ansi_text(self, text, ansi_codes=True, cursor=None):
         cursor = cursor if cursor else self.textCursor()

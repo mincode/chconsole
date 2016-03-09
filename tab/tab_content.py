@@ -7,9 +7,13 @@ from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Integer, Unicode, Bool
 from traitlets.config.configurable import LoggingConfigurable
 
-import tab
-import entry
-import receiver
+from messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
+from messages import Stderr, Stdout
+from messages import Source, KernelMessage
+from entry import entry_template, LinePrompt
+from receiver import receiver_template
+from pager import pager_template
+from .importer import Importer
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -85,7 +89,7 @@ def _post(item, target):
 
 
 # Pager
-@_post.register(tab.PageDoc)
+@_post.register(PageDoc)
 def _(item, target):
     if target.receiver.covers(item):
         target.pager.post(item)
@@ -94,15 +98,15 @@ def _(item, target):
 
 
 # Entry
-@_post.register(tab.InText)
-@_post.register(tab.CompleteItems)
-@_post.register(tab.CallTip)
+@_post.register(InText)
+@_post.register(CompleteItems)
+@_post.register(CallTip)
 def _(item, target):
     target.entry.post(item)
 
 
 # Process here
-@_post.register(tab.ExitRequested)
+@_post.register(ExitRequested)
 def _(item, target):
     reply = QtGui.QMessageBox.Yes
     if item.confirm:
@@ -115,7 +119,7 @@ def _(item, target):
         target.please_exit.emit(item.keep_kernel_on_exit)
 
 
-@_post.register(tab.EditFile)
+@_post.register(EditFile)
 def _(item, target):
     try:
         target.external_edit(item.filename, item.line_number)
@@ -123,16 +127,16 @@ def _(item, target):
         text = ('No default editor available. '
                 'Specify a GUI text editor in the `TabContent.editor` configurable '
                 'to enable the %edit magic')
-        target.receiver.post(tab.Stderr(text))
+        target.receiver.post(Stderr(text))
     except KeyError:
         text = 'Invalid editor command.'
-        target.receiver.post(tab.Stderr(text))
+        target.receiver.post(Stderr(text))
     except CommandError as e:
         text = 'Opening editor with command "%s" failed.' % e.command
-        target.receiver.post(tab.Stderr(text))
+        target.receiver.post(Stderr(text))
 
 
-@_post.register(tab.InputRequest)
+@_post.register(InputRequest)
 def _(item, target):
     target.entry.setReadOnly(True)
     target.line_prompt.setParent(target.entry)
@@ -173,8 +177,8 @@ def tab_content_template(edit_class):
 
         show_other = Bool(True, config=True, help='True if messages from other clients are to be included.')
 
-        please_execute = QtCore.Signal(entry.Source)  # source to be executed
-        please_inspect = QtCore.Signal(entry.Source, int)  # source to be inspected at cursor position int
+        please_execute = QtCore.Signal(Source)  # source to be executed
+        please_inspect = QtCore.Signal(Source, int)  # source to be inspected at cursor position int
         input_reply = QtCore.Signal(str)  # text given by the user to an input request
 
         print_action = None  # action for printing
@@ -238,13 +242,13 @@ def tab_content_template(edit_class):
             self._console_area = QtGui.QSplitter(QtCore.Qt.Vertical)
             self._console_stack_layout.addWidget(self._console_area)
 
-            self.entry = entry.entry_template(edit_class)(is_complete=is_complete, use_ansi=self.ansi_codes)
+            self.entry = entry_template(edit_class)(is_complete=is_complete, use_ansi=self.ansi_codes)
             self.entry.please_execute.connect(self.on_send_clicked)
             self.entry.please_inspect.connect(self._on_please_inspect)
             self.entry.please_complete.connect(self.please_complete)
             self.entry.please_restart_kernel.connect(self._on_please_restart_kernel)
             self.entry.please_interrupt_kernel.connect(self.please_interrupt_kernel)
-            self.receiver = receiver.receiver_template(edit_class)(use_ansi=self.ansi_codes)
+            self.receiver = receiver_template(edit_class)(use_ansi=self.ansi_codes)
             self._console_area.addWidget(self.receiver)
             self._console_area.addWidget(self.entry)
 
@@ -261,7 +265,7 @@ def tab_content_template(edit_class):
                 ('inside', {'target': self._console_stack_layout, 'index': 1})
             ]
 
-            self.pager = pager.pager_template(edit_class)(self._pager_targets, self.default_pager_location,
+            self.pager = pager_template(edit_class)(self._pager_targets, self.default_pager_location,
                                                     'This is the pager!', use_ansi=self.ansi_codes)
             self.pager.hide()
 
@@ -271,13 +275,13 @@ def tab_content_template(edit_class):
             self.receiver.please_exit.connect(self.please_exit)
 
             # Import and handle kernel messages
-            self._importer = tab.Importer(self)
+            self._importer = Importer(self)
             self._importer.please_process.connect(self.post)
 
-            self.line_prompt = entry.LinePrompt()
+            self.line_prompt = LinePrompt()
             self.line_prompt.text_input.connect(self.on_text_input)
 
-        @QtCore.Slot(tab.KernelMessage)
+        @QtCore.Slot(KernelMessage)
         def convert(self, msg):
             self._importer.convert(msg, self.show_other)
 
@@ -346,7 +350,7 @@ def tab_content_template(edit_class):
                     except OSError:
                         raise CommandError(command)
 
-        @QtCore.Slot(tab.SplitItem)
+        @QtCore.Slot(SplitItem)
         def post(self, item):
             _post(item, self)
 
@@ -380,7 +384,7 @@ def tab_content_template(edit_class):
             :return:
             """
             # print('Send clicked')
-            self.dispatch(Message(eval(self.entry.source.code), from_here=True))
+            self.dispatch(KernelMessage(eval(self.entry.source.code), from_here=True))
 
         @QtCore.Slot()
         def _on_please_restart_kernel(self):

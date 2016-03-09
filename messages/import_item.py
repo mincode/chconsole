@@ -221,8 +221,8 @@ class PageDoc(SplitItem):
 ################################################################################################
 # Receiver
 class Stderr(Stream):
-    def __init__(self, content=None):
-        super(Stderr, self).__init__(content=content, clearable=False)
+    def __init__(self, content=None, clearable=False):
+        super(Stderr, self).__init__(content=content, clearable=clearable)
 
 
 class ClearOutput(SplitItem):
@@ -250,8 +250,9 @@ class ClearOutput(SplitItem):
 class Banner(Stdout):
     help_links = None  # list of dict: ('text', 'url')
 
-    def __init__(self, text='', help_links=None):
-        super(Banner, self).__init__(content=AtomicText(text), clearable=False)
+    def __init__(self, content='', help_links=None, clearable=False):
+        new_content = AtomicText(content) if isinstance(content, str) else content
+        super(Banner, self).__init__(content=new_content, clearable=clearable)
         self.help_links = help_links
 
     @property
@@ -271,13 +272,15 @@ class Banner(Stdout):
             rest.help_links = self.help_links
         elif first:
             first.help_links = self.help_links
+        return count, first, rest
 
 
 class Execution(Stream):
     execution_count = 0  # int
 
-    def __init__(self, text='', execution_count=0):
-        super(Execution, self).__init__(content=SplitText(text=text, ansi_codes=False), clearable=False)
+    def __init__(self, content='', execution_count=0, ansi_codes=False, clearable=False):
+        new_content = SplitText(text=content, ansi_codes=ansi_codes) if isinstance(content, str) else content
+        super(Execution, self).__init__(content=new_content, clearable=clearable)
         self.execution_count = execution_count
 
     def split(self, num_lines):
@@ -290,8 +293,8 @@ class Execution(Stream):
 
 
 class Input(Execution):
-    def __init__(self, text='', execution_count=0):
-        super(Input, self).__init__(text=text, execution_count=execution_count, ansi_codes=True)
+    def __init__(self, content='', execution_count=0, clearable=False):
+        super(Input, self).__init__(content, execution_count=execution_count, ansi_codes=True, clearable=clearable)
 
     @property
     def code(self):
@@ -299,5 +302,5 @@ class Input(Execution):
 
 
 class Result(Execution):
-    def __init__(self, text='', execution_count=0):
-        super(Result, self).__init__(text=text, execution_count=execution_count)
+    def __init__(self, content='', execution_count=0, clearable=False):
+        super(Result, self).__init__(content, execution_count=execution_count, clearable=clearable)

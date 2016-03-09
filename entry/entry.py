@@ -10,11 +10,11 @@ from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool
 
+from messages import InText, CompleteItems, CallTip
+from messages.source import Source
 from standards.text_config import TextConfig
-from tab import InText, CompleteItems, CallTip
 from .entry_filter import EntryFilter
 from .history import History
-from .source import Source
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 

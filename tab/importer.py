@@ -1,7 +1,8 @@
-from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from .import_item import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput, \
+from traitlets.config.configurable import LoggingConfigurable
+
+from messages.import_item import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput, \
     CompleteItems, PageDoc, EditFile, InText, CallTip, InputRequest
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -40,7 +41,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
     def convert(self, msg, show_other=True):
         print('dispatch: ' + msg.type)
-        print(msg.whole)
+        print(msg.raw)
         handler = getattr(self, '_handle_' + msg.type, None)
         if handler and _show_msg(msg, show_other):
             handler(msg)
@@ -56,13 +57,12 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
     def _handle_kernel_info_reply(self, msg):
         to_show = msg.content['banner']
         help_links = msg.content['help_links']
-        banner = Banner(text=to_show, help_links=help_links.copy())
+        banner = Banner(to_show, help_links=help_links.copy())
         self.please_process.emit(banner)
 
     # FrontendWidget
     def _kernel_restarted(self, died=True):
         """Notice that the autorestarter restarted the kernel.
-
         There's nothing to do but show a message.
         """
         self.log.warn("kernel restarted")
@@ -203,8 +203,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
     # JupyterWidget
     def _process_execute_error(self, msg):
         """Handle an execute_error message"""
-        content = msg.content
-        traceback = '\n'.join(content['traceback']) + '\n'
+        traceback = '\n'.join(msg.content['traceback']) + '\n'
         if False:
             # For now, tracebacks come as plain text, so we can't use
             # the html renderer yet.  Once we refactor ultratb to produce

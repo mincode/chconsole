@@ -1,5 +1,5 @@
 from qtconsole.qt import QtCore, QtGui
-from ui.standards.base_event_filter import BaseEventFilter
+from standards.base_event_filter import BaseEventFilter
 
 from standards.text_config import get_block_plain_text
 

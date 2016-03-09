@@ -3,10 +3,10 @@ from functools import singledispatch
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Unicode
-from ui.standards import TextAreaFilter, ViewportFilter
+from standards import TextAreaFilter, ViewportFilter
 
+from messages import AtomicText, SplitText
 from standards.text_config import TextConfig
-from tab.import_item import AtomicText, SplitText
 from .pager_filter import PagerFilter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'

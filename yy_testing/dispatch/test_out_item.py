@@ -1,6 +1,6 @@
 import unittest
 
-from tab.import_item import _split_lines
+from messages.import_item import _split_lines
 
 __author__ = 'minimair'
 
