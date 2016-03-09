@@ -12,7 +12,7 @@ from qtconsole.util import get_font
 from traitlets import Integer, Unicode, Instance, DottedObjectName, Any, Float
 from traitlets.config.configurable import LoggingConfigurable
 
-from ui.menus.context_menu import ContextMenu
+from menus import ContextMenu
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -145,7 +145,9 @@ class TextConfig(LoggingConfigurable):
     export_action = None  # action for exporting
     select_all_action = None  # action for selecting all
 
-    def __init__(self, **kwargs):
+    use_ansi = True  # whether to use ansi codes in text
+
+    def __init__(self, use_ansi=True, **kwargs):
         """
         Initialize.
         :return:
@@ -153,6 +155,7 @@ class TextConfig(LoggingConfigurable):
         super(LoggingConfigurable, self).__init__(**kwargs)
 
         # Text interaction
+        self.use_ansi = use_ansi
         self.setMouseTracking(True)
         if hasattr(self, 'setAcceptRichText'):
             self.setAcceptRichText(False)

@@ -7,15 +7,9 @@ from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Integer, Unicode, Bool
 from traitlets.config.configurable import LoggingConfigurable
 
-from dispatch.importer import Importer
-from dispatch.message import KernelMessage, Message
-from dispatch.import_item import ImportItem, PageDoc, EditFile, Stream, ExitRequested, \
-    InText, CompleteItems, CallTip, InputRequest
-from dispatch.source import Source
-from ui.entry.line_prompt import LinePrompt
-from ui.entry import entry_template
-from ui.pager import pager_template
-from ui.receiver import receiver_template
+import tab
+import entry
+import receiver
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -90,8 +84,25 @@ def _post(item, target):
     target.receiver.post(item)
 
 
+# Pager
+@_post.register(tab.PageDoc)
+def _(item, target):
+    if target.receiver.covers(item):
+        target.pager.post(item)
+    else:
+        target.receiver.post(item)
+
+
+# Entry
+@_post.register(tab.InText)
+@_post.register(tab.CompleteItems)
+@_post.register(tab.CallTip)
+def _(item, target):
+    target.entry.post(item)
+
+
 # Process here
-@_post.register(ExitRequested)
+@_post.register(tab.ExitRequested)
 def _(item, target):
     reply = QtGui.QMessageBox.Yes
     if item.confirm:
@@ -104,7 +115,7 @@ def _(item, target):
         target.please_exit.emit(item.keep_kernel_on_exit)
 
 
-@_post.register(EditFile)
+@_post.register(tab.EditFile)
 def _(item, target):
     try:
         target.external_edit(item.filename, item.line_number)
@@ -112,16 +123,16 @@ def _(item, target):
         text = ('No default editor available. '
                 'Specify a GUI text editor in the `TabContent.editor` configurable '
                 'to enable the %edit magic')
-        target.receiver.post(Stream(text=text, name='stderr', clearable=False))
+        target.receiver.post(tab.Stderr(text))
     except KeyError:
         text = 'Invalid editor command.'
-        target.receiver.post(Stream(text=text, name='stderr', clearable=False))
+        target.receiver.post(tab.Stderr(text))
     except CommandError as e:
         text = 'Opening editor with command "%s" failed.' % e.command
-        target.receiver.post(Stream(text=text, name='stderr', clearable=False))
+        target.receiver.post(tab.Stderr(text))
 
 
-@_post.register(InputRequest)
+@_post.register(tab.InputRequest)
 def _(item, target):
     target.entry.setReadOnly(True)
     target.line_prompt.setParent(target.entry)
@@ -131,23 +142,6 @@ def _(item, target):
     target.line_prompt.setEnabled(True)
     target.line_prompt.set_focus()
     target.line_prompt.show()
-
-
-# Pager
-@_post.register(PageDoc)
-def _(item, target):
-    if target.receiver.covers(item):
-        target.pager.post(item)
-    else:
-        target.receiver.post(item)
-
-
-# Entry
-@_post.register(InText)
-@_post.register(CompleteItems)
-@_post.register(CallTip)
-def _(item, target):
-    target.entry.post(item)
 
 
 def tab_content_template(edit_class):
@@ -179,9 +173,8 @@ def tab_content_template(edit_class):
 
         show_other = Bool(True, config=True, help='True if messages from other clients are to be included.')
 
-        message_arrived = QtCore.Signal(Message)  # to signal a message from the kernel
-        please_execute = QtCore.Signal(Source)  # source to be executed
-        please_inspect = QtCore.Signal(Source, int)  # source to be inspected at cursor position int
+        please_execute = QtCore.Signal(entry.Source)  # source to be executed
+        please_inspect = QtCore.Signal(entry.Source, int)  # source to be inspected at cursor position int
         input_reply = QtCore.Signal(str)  # text given by the user to an input request
 
         print_action = None  # action for printing
@@ -245,13 +238,13 @@ def tab_content_template(edit_class):
             self._console_area = QtGui.QSplitter(QtCore.Qt.Vertical)
             self._console_stack_layout.addWidget(self._console_area)
 
-            self.entry = entry_template(edit_class)(is_complete=is_complete)
+            self.entry = entry.entry_template(edit_class)(is_complete=is_complete, use_ansi=self.ansi_codes)
             self.entry.please_execute.connect(self.on_send_clicked)
             self.entry.please_inspect.connect(self._on_please_inspect)
             self.entry.please_complete.connect(self.please_complete)
             self.entry.please_restart_kernel.connect(self._on_please_restart_kernel)
             self.entry.please_interrupt_kernel.connect(self.please_interrupt_kernel)
-            self.receiver = receiver_template(edit_class)()
+            self.receiver = receiver.receiver_template(edit_class)(use_ansi=self.ansi_codes)
             self._console_area.addWidget(self.receiver)
             self._console_area.addWidget(self.entry)
 
@@ -268,8 +261,8 @@ def tab_content_template(edit_class):
                 ('inside', {'target': self._console_stack_layout, 'index': 1})
             ]
 
-            self.pager = pager_template(edit_class)(self._pager_targets, self.default_pager_location,
-                                                    'This is the pager!')
+            self.pager = pager.pager_template(edit_class)(self._pager_targets, self.default_pager_location,
+                                                    'This is the pager!', use_ansi=self.ansi_codes)
             self.pager.hide()
 
             self.pager.release_focus.connect(self.entry.set_focus)
@@ -278,12 +271,15 @@ def tab_content_template(edit_class):
             self.receiver.please_exit.connect(self.please_exit)
 
             # Import and handle kernel messages
-            self._importer = Importer(self)
+            self._importer = tab.Importer(self)
             self._importer.please_process.connect(self.post)
-            self.message_arrived.connect(self._importer.convert)
 
-            self.line_prompt = LinePrompt()
+            self.line_prompt = entry.LinePrompt()
             self.line_prompt.text_input.connect(self.on_text_input)
+
+        @QtCore.Slot(tab.KernelMessage)
+        def convert(self, msg):
+            self._importer.convert(msg, self.show_other)
 
         @property
         def _focus_text_component(self):
@@ -350,7 +346,7 @@ def tab_content_template(edit_class):
                     except OSError:
                         raise CommandError(command)
 
-        @QtCore.Slot(ImportItem)
+        @QtCore.Slot(tab.SplitItem)
         def post(self, item):
             _post(item, self)
 
@@ -386,18 +382,6 @@ def tab_content_template(edit_class):
             # print('Send clicked')
             self.dispatch(Message(eval(self.entry.source.code), from_here=True))
 
-        @QtCore.Slot(KernelMessage)
-        def augment(self, msg):
-            """
-            Augment the KernelMessage with ui information and emit as Message through message_arrived.
-            :param msg: KernelMessage
-            :return:
-            """
-            msg = Message(msg)
-            msg.show_other = self.show_other
-            msg.ansi_codes = self.ansi_codes
-            self.message_arrived.emit(msg)
-
         @QtCore.Slot()
         def _on_please_restart_kernel(self):
             if self.entry.clear_on_kernel_restart:
@@ -418,7 +402,7 @@ def tab_content_template(edit_class):
             if self.line_prompt.password:
                 text = '****'
             out = self.line_prompt.prompt + text
-            self.post(Stream(out, name='stdout'))
+            self.post(Stdout(out))
             self.entry.setFocus()
             self.entry.setReadOnly(False)
 

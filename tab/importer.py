@@ -1,10 +1,20 @@
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from .import_item import ImportItem, Stream, Input, ClearOutput, PageDoc, EditFile, ExitRequested, \
-    InText, ExecuteResult, Banner, CompleteItems, CallTip, HtmlStream, InputRequest
+from .import_item import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput, \
+    CompleteItems, PageDoc, EditFile, InText, CallTip, InputRequest
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
+
+
+def _show_msg(msg, show_other):
+    """
+    Determine if message should be shown.
+    :param msg: message to be shown.
+    :param show_other: whether messages from other clients should be shown.
+    :return: whether the message should be shown.
+    """
+    return msg.from_here or show_other
 
 
 class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject), {})):
@@ -28,16 +38,20 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             self._payload_source_page: self._handle_payload_page,
             self._payload_source_next_input: self._handle_payload_next_input}
 
-    def convert(self, msg):
+    def convert(self, msg, show_other=True):
         print('dispatch: ' + msg.type)
         print(msg.whole)
         handler = getattr(self, '_handle_' + msg.type, None)
-        if handler and msg.show_me:
+        if handler and _show_msg(msg, show_other):
             handler(msg)
 
     def _handle_stream(self, msg):
         content = msg.content
-        self.please_process.emit(Stream(content['text'], name=content['name']))
+        name = content['name']
+        if name == 'stderr':
+            self.please_process.emit(Stderr(content['text']))
+        else:
+            self.please_process.emit(Stdout(content['text']))
 
     def _handle_kernel_info_reply(self, msg):
         to_show = msg.content['banner']
@@ -54,7 +68,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         self.log.warn("kernel restarted")
         msg = "Kernel died, restarting" if died else "Kernel restarting"
         text = "<br>%s<hr><br>" % msg
-        self.please_process.emit(HtmlStream(text, name='stderr', clearable=False))
+        self.please_process.emit(Stderr(HtmlText(text)))
 
     # FrontendWidget
     def _handle_shutdown_reply(self, msg):
@@ -102,7 +116,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         prompt_number = content.get('execution_count', 0)
         data = content['data']
         if 'text/plain' in data:
-            self.please_process.emit(ExecuteResult(data['text/plain'], execution_count=prompt_number))
+            self.please_process.emit(Result(data['text/plain'], execution_count=prompt_number))
 
     def _handle_clear_output(self, msg):
         # {'header': {'msg_type': 'clear_output'}, 'content': {'wait': False}}
@@ -117,7 +131,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         data = msg.content['data']
         # metadata = msg.content['metadata']
         if 'text/plain' in data:
-            self.please_process.emit(Stream(data['text/plain'], name='stdout'))
+            self.please_process.emit(Stdout(data['text/plain']))
 
     def _handle_complete_reply(self, msg):
         self.log.debug("complete: %s", msg.content)
@@ -206,13 +220,13 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             # post traceback as html
         else:
             # This is the fallback for now, using plain text with ansi escapes
-            self.please_process.emit(Stream(traceback, name='stderr', clearable=False))
+            self.please_process.emit(Stderr(traceback))
 
     # FrontendWidget
     def _process_execute_abort(self, msg):
         """ Process a reply for an aborted execution request.
         """
-        self.please_process.emit(Stream('ERROR: execution aborted', name='stderr', clearable=False))
+        self.please_process.emit(Stderr('ERROR: execution aborted'))
 
     # FrontendWidget
     def _handle_inspect_reply(self, msg):

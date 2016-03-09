@@ -2,7 +2,7 @@ import sys
 
 from qtconsole.qt import QtGui
 
-from ui.entry.line_prompt import LinePrompt
+from entry.line_prompt import LinePrompt
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 

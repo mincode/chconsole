@@ -1,12 +1,26 @@
+from functools import singledispatch
+
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Unicode
-
-from .pager_filter import PagerFilter
 from ui.standards import TextAreaFilter, ViewportFilter
-from ui.standards.text_config import TextConfig
+
+from standards.text_config import TextConfig
+from tab.import_item import AtomicText, SplitText
+from .pager_filter import PagerFilter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
+
+
+@singledispatch
+def _post(item, target):
+    target.insert_html(item.text)
+
+
+@_post.register(AtomicText)
+@_post.register(SplitText)
+def _(item, target):
+    target.insert_ansi_text(item.text, ansi_codes=target.use_ansi)
 
 
 def pager_template(edit_class):
@@ -25,7 +39,7 @@ def pager_template(edit_class):
         text_area_filter = None
         release_focus = QtCore.Signal()
 
-        def __init__(self, locations, initial_location, text='', parent=None, **kwargs):
+        def __init__(self, locations, initial_location, text='', use_ansi=True, parent=None, **kwargs):
             """
             Initialize pager.
             :param locations: Possible pager locations,
@@ -39,7 +53,7 @@ def pager_template(edit_class):
             :return:
             """
             QtGui.QTextEdit.__init__(self, text, parent)
-            TextConfig.__init__(self, **kwargs)
+            TextConfig.__init__(self, use_ansi, **kwargs)
             self._locations = dict(locations)
             self.location = initial_location
             self.document().setMaximumBlockCount(0)
@@ -105,10 +119,10 @@ def pager_template(edit_class):
 
         def post(self, item):
             self.clear()
-            if hasattr(self, 'insertHtml') and item.html != '':
-                self.insert_html(item.html)
+            if hasattr(self, 'insertHtml') and item.html_stream:
+                _post(item.html_stream.content, self)
             else:
-                self.insert_ansi_text(item.text)
+                _post(item.text_stream.content, self)
             self.moveCursor(QtGui.QTextCursor.Start)
             self.setFocus()
             self.show()

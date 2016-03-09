@@ -3,8 +3,8 @@ import sys
 from qtconsole import mainwindow
 from qtconsole.qt import QtGui, QtCore
 
+from entry import code_active_color, chat_active_color
 from main.statusbar import StatusBar
-from ui.entry import code_active_color, chat_active_color
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 

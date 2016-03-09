@@ -10,11 +10,11 @@ from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool
 
-from dispatch.import_item import InText, CompleteItems, CallTip
-from dispatch.source import Source
-from ui.entry.entry_filter import EntryFilter
-from ui.standards.text_config import TextConfig
+from standards.text_config import TextConfig
+from tab import InText, CompleteItems, CallTip
+from .entry_filter import EntryFilter
 from .history import History
+from .source import Source
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -102,7 +102,7 @@ def entry_template(edit_class):
         please_restart_kernel = QtCore.Signal()  # Signal when exit is requested
         please_interrupt_kernel = QtCore.Signal()  # Signal when exit is requested
 
-        def __init__(self, is_complete=None, code=True, text='', parent=None, **kwargs):
+        def __init__(self, is_complete=None, code=True, text='', use_ansi=True, parent=None, **kwargs):
             """
             Initialize.
             :param is_complete: function str->(bool, str) that checks whether the input is complete code
@@ -114,6 +114,8 @@ def entry_template(edit_class):
             """
             edit_class.__init__(self, text, parent)
             TextConfig.__init__(self, **kwargs)
+
+            self.use_ansi = use_ansi
 
             # Call tips
             # forcefully disable calltips if PySide is < 1.0.7, because they crash
@@ -196,7 +198,6 @@ def entry_template(edit_class):
         def _code_mode_changed(self, name=None, old=None, new=None):
             """
             Set the frame color according to self.code.
-            :param changed: Not used.
             :return:
             """
             new_palette = self.palette()

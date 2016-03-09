@@ -2,7 +2,7 @@ import qtconsole.qtconsoleapp
 from qtconsole.qtconsoleapp import JupyterQtConsoleApp
 
 import main.expanded_main_window
-from ui.tab.tab_main import RichTabMain, PlainTabMain
+from tab import RichTabMain, PlainTabMain
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 

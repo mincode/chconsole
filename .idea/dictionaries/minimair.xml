@@ -4,6 +4,8 @@
       <w>jupyter</w>
       <w>minimair</w>
       <w>scrollbars</w>
+      <w>stderr</w>
+      <w>stdout</w>
       <w>traitlets</w>
     </words>
   </dictionary>

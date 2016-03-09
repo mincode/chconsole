@@ -1,5 +1,6 @@
 import unittest
-from dispatch.import_item import _split_lines
+
+from tab.import_item import _split_lines
 
 __author__ = 'minimair'
 

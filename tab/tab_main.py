@@ -4,9 +4,9 @@ from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool, Float
 from traitlets.config.configurable import LoggingConfigurable
 
-from dispatch.kernel_message import KernelMessage
-from dispatch.source import Source
-from ui.tab.tab_content import tab_content_template
+from entry.source import Source
+from tab import KernelMessage
+from tab import tab_content_template
 
 try:
     from queue import Empty
@@ -80,7 +80,7 @@ def tab_main_template(edit_class):
             self.main_content.please_inspect.connect(self._inspect)
             self.main_content.please_exit.connect(self._on_exit_request)
             self.main_content.please_complete.connect(self._on_complete_request)
-            self.message_arrived.connect(self.main_content.augment)
+            self.message_arrived.connect(self.main_content.convert)
 
             layout = QtGui.QHBoxLayout(self)
             layout.setContentsMargins(0, 0, 0, 0)

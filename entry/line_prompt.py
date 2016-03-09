@@ -1,6 +1,6 @@
 from qtconsole.qt import QtGui, QtCore
 
-from ui.entry.line_prompt_filter import LinePromptFilter
+from entry.line_prompt_filter import LinePromptFilter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
