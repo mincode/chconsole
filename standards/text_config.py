@@ -163,7 +163,7 @@ class TextConfig(LoggingConfigurable):
         self.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setReadOnly(False)
-        self.setUndoRedoEnabled(False)
+        self.setUndoRedoEnabled(True)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
 
         # ConsoleWidget

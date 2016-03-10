@@ -384,7 +384,7 @@ def tab_content_template(edit_class):
             :return:
             """
             # print('Send clicked')
-            self.dispatch(KernelMessage(eval(self.entry.source.code), from_here=True))
+            self._importer.convert(KernelMessage(eval(self.entry.source.code), from_here=True))
 
         @QtCore.Slot()
         def _on_please_restart_kernel(self):

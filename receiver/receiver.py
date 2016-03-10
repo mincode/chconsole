@@ -138,8 +138,9 @@ def _(item, target):
 @_receive.register(ClearOutput)
 def _(item, target):
     if target.clear_cursor:
-        target.clear_cursor.undo()
+        target.document().undo(target.clear_cursor)
         target.clear_cursor = None
+        print('attempting undo')
 
 
 def receiver_template(edit_class):

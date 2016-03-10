@@ -245,6 +245,7 @@ class ClearOutput(SplitItem):
             first.wait = self.wait
         if rest:
             rest.wait = self.wait
+        return count, first, rest
 
 
 class Banner(Stdout):
