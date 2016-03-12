@@ -58,7 +58,7 @@ class EntryFilter(BaseEventFilter):
                     self.target.ensureCursorVisible()
                 elif shift_down:
                     # force execute source
-                    self.target.please_handle.emit(Execute(self.target.source))
+                    self.target.please_export.emit(Execute(self.target.source))
                     self.target.history.store(self.target.source)
                     self.target.clear()
                 elif self.target.execute_on_complete_input and (at_end or single_line):
@@ -67,7 +67,7 @@ class EntryFilter(BaseEventFilter):
                     # The \n does not seem to be needed for executint code.
                     complete, indent = self.target.is_complete(self.target.source.code + '\n')
                     if complete:
-                        self.target.please_handle.emit(Execute(self.target.source))
+                        self.target.please_export.emit(Execute(self.target.source))
                         self.target.history.store(self.target.source)
                         self.target.clear()
                     else:
@@ -163,14 +163,14 @@ class EntryFilter(BaseEventFilter):
                     self.target.please_interrupt_kernel.emit()
 
                 elif key == QtCore.Qt.Key_Period:
-                    self.target.please_handle.emit(Restart())
+                    self.target.please_export.emit(Restart(self.target.clear_on_kernel_restart))
 
             else:
                 anchor_mode = QtGui.QTextCursor.KeepAnchor if shift_down else QtGui.QTextCursor.MoveAnchor
 
                 if key == QtCore.Qt.Key_Tab:
                     if complete_possible(self.target.textCursor()):
-                        self.target.please_handle.emit(Complete(self.target.source,
+                        self.target.please_export.emit(Complete(self.target.source,
                                                                 self.target.textCursor().position()))
                     else:
                         self.target.insertPlainText(' '*self.target.tab_width)

@@ -83,7 +83,7 @@ def entry_template(edit_class):
         clear_on_kernel_restart = Bool(True, config=True,
             help="Whether to clear the console when the kernel is restarted")
 
-        please_handle = QtCore.Signal(ExportItem)  # tasks for the kernel
+        please_export = QtCore.Signal(ExportItem)  # tasks for the kernel
 
         is_complete = None  # function str->(bool, str) that checks whether the input is complete code
 
@@ -279,7 +279,7 @@ def entry_template(edit_class):
             if not self.enable_call_tips:
                 return False
             cursor_pos = self.textCursor().position()
-            self.please_handle.emit(Inspect(self.source, cursor_pos))
+            self.please_export.emit(Inspect(self.source, cursor_pos))
             return True
 
         # FrontendWidget

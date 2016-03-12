@@ -2,7 +2,10 @@ kernel restart/interrupt as messages
 finish history request
 syntax highlighting
 handle mime data
-split code and chat widget?, or just remove chat mode
+split code and chat widget?, or just remove chat mode:
+    automatically recognize non-Python code and propose as chat
+    later expand classifier to recognize code with syntax errors and propose corrections
+    automatic code correction literature?
 
 Collaboration:
 let other clients know that there is an input request going on in one client because code execution is blocked

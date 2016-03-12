@@ -41,7 +41,7 @@ class ReceiverFilter(BaseEventFilter):
                 if key == QtCore.Qt.Key_O:
                     self.target.release_focus.emit()
                 elif key == QtCore.Qt.Key_D:
-                    self.target.please_handle.emit(Exit())
+                    self.target.please_export.emit(Exit())
 
             else:
                 anchor_mode = QtGui.QTextCursor.KeepAnchor if shift_down else QtGui.QTextCursor.MoveAnchor

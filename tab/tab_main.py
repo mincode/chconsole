@@ -16,29 +16,29 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
 @singledispatch
-def _post(item, target):
+def _export(item, target):
     pass
     #raise NotImplementedError
 
 
-@_post.register(Exit)
+@_export.register(Exit)
 def _(item, target):
     target.keep_kernel_on_exit = True if item.keep_kernel else None
     target.exit_requested.emit(target)
 
 
-@_post.register(Inspect)
+@_export.register(Inspect)
 def _(item, target):
     if target.kernel_client.shell_channel.is_alive():
         target.kernel_client.inspect(item.source.code, item.position)
 
 
-@_post.register(Complete)
+@_export.register(Complete)
 def _(item, target):
     target.kernel_client.complete(code=item.source.code, cursor_pos=item.position)
 
 
-@_post.register(Execute)
+@_export.register(Execute)
 def _(item, target):
     target.kernel_client.execute(item.source.code, silent=item.source.hidden)
     #jupyter_client.client:
@@ -142,7 +142,7 @@ def tab_main_template(edit_class):
 
             self.main_content = tab_content_template(edit_class)(self.is_complete)
             self.message_arrived.connect(self.main_content.convert)
-            self.main_content.please_handle.connect(self.post)
+            self.main_content.please_export.connect(self.export)
 
             layout = QtGui.QHBoxLayout(self)
             layout.setContentsMargins(0, 0, 0, 0)
@@ -284,13 +284,13 @@ def tab_main_template(edit_class):
                     indent = reply['content'].get('indent', u'')
                     return status != 'incomplete', indent
 
-        def post(self, item):
+        def export(self, item):
             """
             Process the item received.
             :param item: ExportItem for the kernel.
             :return:
             """
-            _post(item, self)
+            _export(item, self)
 
     return TabMain
 

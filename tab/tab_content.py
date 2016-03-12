@@ -10,7 +10,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
 from messages import Stderr, Stdout
 from messages import Source, KernelMessage, ExportItem
-from messages import Exit, Execute
+from messages import Exit, Execute, Restart
 from entry import entry_template, LinePrompt
 from receiver import receiver_template
 from pager import pager_template
@@ -86,16 +86,16 @@ class CommandError(Exception):
 # Receiver
 @singledispatch
 def _post(item, target):
-    target.receiver.post(item)
+    target.receiver.export(item)
 
 
 # Pager
 @_post.register(PageDoc)
 def _(item, target):
     if target.receiver.covers(item):
-        target.pager.post(item)
+        target.pager.export(item)
     else:
-        target.receiver.post(item)
+        target.receiver.export(item)
 
 
 # Entry
@@ -103,7 +103,7 @@ def _(item, target):
 @_post.register(CompleteItems)
 @_post.register(CallTip)
 def _(item, target):
-    target.entry.post(item)
+    target.entry.export(item)
 
 
 # Process here
@@ -128,13 +128,13 @@ def _(item, target):
         text = ('No default editor available. '
                 'Specify a GUI text editor in the `TabContent.editor` configurable '
                 'to enable the %edit magic')
-        target.receiver.post(Stderr(text))
+        target.receiver.export(Stderr(text))
     except KeyError:
         text = 'Invalid editor command.'
-        target.receiver.post(Stderr(text))
+        target.receiver.export(Stderr(text))
     except CommandError as e:
         text = 'Opening editor with command "%s" failed.' % e.command
-        target.receiver.post(Stderr(text))
+        target.receiver.export(Stderr(text))
 
 
 @_post.register(InputRequest)
@@ -147,6 +147,20 @@ def _(item, target):
     target.line_prompt.setEnabled(True)
     target.line_prompt.set_focus()
     target.line_prompt.show()
+
+
+@singledispatch
+def _export(item, target):
+    pass
+    #raise NotImplementedError
+
+
+@_export.register(Restart)
+def _(item, target):
+    if item.clear:
+        target.entry.clear()
+        target.receiver.clear()
+        target.pager.clear()
 
 
 def tab_content_template(edit_class):
@@ -211,10 +225,9 @@ def tab_content_template(edit_class):
             magic will be ignored.
             """)
 
-        please_restart_kernel = QtCore.Signal()  # Signal when exit is requested
         please_interrupt_kernel = QtCore.Signal()  # Signal when exit is requested
 
-        please_handle = QtCore.Signal(ExportItem)  # tasks for the kernel
+        please_export = QtCore.Signal(ExportItem)  # tasks for the kernel
 
         line_prompt = None  # LinePrompt for entering input requested by the kernel
 
@@ -243,14 +256,15 @@ def tab_content_template(edit_class):
 
             self.entry = entry_template(edit_class)(is_complete=is_complete, use_ansi=self.ansi_codes)
 
-            self.entry.please_handle.connect(self.please_handle)
-            self.entry.please_restart_kernel.connect(self._on_please_restart_kernel)
+            self.entry.please_export.connect(self.please_export)
             self.entry.please_interrupt_kernel.connect(self.please_interrupt_kernel)
 
             self.receiver = receiver_template(edit_class)(use_ansi=self.ansi_codes)
-            self.receiver.please_handle.connect(self.please_handle)
+            self.receiver.please_export.connect(self.please_export)
             self._console_area.addWidget(self.receiver)
             self._console_area.addWidget(self.entry)
+
+            self.please_export.connect(self.export)
 
             self.print_action = self.receiver.print_action
             self.export_action = self.receiver.export_action
@@ -373,7 +387,7 @@ def tab_content_template(edit_class):
             After the user clicks send, emit the source to be executed.
             :return:
             """
-            self.please_handle.emit(Execute(self.entry.source))
+            self.please_export.emit(Execute(self.entry.source))
 
         @QtCore.Slot()
         def on_frontend_clicked(self):
@@ -385,12 +399,8 @@ def tab_content_template(edit_class):
             self._importer.convert(KernelMessage(eval(self.entry.source.code), from_here=True))
 
         @QtCore.Slot()
-        def _on_please_restart_kernel(self):
-            if self.entry.clear_on_kernel_restart:
-                self.entry.clear()
-                self.receiver.clear()
-                self.pager.clear()
-            self.please_restart_kernel.emit()
+        def export(self, item):
+            _export(item, self)
 
         @QtCore.Slot(str)
         def on_text_input(self, text):

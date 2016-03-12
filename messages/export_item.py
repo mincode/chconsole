@@ -14,7 +14,11 @@ class Exit(ExportItem):
 
 
 class Restart(ExportItem):
-    pass
+    clear = True  # whether to clear on restart
+
+    def __init__(self, clear=True):
+        super(Restart, self).__init__()
+        self.clear = clear
 
 
 class Code(ExportItem):
