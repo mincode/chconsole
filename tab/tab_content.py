@@ -86,7 +86,7 @@ class CommandError(Exception):
 # Receiver
 @singledispatch
 def _post(item, target):
-    target.receiver.export(item)
+    target.receiver.post(item)
 
 
 # Pager
