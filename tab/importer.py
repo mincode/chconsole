@@ -2,7 +2,7 @@ from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets.config.configurable import LoggingConfigurable
 
-from messages.import_item import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput, \
+from messages import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput, \
     CompleteItems, PageDoc, EditFile, InText, CallTip, InputRequest
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'

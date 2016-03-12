@@ -4,9 +4,7 @@ from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool, Float
 from traitlets.config.configurable import LoggingConfigurable
 
-from messages.source import Source
-from tab import KernelMessage
-from tab import tab_content_template
+from tab import KernelMessage, tab_content_template, Exporter
 
 try:
     from queue import Empty
@@ -67,6 +65,8 @@ def tab_main_template(edit_class):
         confirm_restart = Bool(True, config=True, help="Whether to ask for user confirmation when restarting kernel")
         is_complete_timeout = Float(0.25, config=True, help="Seconds to wait for is_complete replies from the kernel.")
 
+        _exporter = None  # Exporter of messages to the kernel
+
         def __init__(self, parent=None, **kw):
             """
             Initialize the main widget.
@@ -75,11 +75,12 @@ def tab_main_template(edit_class):
             :return:
             """
             super(TabMain, self).__init__(parent, **kw)
+            self._exporter = Exporter(self)
             self.main_content = tab_content_template(edit_class)(self.is_complete)
-            self.main_content.please_execute.connect(self._execute)
-            self.main_content.please_inspect.connect(self._inspect)
-            self.main_content.please_exit.connect(self._on_exit_request)
-            self.main_content.please_complete.connect(self._on_complete_request)
+            # self.main_content.please_execute.connect(self._execute)
+            # self.main_content.please_inspect.connect(self._inspect)
+            # self.main_content.please_exit.connect(self._on_exit_request)
+            # self.main_content.please_complete.connect(self._on_complete_request)
             self.message_arrived.connect(self.main_content.convert)
 
             layout = QtGui.QHBoxLayout(self)
@@ -217,34 +218,34 @@ def tab_main_template(edit_class):
                     indent = reply['content'].get('indent', u'')
                     return status != 'incomplete', indent
 
-        @QtCore.Slot(str, int)
-        def _on_complete_request(self, code, position):
-            """
-            Handle a complete request.
-            :param code: string to be completed.
-            :param position: cursor position where to complete.
-            :return:
-            """
-            self.kernel_client.complete(code=code, cursor_pos=position)
+        # @QtCore.Slot(str, int)
+        # def _on_complete_request(self, code, position):
+        #     """
+        #     Handle a complete request.
+        #     :param code: string to be completed.
+        #     :param position: cursor position where to complete.
+        #     :return:
+        #     """
+        #     self.kernel_client.complete(code=code, cursor_pos=position)
 
-        @QtCore.Slot(bool)
-        def _on_exit_request(self, keep_kernel_on_exit):
-            self.keep_kernel_on_exit = True if keep_kernel_on_exit else None
-            self.exit_requested.emit(self)
+        # @QtCore.Slot(bool)
+        # def _on_exit_request(self, keep_kernel_on_exit):
+        #     self.keep_kernel_on_exit = True if keep_kernel_on_exit else None
+        #     self.exit_requested.emit(self)
 
-        @QtCore.Slot(Source, int)
-        def _inspect(self, source, position):
-            if self.kernel_client.shell_channel.is_alive():
-                self.kernel_client.inspect(source.code, position)
+        # @QtCore.Slot(Source, int)
+        # def _inspect(self, source, position):
+        #     if self.kernel_client.shell_channel.is_alive():
+        #         self.kernel_client.inspect(source.code, position)
 
-        @QtCore.Slot(Source)
-        def _execute(self, source):
-            """
-            Execute source.
-            :param source: Source object.
-            :return:
-            """
-            self.kernel_client.execute(source.code, silent=source.hidden)
+        # @QtCore.Slot(Source)
+        # def _execute(self, source):
+        #     """
+        #     Execute source.
+        #     :param source: Source object.
+        #     :return:
+        #     """
+        #     self.kernel_client.execute(source.code, silent=source.hidden)
             #jupyter_client.client:
             #execute(self, code, silent=False, store_history=True,
             #        user_expressions=None, allow_stdin=None, stop_on_error=True):

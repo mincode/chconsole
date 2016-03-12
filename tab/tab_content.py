@@ -9,11 +9,11 @@ from traitlets.config.configurable import LoggingConfigurable
 
 from messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
 from messages import Stderr, Stdout
-from messages import Source, KernelMessage
+from messages import Source, KernelMessage, ExportItem
 from entry import entry_template, LinePrompt
 from receiver import receiver_template
 from pager import pager_template
-from .importer import Importer
+from . import Importer
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -173,7 +173,7 @@ def tab_content_template(edit_class):
         _console_stack_layout = None  # QStackedLayout
         _console_area = None  # QSplitter
 
-        _importer = None  # Relay
+        _importer = None  # Importer
 
         show_other = Bool(True, config=True, help='True if messages from other clients are to be included.')
 
@@ -217,6 +217,8 @@ def tab_content_template(edit_class):
         # Signal requesting completing code str ad cursor position int.
         please_complete = QtCore.Signal(str, int)
 
+        please_handle = QtCore.Signal(ExportItem)  # tasks for the kernel
+
         line_prompt = None  # LinePrompt for entering input requested by the kernel
 
         def __init__(self, is_complete, **kwargs):
@@ -243,7 +245,7 @@ def tab_content_template(edit_class):
             self._console_stack_layout.addWidget(self._console_area)
 
             self.entry = entry_template(edit_class)(is_complete=is_complete, use_ansi=self.ansi_codes)
-            self.entry.please_execute.connect(self.on_send_clicked)
+            self.entry.please_execute.connect(self.on_enter_clicked)
             self.entry.please_inspect.connect(self._on_please_inspect)
             self.entry.please_complete.connect(self.please_complete)
             self.entry.please_restart_kernel.connect(self._on_please_restart_kernel)
@@ -369,7 +371,7 @@ def tab_content_template(edit_class):
 
         # Qt slots
         @QtCore.Slot()
-        def on_send_clicked(self):
+        def on_enter_clicked(self):
             """
             After the user clicks send, emit the source to be executed.
             :return:

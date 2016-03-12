@@ -41,7 +41,7 @@ class ExpandedMainWindow(mainwindow.MainWindow):
 
         if self._act_on_send:
             self.status_bar.send_clicked.disconnect(self._act_on_send)
-        self._act_on_send = active.main_content.on_send_clicked
+        self._act_on_send = active.main_content.on_enter_clicked
         self.status_bar.send_clicked.connect(self._act_on_send)
 
         if self._act_on_frontend:
