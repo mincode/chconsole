@@ -11,7 +11,7 @@ from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool
 
 from messages import InText, CompleteItems, CallTip
-from messages.source import Source
+from messages import Source, ExportItem, Inspect
 from standards.text_config import TextConfig
 from .entry_filter import EntryFilter
 from .history import History
@@ -79,21 +79,19 @@ def entry_template(edit_class):
         call_tip_widget = None  # CallTipWidget
         _bracket_matcher = None  # BracketMatcher
         call_tip_position = 0  # cursor position where a call tip should be shown
-        please_inspect = QtCore.Signal(int)  # ask for inspection of source at cursor position int
 
         clear_on_kernel_restart = Bool(True, config=True,
             help="Whether to clear the console when the kernel is restarted")
 
+        please_handle = QtCore.Signal(ExportItem)  # tasks for the kernel
+
         is_complete = None  # function str->(bool, str) that checks whether the input is complete code
-        please_execute = QtCore.Signal()  # ask for execution of source
 
         viewport_filter = None
         entry_filter = None
         text_area_filter = None
         release_focus = QtCore.Signal()
 
-        # Signal requesting completing code str ad cursor position int.
-        please_complete = QtCore.Signal(str, int)
         completer = None  # completion object
 
         kill_ring = None  # QKillRing
@@ -205,14 +203,6 @@ def entry_template(edit_class):
             new_palette.setColor(QtGui.QPalette.WindowText, new_color)
             self.setPalette(new_palette)
 
-        def request_complete(self, cursor):
-            """
-            Request completion of document text at cursor.
-            :param cursor:
-            :return:
-            """
-            self.please_complete.emit(self.toPlainText(), cursor.position())
-
         # JupyterWidget
         def process_complete(self, items):
             cursor = self.textCursor()
@@ -290,8 +280,7 @@ def entry_template(edit_class):
             if not self.enable_call_tips:
                 return False
             cursor_pos = self.textCursor().position()
-            code = self.toPlainText()
-            self.please_inspect.emit(cursor_pos)
+            self.please_handle.emit(Inspect(self.source, cursor_pos))
             return True
 
         # FrontendWidget

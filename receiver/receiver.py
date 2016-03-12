@@ -188,7 +188,7 @@ def receiver_template(edit_class):
         text_area_filter = None
         release_focus = QtCore.Signal()  # signal to release the focus
 
-        please_handle = QtCore.Signal(ExportItem)
+        please_handle = QtCore.Signal(ExportItem)  # signal items to be handled by the kernel
 
         def __init__(self, text='', use_ansi=True, parent=None, **kwargs):
             """
@@ -225,9 +225,6 @@ def receiver_template(edit_class):
                 QtCore.Qt.TextSelectableByKeyboard |
                 QtCore.Qt.LinksAccessibleByMouse |
                 QtCore.Qt.LinksAccessibleByKeyboard)
-
-        def undo_here(self):
-            print('Undo command added')
 
         # ConsoleWidget
         def _banner_default(self):

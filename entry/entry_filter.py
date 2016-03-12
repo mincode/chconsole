@@ -1,7 +1,7 @@
 from qtconsole.qt import QtCore, QtGui
 from standards.base_event_filter import BaseEventFilter
-
 from standards.text_config import get_block_plain_text
+from messages import Execute, Complete
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -58,13 +58,13 @@ class EntryFilter(BaseEventFilter):
                     self.target.ensureCursorVisible()
                 elif shift_down:
                     # force execute source
-                    self.target.please_execute.emit()
+                    self.target.please_handle.emit(Execute(self.target.source))
                     self.target.history.store(self.target.source)
                     self.target.clear()
                 elif self.target.execute_on_complete_input and (at_end or single_line):
                     complete, indent = self.target.is_complete(self.target.source.code)
                     if complete:
-                        self.target.please_execute.emit()
+                        self.target.please_handle.emit(Execute(self.target.source))
                         self.target.history.store(self.target.source)
                         self.target.clear()
                     else:
@@ -167,7 +167,8 @@ class EntryFilter(BaseEventFilter):
 
                 if key == QtCore.Qt.Key_Tab:
                     if complete_possible(self.target.textCursor()):
-                        self.target.request_complete(self.target.textCursor())  # complete request
+                        self.target.please_handle.emit(Complete(self.target.toPlainText(),
+                                                                self.target.textCursor().position()))
                     else:
                         self.target.insertPlainText(' '*self.target.tab_width)
 

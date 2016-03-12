@@ -4,7 +4,8 @@ from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool, Float
 from traitlets.config.configurable import LoggingConfigurable
 
-from tab import KernelMessage, tab_content_template, Exporter
+from tab import KernelMessage, tab_content_template
+from kernel_interface import Exporter
 
 try:
     from queue import Empty
@@ -76,12 +77,10 @@ def tab_main_template(edit_class):
             """
             super(TabMain, self).__init__(parent, **kw)
             self._exporter = Exporter(self)
+
             self.main_content = tab_content_template(edit_class)(self.is_complete)
-            # self.main_content.please_execute.connect(self._execute)
-            # self.main_content.please_inspect.connect(self._inspect)
-            # self.main_content.please_exit.connect(self._on_exit_request)
-            # self.main_content.please_complete.connect(self._on_complete_request)
             self.message_arrived.connect(self.main_content.convert)
+            self.main_content.please_handle.connect(self._exporter.convert)
 
             layout = QtGui.QHBoxLayout(self)
             layout.setContentsMargins(0, 0, 0, 0)
@@ -218,71 +217,6 @@ def tab_main_template(edit_class):
                     indent = reply['content'].get('indent', u'')
                     return status != 'incomplete', indent
 
-        # @QtCore.Slot(str, int)
-        # def _on_complete_request(self, code, position):
-        #     """
-        #     Handle a complete request.
-        #     :param code: string to be completed.
-        #     :param position: cursor position where to complete.
-        #     :return:
-        #     """
-        #     self.kernel_client.complete(code=code, cursor_pos=position)
-
-        # @QtCore.Slot(bool)
-        # def _on_exit_request(self, keep_kernel_on_exit):
-        #     self.keep_kernel_on_exit = True if keep_kernel_on_exit else None
-        #     self.exit_requested.emit(self)
-
-        # @QtCore.Slot(Source, int)
-        # def _inspect(self, source, position):
-        #     if self.kernel_client.shell_channel.is_alive():
-        #         self.kernel_client.inspect(source.code, position)
-
-        # @QtCore.Slot(Source)
-        # def _execute(self, source):
-        #     """
-        #     Execute source.
-        #     :param source: Source object.
-        #     :return:
-        #     """
-        #     self.kernel_client.execute(source.code, silent=source.hidden)
-            #jupyter_client.client:
-            #execute(self, code, silent=False, store_history=True,
-            #        user_expressions=None, allow_stdin=None, stop_on_error=True):
-            # """Execute code in the kernel.
-            #
-            # Parameters
-            # ----------
-            # code : str
-            #     A string of code in the kernel's language.
-            #
-            # silent : bool, optional (default False)
-            #     If set, the kernel will execute the code as quietly possible, and
-            #     will force store_history to be False.
-            #
-            # store_history : bool, optional (default True)
-            #     If set, the kernel will store command history.  This is forced
-            #     to be False if silent is True.
-            #
-            # user_expressions : dict, optional
-            #     A dict mapping names to expressions to be evaluated in the user's
-            #     dict. The expression values are returned as strings formatted using
-            #     :func:`repr`.
-            #
-            # allow_stdin : bool, optional (default self.allow_stdin)
-            #     Flag for whether the kernel can send stdin requests to frontends.
-            #
-            #     Some frontends (e.g. the Notebook) do not support stdin requests.
-            #     If raw_input is called from code executed from such a frontend, a
-            #     StdinNotImplementedError will be raised.
-            #
-            # stop_on_error: bool, optional (default True)
-            #     Flag whether to abort the execution queue, if an exception is encountered.
-            #
-            # Returns
-            # -------
-            # The msg_id of the message sent.
-            # """
     return TabMain
 
 RichTabMain = tab_main_template(QtGui.QTextEdit)

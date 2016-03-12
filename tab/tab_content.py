@@ -10,7 +10,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
 from messages import Stderr, Stdout
 from messages import Source, KernelMessage, ExportItem
-from messages import Exit
+from messages import Exit, Execute
 from entry import entry_template, LinePrompt
 from receiver import receiver_template
 from pager import pager_template
@@ -214,9 +214,6 @@ def tab_content_template(edit_class):
         please_restart_kernel = QtCore.Signal()  # Signal when exit is requested
         please_interrupt_kernel = QtCore.Signal()  # Signal when exit is requested
 
-        # Signal requesting completing code str ad cursor position int.
-        please_complete = QtCore.Signal(str, int)
-
         please_handle = QtCore.Signal(ExportItem)  # tasks for the kernel
 
         line_prompt = None  # LinePrompt for entering input requested by the kernel
@@ -245,12 +242,13 @@ def tab_content_template(edit_class):
             self._console_stack_layout.addWidget(self._console_area)
 
             self.entry = entry_template(edit_class)(is_complete=is_complete, use_ansi=self.ansi_codes)
-            self.entry.please_execute.connect(self.on_enter_clicked)
-            self.entry.please_inspect.connect(self._on_please_inspect)
-            self.entry.please_complete.connect(self.please_complete)
+
+            self.entry.please_handle.connect(self.please_handle)
             self.entry.please_restart_kernel.connect(self._on_please_restart_kernel)
             self.entry.please_interrupt_kernel.connect(self.please_interrupt_kernel)
+
             self.receiver = receiver_template(edit_class)(use_ansi=self.ansi_codes)
+            self.receiver.please_handle.connect(self.please_handle)
             self._console_area.addWidget(self.receiver)
             self._console_area.addWidget(self.entry)
 
@@ -274,8 +272,6 @@ def tab_content_template(edit_class):
             self.pager.release_focus.connect(self.entry.set_focus)
             self.receiver.release_focus.connect(self.entry.set_focus)
             self.entry.release_focus.connect(self.receiver.set_focus)
-
-            self.receiver.please_handle.connect(self.please_handle)
 
             # Import and handle kernel messages
             self._importer = Importer(self)
@@ -377,7 +373,7 @@ def tab_content_template(edit_class):
             After the user clicks send, emit the source to be executed.
             :return:
             """
-            self.please_execute.emit(self.entry.source)
+            self.please_handle.emit(Execute(self.entry.source))
 
         @QtCore.Slot()
         def on_frontend_clicked(self):
@@ -395,10 +391,6 @@ def tab_content_template(edit_class):
                 self.receiver.clear()
                 self.pager.clear()
             self.please_restart_kernel.emit()
-
-        @QtCore.Slot(int)
-        def _on_please_inspect(self, position):
-            self.please_inspect.emit(self.entry.source, position)
 
         @QtCore.Slot(str)
         def on_text_input(self, text):
