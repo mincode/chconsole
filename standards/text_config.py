@@ -163,7 +163,6 @@ class TextConfig(LoggingConfigurable):
         self.setAttribute(QtCore.Qt.WA_InputMethodEnabled, True)
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setReadOnly(False)
-        self.setUndoRedoEnabled(True)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
 
         # ConsoleWidget
@@ -437,7 +436,6 @@ class TextConfig(LoggingConfigurable):
     # adopted from ConsoleWidget
     def insert_ansi_text(self, text, ansi_codes=True, cursor=None):
         cursor = cursor if cursor else self.textCursor()
-        cursor.beginEditBlock()
         if ansi_codes:
             for substring in self.ansi_processor.split_string(text):
                 for act in self.ansi_processor.actions:
@@ -452,9 +450,9 @@ class TextConfig(LoggingConfigurable):
                     # Simulate a form feed by scrolling just past the last line.
                     elif act.action == 'scroll' and act.unit == 'page':
                         cursor.insertText('\n')
-                        cursor.endEditBlock()
+                        # cursor.endEditBlock()
                         _set_top_cursor(self, cursor)
-                        cursor.joinPreviousEditBlock()
+                        # cursor.joinPreviousEditBlock()
                         cursor.deletePreviousChar()
 
                     elif act.action == 'carriage-return':
@@ -490,7 +488,6 @@ class TextConfig(LoggingConfigurable):
                         cursor.movePosition(cursor.PreviousCharacter, cursor.KeepAnchor, len(old_text))
         else:
             cursor.insertText(text)
-        cursor.endEditBlock()
 
     # ConsoleWidget
     def insert_html(self, html, cursor=None):
@@ -502,7 +499,6 @@ class TextConfig(LoggingConfigurable):
         :return:
         """
         cursor = cursor if cursor else self.textCursor()
-        cursor.beginEditBlock()
         cursor.insertHtml(html)
 
         # Remark from qtconsole.console_widget:
@@ -518,7 +514,6 @@ class TextConfig(LoggingConfigurable):
         else:
             cursor.movePosition(QtGui.QTextCursor.Right)
         cursor.insertText(' ', QtGui.QTextCharFormat())
-        cursor.endEditBlock()
 
     # ConsoleWdiget
     @property

@@ -70,14 +70,14 @@ def _receive(item, target):
 @_receive.register(Stderr)
 def _(item, target):
     cursor = target.end_cursor
+    target.insert_start = cursor.position()
     target.clear_cursor = cursor if item.clearable else None
-    cursor.beginEditBlock()
+
     if isinstance(item.content, HtmlText):
         target.insert_html(item.content.text, cursor)
     else:
         target.insert_ansi_text(item.content.text, item.ansi_codes and target.use_ansi, cursor)
         target.ansi_processor.reset_sgr()
-    cursor.endEditBlock()
 
 
 @_receive.register(PageDoc)
@@ -91,8 +91,7 @@ def _(item, target):
 @_receive.register(Banner)
 def _(item, target):
     cursor = target.end_cursor
-    target.clear_cursor = cursor if item.clearable else None
-    cursor.beginEditBlock()
+    target.clear_cursor = None
     stream = item.stream
     stream.content.text = target.banner + stream.content.text
     _receive(stream, target)
@@ -103,28 +102,24 @@ def _(item, target):
             url = helper['url']
             target.insert_html('<a href="' + url + '">' + url + '</a>', cursor)
     cursor.insertText('\n')
-    cursor.endEditBlock()
 
 
 @_receive.register(Input)
 def _(item, target):
     cursor = target.end_cursor
-    target.clear_cursor = cursor if item.clearable else None
-    cursor.beginEditBlock()
+    target.clear_cursor = None
     cursor.insertText('\n')
     target.insert_html(_make_in_prompt(target.in_prompt, item.execution_count), cursor)
     target.insert_ansi_text(item.code, item.ansi_codes and target.use_ansi, cursor)
     target.ansi_processor.reset_sgr()
     if item.code[-1] != '\n':
         cursor.insertText('\n')
-    cursor.endEditBlock()
 
 
 @_receive.register(Result)
 def _(item, target):
     cursor = target.end_cursor
-    target.clear_cursor = cursor if item.clearable else None
-    cursor.beginEditBlock()
+    target.clear_cursor = None
     cursor.insertText(target.output_sep, cursor)
     target.insert_html(_make_out_prompt(target.out_prompt, item.execution_count), cursor)
     # JupyterWidget: If the repr is multiline, make sure we start on a new line,
@@ -132,15 +127,15 @@ def _(item, target):
     if "\n" in item.content.text and not target.output_sep.endswith("\n"):
         cursor.insertText('\n')
     cursor.insertText(item.content.text + target.output_sep2)
-    cursor.endEditBlock()
 
 
 @_receive.register(ClearOutput)
 def _(item, target):
     if target.clear_cursor:
-        target.document().undo(target.clear_cursor)
+        pos1 = target.clear_cursor.position()
+        target.clear_cursor.movePosition(QtGui.QTextCursor.Left, QtGui.QTextCursor.KeepAnchor, pos1-target.insert_start)
+        target.clear_cursor.deleteChar()
         target.clear_cursor = None
-        print('attempting undo')
 
 
 def receiver_template(edit_class):
@@ -163,11 +158,12 @@ def receiver_template(edit_class):
         out_prompt = Unicode(default_out_prompt, config=True)
 
         output_q = None  # Queue
-        _flush = None  # Flush
+        _out_buffer = None  # OutBuffer
 
         timing_guard = None  # QSemaphore
         receive_time = 0
 
+        insert_start = 0  # position of the start of the last insert that is clearable
         clear_cursor = None  # QTextCursor, used for clearing previous item received
 
         width = Integer(81, config=True,
@@ -207,9 +203,9 @@ def receiver_template(edit_class):
             self.document().setMaximumBlockCount(self.max_blocks)
             self.output_q = Queue()
             self.timing_guard = QtCore.QSemaphore()
-            self._flush = OutBuffer(self, self)
-            self._flush.item_ready.connect(self.on_item_ready)
-            self._flush.start()
+            self._out_buffer = OutBuffer(self, self)
+            self._out_buffer.item_ready.connect(self.on_item_ready)
+            self._out_buffer.start()
 
             self.setAcceptDrops(True)
 
@@ -227,6 +223,9 @@ def receiver_template(edit_class):
                 QtCore.Qt.TextSelectableByKeyboard |
                 QtCore.Qt.LinksAccessibleByMouse |
                 QtCore.Qt.LinksAccessibleByKeyboard)
+
+        def undo_here(self):
+            print('Undo command added')
 
         # ConsoleWidget
         def _banner_default(self):
