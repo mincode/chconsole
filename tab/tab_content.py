@@ -10,6 +10,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
 from messages import Stderr, Stdout
 from messages import Source, KernelMessage, ExportItem
+from messages import Exit
 from entry import entry_template, LinePrompt
 from receiver import receiver_template
 from pager import pager_template
@@ -116,7 +117,7 @@ def _(item, target):
                         "Close the Console?",
                         QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
     if reply == QtGui.QMessageBox.Yes:
-        target.please_exit.emit(item.keep_kernel_on_exit)
+        target.please_handle.emit(Exit(item.keep_kernel_on_exit))
 
 
 @_post.register(EditFile)
@@ -210,7 +211,6 @@ def tab_content_template(edit_class):
             magic will be ignored.
             """)
 
-        please_exit = QtCore.Signal(bool)  # Signal when exit is requested
         please_restart_kernel = QtCore.Signal()  # Signal when exit is requested
         please_interrupt_kernel = QtCore.Signal()  # Signal when exit is requested
 
@@ -274,7 +274,8 @@ def tab_content_template(edit_class):
             self.pager.release_focus.connect(self.entry.set_focus)
             self.receiver.release_focus.connect(self.entry.set_focus)
             self.entry.release_focus.connect(self.receiver.set_focus)
-            self.receiver.please_exit.connect(self.please_exit)
+
+            self.receiver.please_handle.connect(self.please_handle)
 
             # Import and handle kernel messages
             self._importer = Importer(self)
@@ -376,7 +377,6 @@ def tab_content_template(edit_class):
             After the user clicks send, emit the source to be executed.
             :return:
             """
-            # print('Send clicked')
             self.please_execute.emit(self.entry.source)
 
         @QtCore.Slot()

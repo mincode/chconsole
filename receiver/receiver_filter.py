@@ -1,6 +1,7 @@
 from qtconsole.qt import QtCore, QtGui
 
 from standards import BaseEventFilter
+from messages import Exit
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -40,7 +41,7 @@ class ReceiverFilter(BaseEventFilter):
                 if key == QtCore.Qt.Key_O:
                     self.target.release_focus.emit()
                 elif key == QtCore.Qt.Key_D:
-                    self.target.please_exit.emit()
+                    self.target.please_handle.emit(Exit())
 
             else:
                 anchor_mode = QtGui.QTextCursor.KeepAnchor if shift_down else QtGui.QTextCursor.MoveAnchor

@@ -41,6 +41,6 @@ class Complete(CodeFragment):
 class Exit(ExportItem):
     keep_kernel = True  # whether to keep the kernel on exit
 
-    def __init__(self, keep_kernel):
+    def __init__(self, keep_kernel=True):
         super(Exit, self).__init__()
         self.keep_kernel = keep_kernel

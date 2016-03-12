@@ -9,6 +9,7 @@ from traitlets import Integer, Unicode
 from _version import __version__
 
 from messages import Stderr, Stdout, HtmlText, PageDoc, Banner, Input, Result, ClearOutput, SplitItem
+from messages import ExportItem
 from .outbuffer import OutBuffer
 from standards import TextConfig
 from standards import ViewportFilter, TextAreaFilter
@@ -186,7 +187,8 @@ def receiver_template(edit_class):
         receiver_filter = None
         text_area_filter = None
         release_focus = QtCore.Signal()  # signal to release the focus
-        please_exit = QtCore.Signal(bool)  # Signal when exit is requested
+
+        please_handle = QtCore.Signal(ExportItem)
 
         def __init__(self, text='', use_ansi=True, parent=None, **kwargs):
             """
