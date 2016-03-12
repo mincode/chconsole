@@ -1,7 +1,7 @@
 from qtconsole.qt import QtCore, QtGui
 from standards.base_event_filter import BaseEventFilter
 from standards.text_config import get_block_plain_text
-from messages import Execute, Complete
+from messages import Execute, Complete, Restart
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -62,7 +62,10 @@ class EntryFilter(BaseEventFilter):
                     self.target.history.store(self.target.source)
                     self.target.clear()
                 elif self.target.execute_on_complete_input and (at_end or single_line):
-                    complete, indent = self.target.is_complete(self.target.source.code)
+                    # Python seems to expect \n at the end of multi-line code to properly decide
+                    # that it is complete. For single-line code the terminating \n is irrelevant.
+                    # The \n does not seem to be needed for executint code.
+                    complete, indent = self.target.is_complete(self.target.source.code + '\n')
                     if complete:
                         self.target.please_handle.emit(Execute(self.target.source))
                         self.target.history.store(self.target.source)
@@ -160,14 +163,14 @@ class EntryFilter(BaseEventFilter):
                     self.target.please_interrupt_kernel.emit()
 
                 elif key == QtCore.Qt.Key_Period:
-                    self.target.please_restart_kernel.emit()
+                    self.target.please_handle.emit(Restart())
 
             else:
                 anchor_mode = QtGui.QTextCursor.KeepAnchor if shift_down else QtGui.QTextCursor.MoveAnchor
 
                 if key == QtCore.Qt.Key_Tab:
                     if complete_possible(self.target.textCursor()):
-                        self.target.please_handle.emit(Complete(self.target.toPlainText(),
+                        self.target.please_handle.emit(Complete(self.target.source,
                                                                 self.target.textCursor().position()))
                     else:
                         self.target.insertPlainText(' '*self.target.tab_width)

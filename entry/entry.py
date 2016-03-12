@@ -97,7 +97,6 @@ def entry_template(edit_class):
         kill_ring = None  # QKillRing
         history = None  # History object
 
-        please_restart_kernel = QtCore.Signal()  # Signal when exit is requested
         please_interrupt_kernel = QtCore.Signal()  # Signal when exit is requested
 
         def __init__(self, is_complete=None, code=True, text='', use_ansi=True, parent=None, **kwargs):
@@ -179,7 +178,7 @@ def entry_template(edit_class):
         def post(self, item):
             """
             Process the item received.
-            :param item: RelayItem for the input area.
+            :param item: ImportItem for the input area.
             :return:
             """
             _post(item, self)

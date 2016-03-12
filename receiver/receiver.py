@@ -20,7 +20,7 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 default_in_prompt = 'In [<span class="in-prompt-number">%i</span>]: '
 default_out_prompt = 'Out[<span class="out-prompt-number">%i</span>]: '
 default_output_sep = ''
-default_output_sep2 = '|'
+default_output_sep2 = '\n'
 
 
 # JupyterWidget
@@ -121,7 +121,7 @@ def _(item, target):
 def _(item, target):
     cursor = target.end_cursor
     target.clear_cursor = None
-    cursor.insertText(target.output_sep, cursor)
+    cursor.insertText(target.output_sep)
     target.insert_html(_make_out_prompt(target.out_prompt, item.execution_count), cursor)
     # JupyterWidget: If the repr is multiline, make sure we start on a new line,
     # so that its lines are aligned.

@@ -49,6 +49,15 @@ class ExpandedMainWindow(mainwindow.MainWindow):
         self._act_on_frontend = active.main_content.on_frontend_clicked
         self.status_bar.frontend_clicked.connect(self._act_on_frontend)
 
+        self.status_bar.kernel_clicked.connect(self._on_kernel_clicked)
+
+    # For debugging
+    def _on_kernel_clicked(self):
+        active = self.active_frontend
+        active.is_complete('def f():\n\treturn 0\n\n')
+        active.is_complete('x=1')
+
+
     def set_paging_active_frontend(self, paging):
         """
         Adjust the pager location paging of the active frontend.

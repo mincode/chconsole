@@ -1,11 +1,11 @@
+from functools import singledispatch
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool, Float
 from traitlets.config.configurable import LoggingConfigurable
-
 from tab import KernelMessage, tab_content_template
-from kernel_interface import Exporter
+from messages import Exit, Execute, Inspect, Complete
 
 try:
     from queue import Empty
@@ -13,6 +13,71 @@ except ImportError:
     from Queue import Empty
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
+
+
+@singledispatch
+def _post(item, target):
+    pass
+    #raise NotImplementedError
+
+
+@_post.register(Exit)
+def _(item, target):
+    target.keep_kernel_on_exit = True if item.keep_kernel else None
+    target.exit_requested.emit(target)
+
+
+@_post.register(Inspect)
+def _(item, target):
+    if target.kernel_client.shell_channel.is_alive():
+        target.kernel_client.inspect(item.source.code, item.position)
+
+
+@_post.register(Complete)
+def _(item, target):
+    target.kernel_client.complete(code=item.source.code, cursor_pos=item.position)
+
+
+@_post.register(Execute)
+def _(item, target):
+    target.kernel_client.execute(item.source.code, silent=item.source.hidden)
+    #jupyter_client.client:
+    #execute(self, code, silent=False, store_history=True,
+    #        user_expressions=None, allow_stdin=None, stop_on_error=True):
+    # """Execute code in the kernel.
+    #
+    # Parameters
+    # ----------
+    # code : str
+    #     A string of code in the kernel's language.
+    #
+    # silent : bool, optional (default False)
+    #     If set, the kernel will execute the code as quietly possible, and
+    #     will force store_history to be False.
+    #
+    # store_history : bool, optional (default True)
+    #     If set, the kernel will store command history.  This is forced
+    #     to be False if silent is True.
+    #
+    # user_expressions : dict, optional
+    #     A dict mapping names to expressions to be evaluated in the user's
+    #     dict. The expression values are returned as strings formatted using
+    #     :func:`repr`.
+    #
+    # allow_stdin : bool, optional (default self.allow_stdin)
+    #     Flag for whether the kernel can send stdin requests to frontends.
+    #
+    #     Some frontends (e.g. the Notebook) do not support stdin requests.
+    #     If raw_input is called from code executed from such a frontend, a
+    #     StdinNotImplementedError will be raised.
+    #
+    # stop_on_error: bool, optional (default True)
+    #     Flag whether to abort the execution queue, if an exception is encountered.
+    #
+    # Returns
+    # -------
+    # The msg_id of the message sent.
+    # """
 
 
 class _BaseTabWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QWidget), {})):
@@ -66,8 +131,6 @@ def tab_main_template(edit_class):
         confirm_restart = Bool(True, config=True, help="Whether to ask for user confirmation when restarting kernel")
         is_complete_timeout = Float(0.25, config=True, help="Seconds to wait for is_complete replies from the kernel.")
 
-        _exporter = None  # Exporter of messages to the kernel
-
         def __init__(self, parent=None, **kw):
             """
             Initialize the main widget.
@@ -76,11 +139,10 @@ def tab_main_template(edit_class):
             :return:
             """
             super(TabMain, self).__init__(parent, **kw)
-            self._exporter = Exporter(self)
 
             self.main_content = tab_content_template(edit_class)(self.is_complete)
             self.message_arrived.connect(self.main_content.convert)
-            self.main_content.please_handle.connect(self._exporter.convert)
+            self.main_content.please_handle.connect(self.post)
 
             layout = QtGui.QHBoxLayout(self)
             layout.setContentsMargins(0, 0, 0, 0)
@@ -201,6 +263,8 @@ def tab_main_template(edit_class):
                 indent is the current indentation string for autoindent.
                 If complete is True, indent will be '', and should be ignored.
             """
+            print('in is_complete: source:')
+            print(source)
             kc = self.blocking_client
             if kc is None:
                 self.log.warn("No blocking client to make is_complete requests")
@@ -211,11 +275,22 @@ def tab_main_template(edit_class):
                     reply = kc.shell_channel.get_msg(block=True, timeout=self.is_complete_timeout)
                 except Empty:
                     # assume incomplete output if we get no reply in time
+                    print('no reply in time')
                     return False, u''
                 if reply['parent_header'].get('msg_id', None) == msg_id:
+                    print('reply')
+                    print(reply['content'])
                     status = reply['content'].get('status', u'complete')
                     indent = reply['content'].get('indent', u'')
                     return status != 'incomplete', indent
+
+        def post(self, item):
+            """
+            Process the item received.
+            :param item: ExportItem for the kernel.
+            :return:
+            """
+            _post(item, self)
 
     return TabMain
 

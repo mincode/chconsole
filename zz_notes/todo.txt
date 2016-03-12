@@ -1,3 +1,9 @@
+kernel restart/interrupt as messages
+finish history request
+syntax highlighting
+handle mime data
+split code and chat widget?, or just remove chat mode
+
 Collaboration:
 let other clients know that there is an input request going on in one client because code execution is blocked
 possibly add facility to kernel to send custom messages to clients to notify

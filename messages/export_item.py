@@ -2,12 +2,19 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
 class ExportItem:
-    def __init__(self):
-        pass
+    pass
 
-    @property
-    def type(self):
-        return type(self).__name__.lower()
+
+class Exit(ExportItem):
+    keep_kernel = True  # whether to keep the kernel on exit
+
+    def __init__(self, keep_kernel=True):
+        super(Exit, self).__init__()
+        self.keep_kernel = keep_kernel
+
+
+class Restart(ExportItem):
+    pass
 
 
 class Code(ExportItem):
@@ -36,11 +43,3 @@ class Inspect(CodeFragment):
 
 class Complete(CodeFragment):
     pass
-
-
-class Exit(ExportItem):
-    keep_kernel = True  # whether to keep the kernel on exit
-
-    def __init__(self, keep_kernel=True):
-        super(Exit, self).__init__()
-        self.keep_kernel = keep_kernel
