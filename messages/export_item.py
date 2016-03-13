@@ -5,6 +5,10 @@ class ExportItem:
     pass
 
 
+class Interrupt(ExportItem):
+    pass
+
+
 class Exit(ExportItem):
     keep_kernel = True  # whether to keep the kernel on exit
 

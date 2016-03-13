@@ -1,4 +1,4 @@
-kernel restart/interrupt as messages
+
 finish history request
 syntax highlighting
 handle mime data

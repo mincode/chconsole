@@ -9,12 +9,14 @@ from traitlets.config.configurable import LoggingConfigurable
 
 from messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
 from messages import Stderr, Stdout
-from messages import Source, KernelMessage, ExportItem
-from messages import Exit, Execute, Restart
+from messages import Source, ExportItem
+from messages import Exit, Execute, ClearAll
 from entry import entry_template, LinePrompt
 from receiver import receiver_template
 from pager import pager_template
+from standards import Importable
 from . import Importer
+from standards import NoDefaultEditor, CommandError
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -67,22 +69,6 @@ else:
     default_editor = ''
 
 
-class NoDefaultEditor(Exception):
-    def __init__(self):
-        super(NoDefaultEditor, self).__init__()
-
-    def __str__(self):
-        return 'NoDefaultEditor'
-
-
-class CommandError(Exception):
-    command = ''
-
-    def __init__(self, command):
-        super(CommandError, self).__init__()
-        self.command = command
-
-
 # Receiver
 @singledispatch
 def _post(item, target):
@@ -93,9 +79,9 @@ def _post(item, target):
 @_post.register(PageDoc)
 def _(item, target):
     if target.receiver.covers(item):
-        target.pager.export(item)
+        target.pager.post(item)
     else:
-        target.receiver.export(item)
+        target.receiver.post(item)
 
 
 # Entry
@@ -103,7 +89,7 @@ def _(item, target):
 @_post.register(CompleteItems)
 @_post.register(CallTip)
 def _(item, target):
-    target.entry.export(item)
+    target.entry.post(item)
 
 
 # Process here
@@ -128,13 +114,13 @@ def _(item, target):
         text = ('No default editor available. '
                 'Specify a GUI text editor in the `TabContent.editor` configurable '
                 'to enable the %edit magic')
-        target.receiver.export(Stderr(text))
+        target.receiver.post(Stderr(text))
     except KeyError:
         text = 'Invalid editor command.'
-        target.receiver.export(Stderr(text))
+        target.receiver.post(Stderr(text))
     except CommandError as e:
         text = 'Opening editor with command "%s" failed.' % e.command
-        target.receiver.export(Stderr(text))
+        target.receiver.post(Stderr(text))
 
 
 @_post.register(InputRequest)
@@ -149,18 +135,9 @@ def _(item, target):
     target.line_prompt.show()
 
 
-@singledispatch
-def _export(item, target):
-    pass
-    #raise NotImplementedError
-
-
-@_export.register(Restart)
+@_post.register(ClearAll)
 def _(item, target):
-    if item.clear:
-        target.entry.clear()
-        target.receiver.clear()
-        target.pager.clear()
+    target.clear_all()
 
 
 def tab_content_template(edit_class):
@@ -187,10 +164,6 @@ def tab_content_template(edit_class):
         _console_stack = None  # QWidget
         _console_stack_layout = None  # QStackedLayout
         _console_area = None  # QSplitter
-
-        _importer = None  # Importer
-
-        show_other = Bool(True, config=True, help='True if messages from other clients are to be included.')
 
         please_execute = QtCore.Signal(Source)  # source to be executed
         please_inspect = QtCore.Signal(Source, int)  # source to be inspected at cursor position int
@@ -225,8 +198,6 @@ def tab_content_template(edit_class):
             magic will be ignored.
             """)
 
-        please_interrupt_kernel = QtCore.Signal()  # Signal when exit is requested
-
         please_export = QtCore.Signal(ExportItem)  # tasks for the kernel
 
         line_prompt = None  # LinePrompt for entering input requested by the kernel
@@ -255,16 +226,12 @@ def tab_content_template(edit_class):
             self._console_stack_layout.addWidget(self._console_area)
 
             self.entry = entry_template(edit_class)(is_complete=is_complete, use_ansi=self.ansi_codes)
-
             self.entry.please_export.connect(self.please_export)
-            self.entry.please_interrupt_kernel.connect(self.please_interrupt_kernel)
 
             self.receiver = receiver_template(edit_class)(use_ansi=self.ansi_codes)
             self.receiver.please_export.connect(self.please_export)
             self._console_area.addWidget(self.receiver)
             self._console_area.addWidget(self.entry)
-
-            self.please_export.connect(self.export)
 
             self.print_action = self.receiver.print_action
             self.export_action = self.receiver.export_action
@@ -287,16 +254,17 @@ def tab_content_template(edit_class):
             self.receiver.release_focus.connect(self.entry.set_focus)
             self.entry.release_focus.connect(self.receiver.set_focus)
 
-            # Import and handle kernel messages
-            self._importer = Importer(self)
-            self._importer.please_process.connect(self.post)
-
             self.line_prompt = LinePrompt()
             self.line_prompt.text_input.connect(self.on_text_input)
 
-        @QtCore.Slot(KernelMessage)
-        def convert(self, msg):
-            self._importer.convert(msg, self.show_other)
+        def clear_all(self):
+            """
+            Clear all widgets.
+            :return:
+            """
+            self.entry.clear()
+            self.receiver.clear()
+            self.pager.clear()
 
         @property
         def _focus_text_component(self):
@@ -397,10 +365,6 @@ def tab_content_template(edit_class):
             """
             # print('Send clicked')
             self._importer.convert(KernelMessage(eval(self.entry.source.code), from_here=True))
-
-        @QtCore.Slot()
-        def export(self, item):
-            _export(item, self)
 
         @QtCore.Slot(str)
         def on_text_input(self, text):

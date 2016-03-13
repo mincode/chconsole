@@ -4,8 +4,10 @@ from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool, Float
 from traitlets.config.configurable import LoggingConfigurable
-from tab import KernelMessage, tab_content_template
-from messages import Exit, Execute, Inspect, Complete
+from tab import tab_content_template
+from messages import Exit, Execute, Inspect, Complete, Restart, Interrupt, ClearAll, KernelMessage
+from standards import Importable
+from . import Importer
 
 try:
     from queue import Empty
@@ -19,6 +21,16 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 def _export(item, target):
     pass
     #raise NotImplementedError
+
+
+@_export.register(Interrupt)
+def _(item, target):
+    target.request_interrupt_kernel()
+
+
+@_export.register(Restart)
+def _(item, target):
+    target.request_restart_kernel()
 
 
 @_export.register(Exit)
@@ -119,7 +131,7 @@ def tab_main_template(edit_class):
 
         main_content = None  # QWidget
 
-        message_arrived = QtCore.Signal(KernelMessage)  # signal to send a message that has arrived from the kernel
+        message_arrived = QtCore.Signal(Importable)  # signal to send a message that has arrived from the kernel
 
         local_kernel = False  # whether kernel is on the local machine
 
@@ -131,6 +143,9 @@ def tab_main_template(edit_class):
         confirm_restart = Bool(True, config=True, help="Whether to ask for user confirmation when restarting kernel")
         is_complete_timeout = Float(0.25, config=True, help="Seconds to wait for is_complete replies from the kernel.")
 
+        show_other = Bool(True, config=True, help='True if messages from other clients are to be included.')
+        _importer = None  # Importer
+
         def __init__(self, parent=None, **kw):
             """
             Initialize the main widget.
@@ -141,8 +156,12 @@ def tab_main_template(edit_class):
             super(TabMain, self).__init__(parent, **kw)
 
             self.main_content = tab_content_template(edit_class)(self.is_complete)
-            self.message_arrived.connect(self.main_content.convert)
             self.main_content.please_export.connect(self.export)
+
+            # Import and handle kernel messages
+            self._importer = Importer(self)
+            self.message_arrived.connect(self._importer.convert)
+            self._importer.please_process.connect(self.main_content.post)
 
             layout = QtGui.QHBoxLayout(self)
             layout.setContentsMargins(0, 0, 0, 0)
@@ -207,7 +226,8 @@ def tab_main_template(edit_class):
                         msg = {'header': {'msg_type': 'stream'}, 'content': {'text': text, 'name': 'stderr'}}
                         self.message_arrived.emit(KernelMessage(msg, from_here=True))
                     else:
-                        text = '\nRestarting kernel...\n\n'
+                        self.message_arrived.emit(ClearAll())
+                        text = '\nRestarting kernel...\n'
                         msg = {'header': {'msg_type': 'stream'}, 'content': {'text': text, 'name': 'stderr'}}
                         self.message_arrived.emit(KernelMessage(msg, from_here=True))
                 else:
@@ -219,6 +239,7 @@ def tab_main_template(edit_class):
                 self.message_arrived.emit(KernelMessage(msg, from_here=True))
 
         # FrontendWidget
+        # required by MainWindow
         def request_restart_kernel(self):
             message = 'Are you sure you want to restart the kernel?'
             self._restart_kernel(message, now=False)
@@ -235,6 +256,7 @@ def tab_main_template(edit_class):
                 self.message_arrived.emit(KernelMessage(msg, from_here=True))
 
         # FrontendWidget
+        # required by MainWindow
         def request_interrupt_kernel(self):
             self.interrupt_kernel()
 
@@ -263,8 +285,6 @@ def tab_main_template(edit_class):
                 indent is the current indentation string for autoindent.
                 If complete is True, indent will be '', and should be ignored.
             """
-            print('in is_complete: source:')
-            print(source)
             kc = self.blocking_client
             if kc is None:
                 self.log.warn("No blocking client to make is_complete requests")

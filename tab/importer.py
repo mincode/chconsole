@@ -1,9 +1,9 @@
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets.config.configurable import LoggingConfigurable
-
 from messages import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput, \
     CompleteItems, PageDoc, EditFile, InText, CallTip, InputRequest
+from standards import Importable
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -29,9 +29,18 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
     _payload_source_next_input = 'set_next_input'
     _payload_source_page = 'page'
 
+    target = None  # parent object
+
     def __init__(self, parent=None, **kwargs):
+        """
+        Initialize.
+        :param parent: parent object, requires data member show_other.
+        :param kwargs:
+        :return:
+        """
         QtCore.QObject.__init__(self, parent)
         LoggingConfigurable.__init__(self, **kwargs)
+        self.target = parent
 
         self._payload_handlers = {
             self._payload_source_edit: self._handle_payload_edit,
@@ -39,12 +48,16 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             self._payload_source_page: self._handle_payload_page,
             self._payload_source_next_input: self._handle_payload_next_input}
 
-    def convert(self, msg, show_other=True):
+    @QtCore.Slot(Importable)
+    def convert(self, msg):
         print('dispatch: ' + msg.type)
-        print(msg.raw)
-        handler = getattr(self, '_handle_' + msg.type, None)
-        if handler and _show_msg(msg, show_other):
-            handler(msg)
+        if isinstance(msg, ImportItem):
+            self.please_process.emit(msg)
+        else:  # KernelMessage
+            print(msg.raw)
+            handler = getattr(self, '_handle_' + msg.type, None)
+            if handler and _show_msg(msg, self.target.show_other):
+                handler(msg)
 
     def _handle_stream(self, msg):
         content = msg.content
@@ -61,12 +74,12 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         self.please_process.emit(banner)
 
     # FrontendWidget
-    def _kernel_restarted(self, died=True):
+    def _kernel_restarted(self):
         """Notice that the autorestarter restarted the kernel.
         There's nothing to do but show a message.
         """
         self.log.warn("kernel restarted")
-        msg = "Kernel died, restarting" if died else "Kernel restarting"
+        msg = "Kernel has been restarted."
         text = "<br>%s<hr><br>" % msg
         self.please_process.emit(Stderr(HtmlText(text)))
 
@@ -80,7 +93,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             # got shutdown reply, request came from session other than ours
             if restart:
                 # someone restarted the kernel, handle it
-                self._kernel_restarted(died=False)
+                self._kernel_restarted()
             else:
                 # kernel was shutdown permanently
                 # this triggers exit_requested if the kernel was local,
@@ -94,7 +107,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         # when we make one.
         state = msg.content.get('execution_state', '')
         if state == 'starting':
-            self._kernel_restarted(died=True)
+            self._kernel_restarted()
         elif state == 'idle':
             pass
         elif state == 'busy':

@@ -1,7 +1,7 @@
 from qtconsole.qt import QtCore, QtGui
 from standards.base_event_filter import BaseEventFilter
 from standards.text_config import get_block_plain_text
-from messages import Execute, Complete, Restart
+from messages import Execute, Complete, Restart, Interrupt
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -22,9 +22,8 @@ class EntryFilter(BaseEventFilter):
 
     def eventFilter(self, obj, event):
         intercepted = False
-        event_type = event.type()
 
-        if event_type == QtCore.QEvent.KeyPress:
+        if event.type() == QtCore.QEvent.KeyPress:
             intercepted = True  # eat the key by default
             key = event.key()
             alt_down = event.modifiers() & QtCore.Qt.AltModifier
@@ -105,17 +104,14 @@ class EntryFilter(BaseEventFilter):
                     self.target.target.kill_ring.kill_cursor(cursor)
 
             elif ctrl_down:
-                if key == QtCore.Qt.Key_G:
-                    self.target.clear()
+                if key == QtCore.Qt.Key_I:
+                    self.target.please_export.emit(Interrupt())
+
+                elif key == QtCore.Qt.Key_G:
+                    self.target.please_export.emit(Restart(self.target.clear_on_kernel_restart))
 
                 elif key == QtCore.Qt.Key_O:
                     self.target.release_focus.emit()
-
-                elif key == QtCore.Qt.Key_Z:
-                    self.target.undo()
-
-                elif key == QtCore.Qt.Key_Y:
-                    self.target.redo()
 
                 elif key == QtCore.Qt.Key_D:
                     new_event = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, QtCore.Qt.Key_Delete, QtCore.Qt.NoModifier)
@@ -156,14 +152,6 @@ class EntryFilter(BaseEventFilter):
                     position = self.target.textCursor().position()
                     cursor.setPosition(position, QtGui.QTextCursor.KeepAnchor)
                     self.target.target.kill_ring.kill_cursor(cursor)
-
-            elif self.control_key_down(event.modifiers(), include_command=False):
-
-                if key == QtCore.Qt.Key_C:
-                    self.target.please_interrupt_kernel.emit()
-
-                elif key == QtCore.Qt.Key_Period:
-                    self.target.please_export.emit(Restart(self.target.clear_on_kernel_restart))
 
             else:
                 anchor_mode = QtGui.QTextCursor.KeepAnchor if shift_down else QtGui.QTextCursor.MoveAnchor

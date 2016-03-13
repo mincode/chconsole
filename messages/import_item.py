@@ -1,3 +1,5 @@
+from standards import Importable
+
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
@@ -20,13 +22,21 @@ def _split_lines(num_lines, text):
     return num_lines, text[:location], text[location:]
 
 
-class ImportItem:
-    def __init__(self):
-        pass
+class ImportItem(Importable):
+    @property
+    def type(self):
+        return type(self).__name__
 
 
 ################################################################################################
 # TabContent
+class ClearAll(ImportItem):
+    """
+    Clear all widgets.
+    """
+    pass
+
+
 class ExitRequested(ImportItem):
     keep_kernel_on_exit = False  # keep kernel when exit main widget
     confirm = False  # whether exit should be confirmed from the user
