@@ -49,9 +49,9 @@ def _make_out_prompt(prompt_template, number):
     return '<span class="out-prompt">%s</span>' % body
 
 
-def clear_to_beginning_of_line(cursor):
-    cursor.movePosition(cursor.StartOfLine, cursor.KeepAnchor)
-    cursor.insertText('')
+# def clear_to_beginning_of_line(cursor):
+#     cursor.movePosition(cursor.StartOfLine, cursor.KeepAnchor)
+#     cursor.insertText('')
 
 
 def _covers(edit_widget, text):
@@ -202,6 +202,8 @@ def receiver_template(edit_class):
 
             self.use_ansi = use_ansi
 
+            # Setting a positive maximum block count will automatically
+            # disable the undo/redo history
             self.document().setMaximumBlockCount(self.max_blocks)
             self.output_q = Queue()
             self.timing_guard = QtCore.QSemaphore()

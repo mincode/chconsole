@@ -1,7 +1,6 @@
-
-finish history request
 syntax highlighting
 handle mime data
+import qtconsole files
 split code and chat widget?, or just remove chat mode:
     automatically recognize non-Python code and propose as chat
     later expand classifier to recognize code with syntax errors and propose corrections

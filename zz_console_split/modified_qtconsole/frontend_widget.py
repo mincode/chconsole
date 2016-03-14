@@ -179,7 +179,7 @@ class FrontendWidget(HistoryConsoleWidget, BaseFrontendMixin):
     _CompletionRequest = namedtuple('_CompletionRequest', ['id', 'pos'])
     _ExecutionRequest = namedtuple('_ExecutionRequest', ['id', 'kind'])
     _local_kernel = False
-# </done>
+# <done>
     _highlighter = Instance(FrontendHighlighter, allow_none=True)
 
     #---------------------------------------------------------------------------

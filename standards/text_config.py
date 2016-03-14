@@ -47,17 +47,16 @@ def get_block_plain_text(block):
                         QtGui.QTextCursor.KeepAnchor)
     return cursor.selection().toPlainText()
 
+
 # FrontendWidget
 class FrontendHighlighter(PygmentsHighlighter):
-    """ A PygmentsHighlighter that understands and ignores prompts.
+    """ A PygmentsHighlighter .
     """
-    _current_offset = 0
     _frontend = None  # QTextEdit or QPlainTextEdit
     highlight_on = False  # whether to highlight
 
     def __init__(self, frontend, lexer=None):
         super(FrontendHighlighter, self).__init__(frontend.document(), lexer=lexer)
-        self._current_offset = 0
         self._frontend = frontend
         self.highlighting_on = False
 
@@ -82,12 +81,6 @@ class FrontendHighlighter(PygmentsHighlighter):
         self.highlighting_on = True
         super(FrontendHighlighter, self).rehighlightBlock(block)
         self.highlighting_on = old
-
-    def setFormat(self, start, count, format):
-        """ Reimplemented to highlight selectively.
-        """
-        start += self._current_offset
-        super(FrontendHighlighter, self).setFormat(start, count, format)
 
 
 class TextConfig(LoggingConfigurable):
@@ -122,7 +115,7 @@ class TextConfig(LoggingConfigurable):
         information.
         """)
 
-    _highlighter = Instance(FrontendHighlighter, allow_none=True)
+    highlighter = Instance(FrontendHighlighter, allow_none=True)
 
     lexer_class = DottedObjectName(config=True,
         help="The pygments lexer class to use."
@@ -184,7 +177,7 @@ class TextConfig(LoggingConfigurable):
         else:
             self.set_default_style()
 
-        self._highlighter = FrontendHighlighter(self, lexer=self.lexer)
+        self.highlighter = FrontendHighlighter(self, lexer=self.lexer)
 
         self.increase_font_size = QtGui.QAction("Bigger Font",
                 self,
@@ -396,13 +389,13 @@ class TextConfig(LoggingConfigurable):
     def _syntax_style_changed(self):
         """ Set the style for the syntax highlighter.
         """
-        if self._highlighter is None:
+        if self.highlighter is None:
             # ignore premature calls
             return
         if self.syntax_style:
-            self._highlighter.set_style(self.syntax_style)
+            self.highlighter.set_style(self.syntax_style)
         else:
-            self._highlighter.set_style_sheet(self.style_sheet)
+            self.highlighter.set_style_sheet(self.style_sheet)
 
     # FrontendWidget
     def _lexer_class_changed(self, name, old, new):
