@@ -1,9 +1,11 @@
 import time
+from base64 import decodebytes
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets.config.configurable import LoggingConfigurable
-from messages import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput, \
-    CompleteItems, PageDoc, EditFile, InText, CallTip, InputRequest, ExportItem, TailHistory, History
+from messages import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput
+from messages import CompleteItems, PageDoc, EditFile, InText, CallTip, InputRequest, ExportItem, TailHistory, History
+from messages import SvgXml, Png, Jpeg, LaTeX
 from standards import Importable
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -154,11 +156,25 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
     def _handle_execute_result(self, msg):
         """Handle an execute_result message"""
-        content = msg.content
-        prompt_number = content.get('execution_count', 0)
-        data = content['data']
-        if 'text/plain' in data:
-            self.please_process.emit(Result(data['text/plain'], execution_count=prompt_number))
+        prompt_number = msg.content.get('execution_count', 0)
+        data = msg.content['data']
+        metadata = msg.content.get('metadata', None)
+
+        result = Result(data.get('text/plain', None), execution_count=prompt_number)
+
+        if 'image/svg+xml' in data:
+            result.add(SvgXml(data['image/svg+xml']))
+        elif 'image/png' in data:
+            png = decodebytes(data['image/png'].encode('ascii'))
+            result.add(SvgXml(Png(png, metadata=metadata.get('image/png', None))))
+        elif 'image/jpeg' in data:
+            jpg = decodebytes(data['image/jpeg'].encode('ascii'))
+            result.add(SvgXml(Jpeg(jpg, metadata=metadata.get('image/jpeg', None))))
+        elif 'text/latex' in data:
+            result.add(SvgXml(LaTeX(data['text/latex'])))
+
+        self.please_process.emit(result)
+
 
     def _handle_clear_output(self, msg):
         # {'header': {'msg_type': 'clear_output'}, 'content': {'wait': False}}

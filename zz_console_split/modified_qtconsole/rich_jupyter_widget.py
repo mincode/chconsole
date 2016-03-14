@@ -60,7 +60,6 @@ class RichJupyterWidget(RichIPythonWidget):
         # it is not always supported.
         _supported_format = map(str, QtGui.QImageReader.supportedImageFormats())
         self._jpg_supported = 'jpeg' in _supported_format
-        #print('init modified RichJupyterWidget')
 
 
     #---------------------------------------------------------------------------

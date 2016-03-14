@@ -204,7 +204,10 @@ class Stream(SplitItem):
                     where head property of rest is false in rest. The rest has head False and empty is set if
                     it is empty.
         """
-        count, first, rest = self.content.split(num_lines)
+        if self.content:
+            count, first, rest = self.content.split(num_lines)
+        else:
+            count, first, rest = 0, None, None
         first_stream = type(self)(content=first, clearable=self.clearable)
         rest_stream = type(self)(content=rest, clearable=self.clearable) if rest else None
         return count, first_stream, rest_stream
@@ -240,6 +243,36 @@ class PageDoc(SplitItem):
 
 ################################################################################################
 # Receiver
+class Image(SplitItem):
+    image = None   # the image
+    metadata = None  # metadata on the image such as dimensions
+
+    def __init__(self, image, metadata=None):
+        super(Image, self).__init__()
+        self.image = image
+        self.metadata = metadata
+
+
+class SvgXml(Image):
+    pass
+
+
+class Png(Image):
+    pass
+
+
+class Jpeg(Image):
+    pass
+
+
+class LaTeX(AtomicText):
+    """
+    LaTeX text.
+    """
+    def __init__(self, text):
+        super(LaTeX, self).__init__(text, ansi_codes=False)
+
+
 class Stderr(Stream):
     def __init__(self, content=None, clearable=False):
         super(Stderr, self).__init__(content=content, clearable=clearable)
@@ -323,5 +356,27 @@ class Input(Execution):
 
 
 class Result(Execution):
-    def __init__(self, content='', execution_count=0, clearable=False):
+    non_text = None  # list of non-text data items
+
+    def __init__(self, content=None, execution_count=0, clearable=False):
         super(Result, self).__init__(content, execution_count=execution_count, clearable=clearable)
+        self.non_text = list()
+
+    def add(self, data):
+        """
+        Add non-text data item to result.
+        :param data: non-text data item.
+        :return:
+        """
+        self.non_text.extend(data)
+
+    def split(self, num_lines):
+        count, first, rest = super(Result, self).split(num_lines)
+        if first:
+            first.non_text = self.non_text
+        if rest:
+            if first:
+                rest.non_text = list()
+            else:
+                rest.non_text = self.non_text
+        return count, first, rest

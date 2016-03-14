@@ -1,5 +1,6 @@
-syntax highlighting
 handle mime data
+fix the restarting message: some times the application picks up the status message restarting on start up; it should
+not be shown
 import qtconsole files
 split code and chat widget?, or just remove chat mode:
     automatically recognize non-Python code and propose as chat

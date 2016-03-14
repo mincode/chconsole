@@ -44,7 +44,6 @@ def _(item, target):
     target.kernel_client.history(hist_access_type='tail',n=item.length)
 
 
-
 @_export.register(Inspect)
 def _(item, target):
     if target.kernel_client.shell_channel.is_alive():
@@ -182,7 +181,7 @@ def tab_main_template(edit_class):
         def _started_channels(self):
             """Make a history request and load %guiref, if possible."""
             self.main_content.input_reply.connect(self.kernel_client.input)
-            # 1) send clear
+            # 1) send clear, rather send ClearAll, why?
             ansi_clear = {'header': {'msg_type': 'stream'}, 'content': {'text': '\x0c\n', 'name': 'stdout'}}
             self.message_arrived.emit(KernelMessage(ansi_clear, from_here=True))
             # 2) send kernel info request
