@@ -1,6 +1,5 @@
 import os
 from functools import singledispatch
-
 from qtconsole import qt
 from qtconsole.bracket_matcher import BracketMatcher
 from qtconsole.call_tip_widget import CallTipWidget
@@ -9,7 +8,7 @@ from qtconsole.kill_ring import QtKillRing
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool
-
+from standards.selective_highlighter import SelectiveHighlighter
 from messages import InText, CompleteItems, CallTip
 from messages import Source, ExportItem, Inspect
 from standards.text_config import TextConfig
@@ -59,9 +58,7 @@ def entry_template(edit_class):
         """
         code_mode = Bool(True)  # True if document contains code to be executed; rather than a chat message
 
-        # Signal emitted when the font is changed.
-        font_changed = QtCore.Signal(QtGui.QFont)
-
+        font_changed = QtCore.Signal(QtGui.QFont)          # Signal emitted when the font is changed.
 
         execute_on_complete_input = Bool(True, config=True,
             help="""Whether to automatically execute on syntactically complete input.
@@ -113,6 +110,7 @@ def entry_template(edit_class):
             TextConfig.__init__(self, **kwargs)
 
             self.use_ansi = use_ansi
+            self.highlighter.enable()
 
             # Call tips
             # forcefully disable calltips if PySide is < 1.0.7, because they crash

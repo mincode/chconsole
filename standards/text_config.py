@@ -1,92 +1,27 @@
 import sys
-from unicodedata import category
-
 from ipython_genutils import py3compat
 from ipython_genutils.importstring import import_item
 from qtconsole import styles
 from qtconsole.ansi_code_processor import QtAnsiCodeProcessor
-from qtconsole.pygments_highlighter import PygmentsHighlighter
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.rich_text import HtmlExporter
 from qtconsole.util import get_font
-from traitlets import Integer, Unicode, Instance, DottedObjectName, Any, Float
+from traitlets import Integer, Unicode, DottedObjectName, Any, Float, Instance
 from traitlets.config.configurable import LoggingConfigurable
+from .selective_highlighter import SelectiveHighlighter
+from text import set_top_cursor
 
 from menus import ContextMenu
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-# ConsoleWdidget
-def is_letter_or_number(char):
-    """ Returns whether the specified unicode character is a letter or a number.
-    """
-    cat = category(char)
-    return cat.startswith('L') or cat.startswith('N')
-
-
-# ConsoleWidget
-def _set_top_cursor(receiver, cursor):
-    """ Scrolls the viewport so that the specified cursor is at the top.
-    """
-    scrollbar = receiver.verticalScrollBar()
-    scrollbar.setValue(scrollbar.maximum())
-    original_cursor = receiver.textCursor()
-    receiver.setTextCursor(cursor)
-    receiver.ensureCursorVisible()
-    receiver.setTextCursor(original_cursor)
-
-
-# ConsoleWidget
-def get_block_plain_text(block):
-    """ Given a QTextBlock, return its unformatted text.
-    """
-    cursor = QtGui.QTextCursor(block)
-    cursor.movePosition(QtGui.QTextCursor.StartOfBlock)
-    cursor.movePosition(QtGui.QTextCursor.EndOfBlock,
-                        QtGui.QTextCursor.KeepAnchor)
-    return cursor.selection().toPlainText()
-
-
-# FrontendWidget
-class FrontendHighlighter(PygmentsHighlighter):
-    """ A PygmentsHighlighter .
-    """
-    _frontend = None  # QTextEdit or QPlainTextEdit
-    highlight_on = False  # whether to highlight
-
-    def __init__(self, frontend, lexer=None):
-        super(FrontendHighlighter, self).__init__(frontend.document(), lexer=lexer)
-        self._frontend = frontend
-        self.highlighting_on = False
-
-    def highlightBlock(self, string):
-        """ Highlight a block of text. Reimplemented to highlight selectively.
-        """
-        if not self.highlighting_on:
-            return
-
-        # The input to this function is a unicode string that may contain
-        # paragraph break characters, non-breaking spaces, etc. Here we acquire
-        # the string as plain text so we can compare it.
-        current_block = self.currentBlock()
-        string = get_block_plain_text(current_block)
-
-        super(FrontendHighlighter, self).highlightBlock(string)
-
-    def rehighlightBlock(self, block):
-        """ Reimplemented to temporarily enable highlighting if disabled.
-        """
-        old = self.highlighting_on
-        self.highlighting_on = True
-        super(FrontendHighlighter, self).rehighlightBlock(block)
-        self.highlighting_on = old
-
-
 class TextConfig(LoggingConfigurable):
     """
     Mixin for configuring text properties of a QTextEdit or QPlainTextEdit.
     """
+    highlighter = Instance(SelectiveHighlighter, allow_none=True)
+
     font_family = Unicode(
         config=True,
         help="""The font family to use for the console.
@@ -114,8 +49,6 @@ class TextConfig(LoggingConfigurable):
         Otherwise, the style sheet is queried for Pygments style
         information.
         """)
-
-    highlighter = Instance(FrontendHighlighter, allow_none=True)
 
     lexer_class = DottedObjectName(config=True,
         help="The pygments lexer class to use."
@@ -148,6 +81,7 @@ class TextConfig(LoggingConfigurable):
         super(LoggingConfigurable, self).__init__(**kwargs)
 
         # Text interaction
+        self.highlighter = SelectiveHighlighter(self, lexer=self.lexer)
         self.use_ansi = use_ansi
         self.setMouseTracking(True)
         if hasattr(self, 'setAcceptRichText'):
@@ -176,8 +110,6 @@ class TextConfig(LoggingConfigurable):
             self._syntax_style_changed()
         else:
             self.set_default_style()
-
-        self.highlighter = FrontendHighlighter(self, lexer=self.lexer)
 
         self.increase_font_size = QtGui.QAction("Bigger Font",
                 self,
@@ -444,7 +376,7 @@ class TextConfig(LoggingConfigurable):
                     elif act.action == 'scroll' and act.unit == 'page':
                         cursor.insertText('\n')
                         # cursor.endEditBlock()
-                        _set_top_cursor(self, cursor)
+                        set_top_cursor(self, cursor)
                         # cursor.joinPreviousEditBlock()
                         cursor.deletePreviousChar()
 

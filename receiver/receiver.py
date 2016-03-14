@@ -110,10 +110,15 @@ def _(item, target):
     cursor = target.end_cursor
     target.clear_cursor = None
     cursor.insertText('\n')
-    target.insert_html(_make_in_prompt(target.in_prompt, item.execution_count), cursor)
+    before_prompt = cursor.position()
+    in_prompt = _make_in_prompt(target.in_prompt, item.execution_count)
+    target.insert_html(in_prompt, cursor)
+    after_prompt = cursor.position()
+    target.highlighter.enable(after_prompt-before_prompt)
     target.insert_ansi_text(item.code, item.ansi_codes and target.use_ansi, cursor)
     target.ansi_processor.reset_sgr()
-    if item.code[-1] != '\n':
+    target.highlighter.disable()
+    if item.code and item.code[-1] != '\n':
         cursor.insertText('\n')
 
 
