@@ -10,7 +10,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
 from messages import Stderr, Stdout
 from messages import Source, ExportItem
-from messages import Exit, Execute, ClearAll
+from messages import Exit, Execute, ClearAll, History
 from entry import entry_template, LinePrompt
 from receiver import receiver_template
 from pager import pager_template
@@ -103,7 +103,7 @@ def _(item, target):
                         "Close the Console?",
                         QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
     if reply == QtGui.QMessageBox.Yes:
-        target.please_handle.emit(Exit(item.keep_kernel_on_exit))
+        target.please_export.emit(Exit(item.keep_kernel_on_exit))
 
 
 @_post.register(EditFile)
@@ -138,6 +138,18 @@ def _(item, target):
 @_post.register(ClearAll)
 def _(item, target):
     target.clear_all()
+
+
+@_post.register(History)
+def _(item, target):
+    items = []
+    last_cell = u""
+    for _, _, cell in item.items:
+        cell = cell.rstrip()
+        if cell != last_cell:
+            items.append(cell)
+            last_cell = cell
+    target.history.set_history(items)
 
 
 def tab_content_template(edit_class):
@@ -201,6 +213,7 @@ def tab_content_template(edit_class):
         please_export = QtCore.Signal(ExportItem)  # tasks for the kernel
 
         line_prompt = None  # LinePrompt for entering input requested by the kernel
+        history = None  # History
 
         def __init__(self, is_complete, **kwargs):
             """
@@ -227,6 +240,7 @@ def tab_content_template(edit_class):
 
             self.entry = entry_template(edit_class)(is_complete=is_complete, use_ansi=self.ansi_codes)
             self.entry.please_export.connect(self.please_export)
+            self.history = self.entry.history
 
             self.receiver = receiver_template(edit_class)(use_ansi=self.ansi_codes)
             self.receiver.please_export.connect(self.please_export)

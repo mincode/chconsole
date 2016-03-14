@@ -25,6 +25,17 @@ class Restart(ExportItem):
         self.clear = clear
 
 
+class TailHistory(ExportItem):
+    """
+    Tail history request.
+    """
+    length = 1000  # last length history items
+
+    def __init__(self, length=1000):
+        super(TailHistory, self).__init__()
+        self.length = length
+
+
 class Code(ExportItem):
     source = None  # Source
 

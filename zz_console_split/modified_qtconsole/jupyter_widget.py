@@ -206,7 +206,6 @@ class JupyterWidget(IPythonWidget):
             self._request_info['execute'].pop(msg_id)
         else:
             super(JupyterWidget, self)._handle_execute_reply(msg)
-# </done>
 
     def _handle_history_reply(self, msg):
         """ Implemented to handle history tail replies, which are only supported
@@ -241,7 +240,6 @@ class JupyterWidget(IPythonWidget):
                 last_cell = cell
         self._set_history(items)
 
-# <done>
     def _insert_other_input(self, cursor, content):
         """Insert function for input from other frontends"""
         cursor.beginEditBlock()

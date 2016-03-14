@@ -1,8 +1,9 @@
+import time
 from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets.config.configurable import LoggingConfigurable
 from messages import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput, \
-    CompleteItems, PageDoc, EditFile, InText, CallTip, InputRequest
+    CompleteItems, PageDoc, EditFile, InText, CallTip, InputRequest, ExportItem, TailHistory, History
 from standards import Importable
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -23,6 +24,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
     Import messages into objects handled by the ui.
     """
     please_process = QtCore.Signal(ImportItem)
+    please_export = QtCore.Signal(ExportItem)  # tasks for the kernel
 
     _payload_source_edit = 'edit_magic'
     _payload_source_exit = 'ask_exit'
@@ -30,6 +32,8 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
     _payload_source_page = 'page'
 
     target = None  # parent object
+
+    _retry_history = None  # QSemaphore(1) allows one retry of a history request
 
     def __init__(self, parent=None, **kwargs):
         """
@@ -41,6 +45,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         QtCore.QObject.__init__(self, parent)
         LoggingConfigurable.__init__(self, **kwargs)
         self.target = parent
+        self._retry_history = QtCore.QSemaphore(1)
 
         self._payload_handlers = {
             self._payload_source_edit: self._handle_payload_edit,
@@ -113,8 +118,32 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         elif state == 'busy':
             pass
 
-    # def _handle_history_reply(self, msg):
-    #     print('history reply dropped')
+    # JupyterWidget
+    def _handle_history_reply(self, msg):
+        """ Implemented to handle history tail replies, which are only supported
+            by Jupyter kernels.
+        """
+        content = msg.content
+        if 'history' not in content:
+            self.log.error("History request failed: %r"%content)
+            if content.get('status', '') == 'aborted':
+                if self._retry_history.tryAcquire():
+                    # a *different* action caused this request to be aborted, so
+                    # we should try again.
+                    self.log.error("Retrying aborted history request")
+                    # wait out the kernel's queue flush, which is currently timed at 0.1s
+                    time.sleep(0.25)
+                    self.please_export.emit(TailHistory(1000))
+                else:
+                    self._retry_history.release()
+        else:
+            if not self._retry_history.tryAcquire():
+                # history received from a retry
+                self._retry_history.release()
+
+            history_items = content['history']
+            self.log.debug("Received history reply with %i entries", len(history_items))
+            self.please_process.emit(History(history_items))
 
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""

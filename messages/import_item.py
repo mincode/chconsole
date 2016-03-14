@@ -37,6 +37,16 @@ class ClearAll(ImportItem):
     pass
 
 
+class History(ImportItem):
+    """
+    History list.
+    """
+    items = None  # history items
+
+    def __init__(self, items):
+        self.items = items
+
+
 class ExitRequested(ImportItem):
     keep_kernel_on_exit = False  # keep kernel when exit main widget
     confirm = False  # whether exit should be confirmed from the user

@@ -5,7 +5,7 @@ from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool, Float
 from traitlets.config.configurable import LoggingConfigurable
 from tab import tab_content_template
-from messages import Exit, Execute, Inspect, Complete, Restart, Interrupt, ClearAll, KernelMessage
+from messages import Exit, Execute, Inspect, Complete, Restart, Interrupt, ClearAll, KernelMessage, TailHistory
 from standards import Importable
 from . import Importer
 
@@ -37,6 +37,12 @@ def _(item, target):
 def _(item, target):
     target.keep_kernel_on_exit = True if item.keep_kernel else None
     target.exit_requested.emit(target)
+
+
+@_export.register(TailHistory)
+def _(item, target):
+    target.kernel_client.history(hist_access_type='tail',n=item.length)
+
 
 
 @_export.register(Inspect)
@@ -157,11 +163,14 @@ def tab_main_template(edit_class):
 
             self.main_content = tab_content_template(edit_class)(self.is_complete)
             self.main_content.please_export.connect(self.export)
+            # MainContent -> export
 
             # Import and handle kernel messages
+            # message_arrived -> Importer -> MainContent
             self._importer = Importer(self)
             self.message_arrived.connect(self._importer.convert)
             self._importer.please_process.connect(self.main_content.post)
+            self._importer.please_export.connect(self.export)
 
             layout = QtGui.QHBoxLayout(self)
             layout.setContentsMargins(0, 0, 0, 0)
