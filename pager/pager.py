@@ -54,6 +54,9 @@ def pager_template(edit_class):
             """
             QtGui.QTextEdit.__init__(self, text, parent)
             DocumentConfig.__init__(self, use_ansi, **kwargs)
+            if isinstance(self, QtGui.QTextEdit):
+                self.html_exporter.image_tag = self.get_image_tag
+
             self._locations = dict(locations)
             self.location = initial_location
             self.document().setMaximumBlockCount(0)

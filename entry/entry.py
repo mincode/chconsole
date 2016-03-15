@@ -108,6 +108,9 @@ def entry_template(edit_class):
             """
             edit_class.__init__(self, text, parent)
             DocumentConfig.__init__(self, **kwargs)
+            if isinstance(self, QtGui.QTextEdit):
+                self.html_exporter.image_tag = self.get_image_tag
+
 
             self.use_ansi = use_ansi
             self.highlighter.enable()

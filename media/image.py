@@ -106,3 +106,33 @@ def insert_qimage_format(cursor, format):
     cursor.insertBlock()
     cursor.insertImage(format)
     cursor.insertBlock()
+
+
+# RichJupyterWidget
+def copy_image(target, name):
+    """ Copies the ImageResource with 'name' to the clipboard.
+    """
+    image = get_image(target, name)
+    QtGui.QApplication.clipboard().setImage(image)
+
+
+# RichJupyterWidget
+def get_image(target, name):
+    """ Returns the QImage stored as the ImageResource with 'name'.
+    """
+    image = target.document().resource(QtGui.QTextDocument.ImageResource, QtCore.QUrl(name))
+    return image
+
+
+# RichJupyterWidget
+def save_image(target, name, format='PNG'):
+    """ Shows a save dialog for the ImageResource with 'name'.
+    """
+    dialog = QtGui.QFileDialog(target, 'Save Image')
+    dialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
+    dialog.setDefaultSuffix(format.lower())
+    dialog.setNameFilter('%s file (*.%s)' % (format, format.lower()))
+    if dialog.exec_():
+        filename = dialog.selectedFiles()[0]
+        image = get_image(target, name)
+        image.save(filename, format)

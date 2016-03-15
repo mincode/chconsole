@@ -1,7 +1,10 @@
-handle mime data
-fix the restarting message: some times the application picks up the status message restarting on start up; it should
-not be shown
+fix the restarting message:
+    some times the application picks up the status message restarting on start up;
+    clean up starting message
 import qtconsole files
+document code
+add more testers
+
 split code and chat widget?, or just remove chat mode:
     automatically recognize non-Python code and propose as chat
     later expand classifier to recognize code with syntax errors and propose corrections

@@ -3,11 +3,11 @@ from qtconsole.qt import QtGui
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class ContextMenu(QtGui.QMenu):
+class TextContextMenu(QtGui.QMenu):
     def __init__(self, parent, pos):
         """ Creates a context menu for the given QPoint (in widget coordinates).
         """
-        super(ContextMenu, self).__init__(parent)
+        super(TextContextMenu, self).__init__(parent)
 
         if not parent.isReadOnly():
             parent.cut_action = self.addAction('Cut', parent.cut)

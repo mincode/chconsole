@@ -1,6 +1,7 @@
-import sys
+import sys, os, re
 from ipython_genutils import py3compat
 from ipython_genutils.importstring import import_item
+from ipython_genutils.path import ensure_dir_exists
 from qtconsole import styles
 from qtconsole.ansi_code_processor import QtAnsiCodeProcessor
 from qtconsole.qt import QtGui, QtCore
@@ -9,9 +10,8 @@ from qtconsole.util import get_font
 from traitlets import Integer, Unicode, DottedObjectName, Any, Float, Instance
 from traitlets.config.configurable import LoggingConfigurable
 from .selective_highlighter import SelectiveHighlighter
-from media import set_top_cursor, register_qimage, insert_qimage_format
-
-from menus import ContextMenu
+from media import set_top_cursor, insert_qimage_format, get_image
+from menus import TextContextMenu, ImageContextMenu
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -66,12 +66,18 @@ class DocumentConfig(LoggingConfigurable):
     decrease_font_size = None  # action for decreasing font size
     reset_font_size = None  # action for resetting font size
 
-    _html_exporter = None
+    html_exporter = None
     print_action = None  # action for printing
     export_action = None  # action for exporting
     select_all_action = None  # action for selecting all
 
     use_ansi = True  # whether to use ansi codes in text
+    name_to_svg_map = None  # Dictionary for resolving document resource names to SVG data.
+
+    # RichJupyterWidget:
+    # Used to determine whether a given html export attempt has already
+    # displayed a warning about being unable to convert a png to svg.
+    svg_warning_displayed = False
 
     def __init__(self, use_ansi=True, **kwargs):
         """
@@ -81,6 +87,7 @@ class DocumentConfig(LoggingConfigurable):
         super(LoggingConfigurable, self).__init__(**kwargs)
 
         # Text interaction
+        self.name_to_svg_map = {}
         self.highlighter = SelectiveHighlighter(self, lexer=self.lexer)
         self.use_ansi = use_ansi
         self.setMouseTracking(True)
@@ -156,11 +163,11 @@ class DocumentConfig(LoggingConfigurable):
         self.addAction(action)
         self.print_action = action
 
-        self._html_exporter = HtmlExporter(self)
+        self.html_exporter = HtmlExporter(self)
         action = QtGui.QAction('Save as HTML/XML', None)
         action.setShortcut(QtGui.QKeySequence.Save)
         action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        action.triggered.connect(self._html_exporter.export)
+        action.triggered.connect(self.html_exporter.export)
         self.addAction(action)
         self.export_action = action
 
@@ -357,10 +364,83 @@ class DocumentConfig(LoggingConfigurable):
         cursor.movePosition(QtGui.QTextCursor.End)
         return cursor
 
-    def insert_qimage(self, qimage, cursor=None):
+    def insert_qimage(self, image_format, cursor=None):
         cursor = cursor if cursor else self.textCursor()
-        image_format = register_qimage(self.document(), qimage)
         insert_qimage_format(cursor, image_format)
+
+    # RichJupyterWidget
+    def get_image_tag(self, match, path = None, format = "png"):
+        """ Return (X)HTML mark-up for the image-tag given by match.
+
+        Parameters
+        ----------
+        match : re.SRE_Match
+            A match to an HTML image tag as exported by Qt, with
+            match.group("Name") containing the matched image ID.
+
+        path : string|None, optional [default None]
+            If not None, specifies a path to which supporting files may be
+            written (e.g., for linked images).  If None, all images are to be
+            included inline.
+
+        format : "png"|"svg"|"jpg", optional [default "png"]
+            Format for returned or referenced images.
+        """
+        if format in ("png","jpg"):
+            try:
+                image = self.get_image(match.group("name"))
+            except KeyError:
+                return "<b>Couldn't find image %s</b>" % match.group("name")
+
+            if path is not None:
+                ensure_dir_exists(path)
+                rel_path = os.path.basename(path)
+                if image.save("%s/qt_img%s.%s" % (path, match.group("name"), format),
+                              "PNG"):
+                    return '<img src="%s/qt_img%s.%s">' % (rel_path, match.group("name"),format)
+                else:
+                    return "<b>Couldn't save image!</b>"
+            else:
+                ba = QtCore.QByteArray()
+                buffer_ = QtCore.QBuffer(ba)
+                buffer_.open(QtCore.QIODevice.WriteOnly)
+                image.save(buffer_, format.upper())
+                buffer_.close()
+                return '<img src="data:image/%s;base64,\n%s\n" />' % (
+                    format,re.sub(r'(.{60})',r'\1\n',str(ba.toBase64())))
+
+        elif format == "svg":
+            try:
+                svg = str(self.name_to_svg_map[match.group("name")])
+            except KeyError:
+                if not self.svg_warning_displayed:
+                    QtGui.QMessageBox.warning(self, 'Error converting PNG to SVG.',
+                        'Cannot convert PNG images to SVG, export with PNG figures instead. '
+                        'If you want to export matplotlib figures as SVG, add '
+                        'to your ipython config:\n\n'
+                        '\tc.InlineBackend.figure_format = \'svg\'\n\n'
+                        'And regenerate the figures.',
+                                              QtGui.QMessageBox.Ok)
+                    self.svg_warning_displayed = True
+                return ("<b>Cannot convert  PNG images to SVG.</b>  "
+                        "You must export this session with PNG images. "
+                        "If you want to export matplotlib figures as SVG, add to your config "
+                        "<span>c.InlineBackend.figure_format = 'svg'</span> "
+                        "and regenerate the figures.")
+
+            # Not currently checking path, because it's tricky to find a
+            # cross-browser way to embed external SVG images (e.g., via
+            # object or embed tags).
+
+            # Chop stand-alone header from matplotlib SVG
+            offset = svg.find("<svg")
+            assert(offset > -1)
+
+            return svg[offset:]
+
+        else:
+            return '<b>Unrecognized image format</b>'
+
 
     # adopted from ConsoleWidget
     def insert_ansi_text(self, text, ansi_codes=True, cursor=None):
@@ -506,7 +586,8 @@ class DocumentConfig(LoggingConfigurable):
     def export_html(self):
         """ Shows a dialog to export HTML/XML in various formats.
         """
-        self._html_exporter.export()
+        self.svg_warning_displayed = False
+        self.html_exporter.export()
 
     # ConsoleWidget
     def _print_doc(self, printer=None):
@@ -522,5 +603,10 @@ class DocumentConfig(LoggingConfigurable):
     def _custom_context_menu_requested(self, pos):
         """ Shows a context menu at the given QPoint (in widget coordinates).
         """
-        menu = ContextMenu(self, pos)
+        char_format = self.cursorForPosition(pos).charFormat()
+        name = char_format.stringProperty(QtGui.QTextFormat.ImageName)
+        if name:
+            menu = ImageContextMenu(self, pos, name)
+        else:
+            menu = TextContextMenu(self, pos)
         menu.exec_(self.mapToGlobal(pos))

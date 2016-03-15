@@ -35,11 +35,11 @@ class RichJupyterWidget(RichIPythonWidget):
     # RichJupyterWidget protected class variables.
     _payload_source_plot = 'ipykernel.pylab.backend_payload.add_plot_payload'
     _jpg_supported = Bool(False)
-# </done>
 
     # Used to determine whether a given html export attempt has already
     # displayed a warning about being unable to convert a png to svg.
     _svg_warning_displayed = False
+# </done>
 
     #---------------------------------------------------------------------------
     # 'object' interface
@@ -51,19 +51,18 @@ class RichJupyterWidget(RichIPythonWidget):
         kw['kind'] = 'rich'
         super(RichJupyterWidget, self).__init__(*args, **kw)
 
+# <done>
         # Configure the ConsoleWidget HTML exporter for our formats.
         self._html_exporter.image_tag = self._get_image_tag
 
         # Dictionary for resolving document resource names to SVG data.
         self._name_to_svg_map = {}
 
-# <done>
         # Do we support jpg ?
         # it seems that sometime jpg support is a plugin of QT, so try to assume
         # it is not always supported.
         _supported_format = map(str, QtGui.QImageReader.supportedImageFormats())
         self._jpg_supported = 'jpeg' in _supported_format
-# </done>
 
     #---------------------------------------------------------------------------
     # 'ConsoleWidget' public interface overides
@@ -108,7 +107,6 @@ class RichJupyterWidget(RichIPythonWidget):
     #---------------------------------------------------------------------------
     # 'BaseFrontendMixin' abstract interface
     #---------------------------------------------------------------------------
-# <done>
     def _pre_image_append(self, msg, prompt_number):
         """Append the Out[] prompt  and make the output nicer
 
@@ -215,7 +213,6 @@ class RichJupyterWidget(RichIPythonWidget):
         format = QtGui.QTextImageFormat()
         format.setName(name)
         return format
-# </done>
 
     def _copy_image(self, name):
         """ Copies the ImageResource with 'name' to the clipboard.
@@ -304,7 +301,6 @@ class RichJupyterWidget(RichIPythonWidget):
         else:
             return '<b>Unrecognized image format</b>'
 
-# <done>
     def _insert_jpg(self, cursor, jpg, metadata=None):
         """ Insert raw PNG data into the widget."""
         self._insert_img(cursor, jpg, 'jpg', metadata=metadata)
@@ -338,8 +334,6 @@ class RichJupyterWidget(RichIPythonWidget):
             cursor.insertImage(format)
             cursor.insertBlock()
 
-# </done>
-
     def _insert_svg(self, cursor, svg):
         """ Insert raw SVG data into the widet.
         """
@@ -354,7 +348,6 @@ class RichJupyterWidget(RichIPythonWidget):
             cursor.insertImage(format)
             cursor.insertBlock()
 
-
     def _save_image(self, name, format='PNG'):
         """ Shows a save dialog for the ImageResource with 'name'.
         """
@@ -366,7 +359,7 @@ class RichJupyterWidget(RichIPythonWidget):
             filename = dialog.selectedFiles()[0]
             image = self._get_image(name)
             image.save(filename, format)
-
+# </done>
 
 # clobber RichIPythonWidget above:
 

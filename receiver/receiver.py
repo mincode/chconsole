@@ -84,7 +84,10 @@ def _insert_stream_content(target, item, cursor):
         except ValueError:
             _receive(Stderr('Received invalid image/latex data.\n'), target)
         else:
-            target.insert_qimage(qimage)
+            image_format = register_qimage(target.document(), qimage)
+            target.insert_qimage(image_format, cursor)
+            if isinstance(img, SvgXml):
+                target.name_to_svg_map[image_format.name()] = img
     else:
         html = item.content.get(HtmlText)
         if html:
@@ -236,6 +239,8 @@ def receiver_template(edit_class):
             """
             edit_class.__init__(self, text, parent)
             DocumentConfig.__init__(self, **kwargs)
+            if isinstance(self, QtGui.QTextEdit):
+                self.html_exporter.image_tag = self.get_image_tag
 
             self.use_ansi = use_ansi
 
