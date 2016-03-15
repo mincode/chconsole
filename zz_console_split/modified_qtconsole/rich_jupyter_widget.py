@@ -176,6 +176,7 @@ class RichJupyterWidget(RichIPythonWidget):
     # 'RichJupyterWidget' protected interface
     #---------------------------------------------------------------------------
 
+# <done>
     def _append_latex(self, latex, before_prompt=False, metadata=None):
         """ Append latex data to the widget."""
         try:
@@ -211,6 +212,7 @@ class RichJupyterWidget(RichIPythonWidget):
         format = QtGui.QTextImageFormat()
         format.setName(name)
         return format
+# </done>
 
     def _copy_image(self, name):
         """ Copies the ImageResource with 'name' to the clipboard.
@@ -308,6 +310,7 @@ class RichJupyterWidget(RichIPythonWidget):
         """
         self._insert_img(cursor, png, 'png', metadata=metadata)
 
+# <done>
     def _insert_img(self, cursor, img, fmt, metadata=None):
         """ insert a raw image, jpg or png """
         if metadata:
@@ -345,6 +348,8 @@ class RichJupyterWidget(RichIPythonWidget):
             cursor.insertBlock()
             cursor.insertImage(format)
             cursor.insertBlock()
+
+# </done>
 
     def _save_image(self, name, format='PNG'):
         """ Shows a save dialog for the ImageResource with 'name'.

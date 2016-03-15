@@ -9,7 +9,7 @@ from traitlets import Integer, Unicode
 from _version import __version__
 
 from messages import Stderr, Stdout, HtmlText, PageDoc, Banner, Input, Result, ClearOutput, SplitItem
-from messages import ExportItem
+from messages import ExportItem, AtomicText, SvgXml, Jpeg, Png, SplitText, LaTeX
 from .outbuffer import OutBuffer
 from standards import TextConfig
 from standards import ViewportFilter, TextAreaFilter
@@ -61,6 +61,24 @@ def _covers(edit_widget, text):
     return re.match("(?:[^\n]*\n){%i}" % min_lines, text)
 
 
+def _insert_stream_content(target, item, cursor):
+    img = item.content.get((SvgXml, Jpeg, Png, LaTeX))
+    if img:
+        cursor.insertText('\n')
+        # convert to QImage
+        # register QImage
+        # insert QImage
+    else:
+        html = item.content.get(HtmlText)
+        if html:
+            target.insert_html(html.text, cursor)
+        else:
+            regular = item.content.get((AtomicText, SplitText))
+            if regular:
+                target.insert_ansi_text(regular.text, regular.ansi_codes and target.use_ansi, cursor)
+                target.ansi_processor.reset_sgr()
+
+
 @singledispatch
 def _receive(item, target):
     pass
@@ -74,11 +92,7 @@ def _(item, target):
     target.insert_start = cursor.position()
     target.clear_cursor = cursor if item.clearable else None
 
-    if isinstance(item.content, HtmlText):
-        target.insert_html(item.content.text, cursor)
-    else:
-        target.insert_ansi_text(item.content.text, item.ansi_codes and target.use_ansi, cursor)
-        target.ansi_processor.reset_sgr()
+    _insert_stream_content(target, item, cursor)
 
 
 @_receive.register(PageDoc)
@@ -132,7 +146,8 @@ def _(item, target):
     # so that its lines are aligned.
     if "\n" in item.content.text and not target.output_sep.endswith("\n"):
         cursor.insertText('\n')
-    cursor.insertText(item.content.text + target.output_sep2)
+    _insert_stream_content(target, item, cursor)
+    cursor.insertText(target.output_sep2)
 
 
 @_receive.register(ClearOutput)

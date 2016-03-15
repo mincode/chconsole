@@ -154,6 +154,12 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
         self.please_process.emit(Input(content['code'], execution_count=content['execution_count']))
 
+    def _handle_display_data(self, msg):
+        data = msg.content['data']
+        # metadata = msg.content['metadata']
+        if 'text/plain' in data:
+            self.please_process.emit(Stdout(data['text/plain']))
+
     def _handle_execute_result(self, msg):
         """Handle an execute_result message"""
         prompt_number = msg.content.get('execution_count', 0)
@@ -163,18 +169,17 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         result = Result(data.get('text/plain', None), execution_count=prompt_number)
 
         if 'image/svg+xml' in data:
-            result.add(SvgXml(data['image/svg+xml']))
+            result.content.append(SvgXml(data['image/svg+xml']))
         elif 'image/png' in data:
-            png = decodebytes(data['image/png'].encode('ascii'))
-            result.add(SvgXml(Png(png, metadata=metadata.get('image/png', None))))
+            img = decodebytes(data['image/png'].encode('ascii'))
+            result.content.append(Png(img, metadata=metadata.get('image/png', None)))
         elif 'image/jpeg' in data:
-            jpg = decodebytes(data['image/jpeg'].encode('ascii'))
-            result.add(SvgXml(Jpeg(jpg, metadata=metadata.get('image/jpeg', None))))
+            img = decodebytes(data['image/jpeg'].encode('ascii'))
+            result.content.append(Jpeg(img, metadata=metadata.get('image/jpeg', None)))
         elif 'text/latex' in data:
-            result.add(SvgXml(LaTeX(data['text/latex'])))
+            result.content.append(LaTeX(data['text/latex']))
 
         self.please_process.emit(result)
-
 
     def _handle_clear_output(self, msg):
         # {'header': {'msg_type': 'clear_output'}, 'content': {'wait': False}}
@@ -184,12 +189,6 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         content = msg.content
         # print('wait: ' + str(content['wait']))
         self.please_process.emit(ClearOutput(wait=content['wait']))
-
-    def _handle_display_data(self, msg):
-        data = msg.content['data']
-        # metadata = msg.content['metadata']
-        if 'text/plain' in data:
-            self.please_process.emit(Stdout(data['text/plain']))
 
     def _handle_complete_reply(self, msg):
         self.log.debug("complete: %s", msg.content)

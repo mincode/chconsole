@@ -9,7 +9,7 @@ from qtconsole.util import get_font
 from traitlets import Integer, Unicode, DottedObjectName, Any, Float, Instance
 from traitlets.config.configurable import LoggingConfigurable
 from .selective_highlighter import SelectiveHighlighter
-from text import set_top_cursor
+from media import set_top_cursor
 
 from menus import ContextMenu
 

@@ -1,6 +1,6 @@
 from qtconsole.qt import QtCore, QtGui
 from standards.base_event_filter import BaseEventFilter
-from text import get_block_plain_text
+from media import get_block_plain_text
 from messages import Execute, Complete, Restart, Interrupt
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'

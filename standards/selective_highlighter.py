@@ -1,5 +1,5 @@
 from qtconsole.pygments_highlighter import PygmentsHighlighter
-from text import get_block_plain_text
+from media import get_block_plain_text
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 

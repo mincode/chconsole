@@ -117,7 +117,10 @@ class CallTip(ImportItem):
 
 
 ################################################################################################
-# Pager
+# Stream content: choice of different media formats
+# AtomicText, SplitText, HtmlText, SvgXml, Jpeg, Png, LaTeX
+# The stream content can either be one of these, or a list representing a choice.
+# By default SplitText
 class SplitItem(ImportItem):
     def __init__(self):
         super(SplitItem, self).__init__()
@@ -172,77 +175,6 @@ class HtmlText(AtomicText):
         super(HtmlText, self).__init__(text=text, ansi_codes=False)
 
 
-class Stream(SplitItem):
-    clearable = True  # True if text can be cleared by ClearOutput
-    content = None  # AtomicText, SplitText, HtmlText
-
-    def __init__(self, content=None, clearable=True):
-        super(Stream, self).__init__()
-        self.clearable = clearable
-        if isinstance(content, str):
-            self.content = SplitText(content)
-        else:
-            self.content = content
-
-    @property
-    def ansi_codes(self):
-        if hasattr(self.content, 'ansi_codes'):
-            return self.content.ansi_codes
-        else:
-            return False
-
-    @ansi_codes.setter
-    def ansi_codes(self, ansi_codes):
-        if hasattr(self.content, 'ansi_codes'):
-            self.content.ansi_codes = ansi_codes
-
-    def split(self, num_lines):
-        """
-        Split text item into initial piece of given number of lines and the rest.
-        :param num_lines: number of lines for the initial piece.
-        :return: number of lines in the initial piece, item of initial piece, item of rest,
-                    where head property of rest is false in rest. The rest has head False and empty is set if
-                    it is empty.
-        """
-        if self.content:
-            count, first, rest = self.content.split(num_lines)
-        else:
-            count, first, rest = 0, None, None
-        first_stream = type(self)(content=first, clearable=self.clearable)
-        rest_stream = type(self)(content=rest, clearable=self.clearable) if rest else None
-        return count, first_stream, rest_stream
-
-
-class Stdout(Stream):
-    def __init__(self, content=None, clearable=True):
-        super(Stdout, self).__init__(content=content, clearable=clearable)
-
-
-class PageDoc(SplitItem):
-    text_stream = None  # text version of text if available
-    html_stream = None  # html version of text if available
-
-    def __init__(self, text='', html=''):
-        super(PageDoc, self).__init__()
-        self.text_stream = Stdout(SplitText(text), clearable=False)
-        if html:
-            self.html_stream = Stdout(HtmlText(html), clearable=False)
-
-    @property
-    def ansi_codes(self):
-        if self.text_stream:
-            return self.text_stream.ansi_codes
-        else:
-            return False
-
-    @ansi_codes.setter
-    def ansi_codes(self, ansi_codes):
-        if self.text_stream:
-            self.text_stream.ansi_codes = ansi_codes
-
-
-################################################################################################
-# Receiver
 class Image(SplitItem):
     image = None   # the image
     metadata = None  # metadata on the image such as dimensions
@@ -273,6 +205,139 @@ class LaTeX(AtomicText):
         super(LaTeX, self).__init__(text, ansi_codes=False)
 
 
+class Content(SplitItem):
+    data = None  # list of SplitItem
+
+    def __init__(self, first=None):
+        super(Content, self).__init__()
+        self.data = list()
+        if first is not None:
+            self.data.append(first)
+
+    @property
+    def text(self):
+        for item in self.data:
+            if hasattr(item, 'text'):
+                return item.text
+        return ''
+
+    @text.setter
+    def text(self, text):
+        for item in self.data:
+            if hasattr(item, 'text'):
+                item.text = text
+
+    @property
+    def ansi_codes(self):
+        for item in self.data:
+            if hasattr(item, 'ansi_codes'):
+                return item.ansi_codes
+        return False
+
+    def split(self, num_lines):
+        count_max = 0
+        first_content = Content()
+        rest_content = Content()
+        for item in self.data:
+            if item:
+                count, first, rest = item.split(num_lines)
+                count_max = max(count_max, count)
+                if first:
+                    first_content.data.append(first)
+                if rest:
+                    rest_content.data.append(rest)
+        if not first_content:
+            first_content = None
+        if not rest_content.data:
+            # nothing in rest_content
+            rest_content = None
+
+        return count_max, first_content, rest_content
+
+    def get(self, class_names):
+        """
+        Return an item of a specific class.
+        :param class_names: class name or tuple of class names.
+        :return: the first item matching class_names or None.
+        """
+        for item in self.data:
+            if isinstance(item, class_names):
+                return item
+        return None
+
+
+class Stream(SplitItem):
+    clearable = True  # True if text can be cleared by ClearOutput
+    content = None  # AtomicText, SplitText, HtmlText
+
+    def __init__(self, content=None, clearable=True):
+        super(Stream, self).__init__()
+        self.clearable = clearable
+        if isinstance(content, str):
+            self.content = Content(SplitText(content))
+        elif isinstance(content, Content):
+            self.content = content
+        else:
+            self.content = Content(content)
+
+    @property
+    def ansi_codes(self):
+        return self.content.ansi_codes
+
+    @ansi_codes.setter
+    def ansi_codes(self, ansi_codes):
+        if hasattr(self.content, 'ansi_codes'):
+            self.content.ansi_codes = ansi_codes
+
+    def split(self, num_lines):
+        """
+        Split text item into initial piece of given number of lines and the rest.
+        :param num_lines: number of lines for the initial piece.
+        :return: number of lines in the initial piece, item of initial piece, item of rest,
+                    where head property of rest is false in rest. The rest has head False and empty is set if
+                    it is empty.
+        """
+        if self.content:
+            count, first, rest = self.content.split(num_lines)
+        else:
+            count, first, rest = 0, None, None
+        first_stream = type(self)(content=first, clearable=self.clearable)
+        rest_stream = type(self)(content=rest, clearable=self.clearable) if rest else None
+        return count, first_stream, rest_stream
+
+
+class Stdout(Stream):
+    def __init__(self, content=None, clearable=True):
+        super(Stdout, self).__init__(content=content, clearable=clearable)
+
+
+################################################################################################
+# Pager
+class PageDoc(SplitItem):
+    text_stream = None  # text version of text if available
+    html_stream = None  # html version of text if available
+
+    def __init__(self, text='', html=''):
+        super(PageDoc, self).__init__()
+        self.text_stream = Stdout(SplitText(text), clearable=False)
+        if html:
+            self.html_stream = Stdout(HtmlText(html), clearable=False)
+
+    @property
+    def ansi_codes(self):
+        if self.text_stream:
+            return self.text_stream.ansi_codes
+        else:
+            return False
+
+    @ansi_codes.setter
+    def ansi_codes(self, ansi_codes):
+        if self.text_stream:
+            self.text_stream.ansi_codes = ansi_codes
+
+
+################################################################################################
+# Receiver
 class Stderr(Stream):
     def __init__(self, content=None, clearable=False):
         super(Stderr, self).__init__(content=content, clearable=clearable)
@@ -339,6 +404,9 @@ class Execution(Stream):
 
     def split(self, num_lines):
         count, first, rest = super(Execution, self).split(num_lines)
+        if rest:
+            print(rest.content.data)
+
         if first:
             first.execution_count = self.execution_count
         if rest:
@@ -356,27 +424,5 @@ class Input(Execution):
 
 
 class Result(Execution):
-    non_text = None  # list of non-text data items
-
     def __init__(self, content=None, execution_count=0, clearable=False):
         super(Result, self).__init__(content, execution_count=execution_count, clearable=clearable)
-        self.non_text = list()
-
-    def add(self, data):
-        """
-        Add non-text data item to result.
-        :param data: non-text data item.
-        :return:
-        """
-        self.non_text.extend(data)
-
-    def split(self, num_lines):
-        count, first, rest = super(Result, self).split(num_lines)
-        if first:
-            first.non_text = self.non_text
-        if rest:
-            if first:
-                rest.non_text = list()
-            else:
-                rest.non_text = self.non_text
-        return count, first, rest
