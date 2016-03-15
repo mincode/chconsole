@@ -11,9 +11,10 @@ from _version import __version__
 from messages import Stderr, Stdout, HtmlText, PageDoc, Banner, Input, Result, ClearOutput, SplitItem
 from messages import ExportItem, AtomicText, SvgXml, Jpeg, Png, SplitText, LaTeX
 from .outbuffer import OutBuffer
-from standards import TextConfig
+from standards import DocumentConfig
 from standards import ViewportFilter, TextAreaFilter
 from .receiver_filter import ReceiverFilter
+from media import to_qimage, register_qimage, insert_qimage_format
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -64,10 +65,20 @@ def _covers(edit_widget, text):
 def _insert_stream_content(target, item, cursor):
     img = item.content.get((SvgXml, Jpeg, Png, LaTeX))
     if img:
+        #Test:
+        # from IPython.display import Image
+        # Image(filename='../yy_testing/squirrel.jpg')
+        #
+        # from IPython.display import Image
+        # Image(filename='../yy_testing/baby-squirrel.png')
+
         cursor.insertText('\n')
-        # convert to QImage
-        # register QImage
-        # insert QImage
+        try:
+            qimage = to_qimage(img)
+        except ValueError:
+            _receive(Stderr('Received invalid image/latex data.\n'), target)
+        else:
+            target.insert_qimage(qimage)
     else:
         html = item.content.get(HtmlText)
         if html:
@@ -166,7 +177,7 @@ def receiver_template(edit_class):
     :return: Instantiated class.
     """
 
-    class Receiver(MetaQObjectHasTraits('NewBase', (TextConfig, edit_class), {})):
+    class Receiver(MetaQObjectHasTraits('NewBase', (DocumentConfig, edit_class), {})):
         """
         Text edit that shows input and output.
         """
@@ -218,7 +229,7 @@ def receiver_template(edit_class):
             :return:
             """
             edit_class.__init__(self, text, parent)
-            TextConfig.__init__(self, **kwargs)
+            DocumentConfig.__init__(self, **kwargs)
 
             self.use_ansi = use_ansi
 

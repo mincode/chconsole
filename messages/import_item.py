@@ -214,6 +214,9 @@ class Content(SplitItem):
         if first is not None:
             self.data.append(first)
 
+    def append(self, item):
+        self.data.append(item)
+
     @property
     def text(self):
         for item in self.data:

@@ -11,7 +11,7 @@ from traitlets import Bool
 from standards.selective_highlighter import SelectiveHighlighter
 from messages import InText, CompleteItems, CallTip
 from messages import Source, ExportItem, Inspect
-from standards.text_config import TextConfig
+from standards.document_config import DocumentConfig
 from .entry_filter import EntryFilter
 from .history import History
 
@@ -51,7 +51,7 @@ def entry_template(edit_class):
     :param edit_class: QTGui.QTextEdit or QtGui.QPlainTextEdit
     :return: Instantiated class.
     """
-    class Entry(MetaQObjectHasTraits('NewBase', (TextConfig, edit_class), {})):
+    class Entry(MetaQObjectHasTraits('NewBase', (DocumentConfig, edit_class), {})):
         """
         Text edit that has two modes, code and chat mode,
         accepting code to be executed or arbitrary text (chat messages).
@@ -107,7 +107,7 @@ def entry_template(edit_class):
             :return:
             """
             edit_class.__init__(self, text, parent)
-            TextConfig.__init__(self, **kwargs)
+            DocumentConfig.__init__(self, **kwargs)
 
             self.use_ansi = use_ansi
             self.highlighter.enable()
@@ -160,7 +160,7 @@ def entry_template(edit_class):
             self.code_mode = code_mode
 
         def _set_font(self, font):
-            TextConfig.set_font(self, font)
+            DocumentConfig.set_font(self, font)
             if hasattr(self, 'completer') and self.completer:
                 self.completer.setFont(font)
             self.font_changed.emit(font)

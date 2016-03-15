@@ -6,7 +6,7 @@ from traitlets import Unicode
 from standards import TextAreaFilter, ViewportFilter
 
 from messages import AtomicText, SplitText
-from standards.text_config import TextConfig
+from standards.document_config import DocumentConfig
 from .pager_filter import PagerFilter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -24,7 +24,7 @@ def _(item, target):
 
 
 def pager_template(edit_class):
-    class Pager(MetaQObjectHasTraits('NewBase', (TextConfig, edit_class), {})):
+    class Pager(MetaQObjectHasTraits('NewBase', (DocumentConfig, edit_class), {})):
         """
         The pager of the console.
         """
@@ -53,7 +53,7 @@ def pager_template(edit_class):
             :return:
             """
             QtGui.QTextEdit.__init__(self, text, parent)
-            TextConfig.__init__(self, use_ansi, **kwargs)
+            DocumentConfig.__init__(self, use_ansi, **kwargs)
             self._locations = dict(locations)
             self.location = initial_location
             self.document().setMaximumBlockCount(0)

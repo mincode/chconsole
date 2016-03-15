@@ -1,9 +1,11 @@
+from functools import singledispatch
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.svg import svg_to_image
 try:
     from IPython.lib.latextools import latex_to_png
 except ImportError:
     latex_to_png = None
+from messages import SvgXml, Jpeg, Png, LaTeX
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -14,6 +16,14 @@ svg_to_qimage = svg_to_image
 # :param svg: image as svg.
 # :return: QImage representation of img, or raises ValueError if img cannot be converted.
 # """
+
+
+def jpg_to_qimage(img, metadata=None):
+    return jpg_png_to_qimage(img, 'jpg', metadata)
+
+
+def png_to_qimage(img, metadata=None):
+    return jpg_png_to_qimage(img, 'png', metadata)
 
 
 # RichJupyterWidget, based on _insert_img
@@ -48,6 +58,31 @@ def latex_to_qimage(text):
     return jpg_png_to_qimage(png, 'png')
 
 
+@singledispatch
+def to_qimage(item):
+    raise NotImplementedError
+
+
+@to_qimage.register(SvgXml)
+def _(item):
+    return svg_to_qimage(item.image)
+
+
+@to_qimage.register(Jpeg)
+def _(item):
+    return jpg_to_qimage(item.image, item.metadata)
+
+
+@to_qimage.register(Png)
+def _(item):
+    return png_to_qimage(item.image, item.metadata)
+
+
+@to_qimage.register(LaTeX)
+def _(item):
+    return latex_to_qimage(item.text)
+
+
 # RichJupyterWidget add_image
 def register_qimage(document, image):
     """ Adds the specified QImage to the document and returns a
@@ -61,11 +96,11 @@ def register_qimage(document, image):
     return img_format
 
 
-def insert_qimage_format(cursor, fmt):
+def insert_qimage_format(cursor, format):
     """
     Insert a QImage given by a format at a cursor.
     :param cursor: QTextCursor where to insert.
-    :param fmt: QImageFormat of the image.
+    :param format: QImageFormat of the image.
     :return:
     """
     cursor.insertBlock()

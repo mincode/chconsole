@@ -9,14 +9,14 @@ from qtconsole.util import get_font
 from traitlets import Integer, Unicode, DottedObjectName, Any, Float, Instance
 from traitlets.config.configurable import LoggingConfigurable
 from .selective_highlighter import SelectiveHighlighter
-from media import set_top_cursor
+from media import set_top_cursor, register_qimage, insert_qimage_format
 
 from menus import ContextMenu
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class TextConfig(LoggingConfigurable):
+class DocumentConfig(LoggingConfigurable):
     """
     Mixin for configuring text properties of a QTextEdit or QPlainTextEdit.
     """
@@ -257,7 +257,7 @@ class TextConfig(LoggingConfigurable):
         font = self.font
         size = max(font.pointSize() + delta, 1)  # minimum 1 point
         font.setPointSize(size)
-        self._set_font(font)
+        self.set_font(font)
 
     def _increase_font_size(self):
         self.change_font_size(1)
@@ -357,6 +357,10 @@ class TextConfig(LoggingConfigurable):
         cursor.movePosition(QtGui.QTextCursor.End)
         return cursor
 
+    def insert_qimage(self, qimage, cursor=None):
+        cursor = cursor if cursor else self.textCursor()
+        image_format = register_qimage(self.document(), qimage)
+        insert_qimage_format(cursor, image_format)
 
     # adopted from ConsoleWidget
     def insert_ansi_text(self, text, ansi_codes=True, cursor=None):
