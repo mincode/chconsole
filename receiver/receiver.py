@@ -57,14 +57,20 @@ def _make_out_prompt(prompt_template, number):
 
 def _covers(edit_widget, text):
     line_height = QtGui.QFontMetrics(edit_widget.font).height()
-    # print('lines: {}'.format(line_height))
     min_lines = edit_widget.viewport().height() / line_height
     return re.match("(?:[^\n]*\n){%i}" % min_lines, text)
 
 
 def _insert_stream_content(target, item, cursor):
-    img = item.content.get((SvgXml, Jpeg, Png, LaTeX))
-    if img:
+    img = item.content.get(Jpeg)
+    # RichJupyterWidget:
+    # Do we support jpg?
+    # it seems that sometime jpg support is a plugin of QT, so try to assume
+    # it is not always supported.
+    jpeg_supported = QtCore.QByteArray(b'jpeg') in QtGui.QImageReader.supportedImageFormats()
+    if not img or not jpeg_supported:
+        img = item.content.get((SvgXml, Png, LaTeX))
+    if img and isinstance(target, QtGui.QTextEdit):
         #Test:
         # from IPython.display import Image
         # Image(filename='../yy_testing/squirrel.jpg')

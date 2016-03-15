@@ -31,9 +31,11 @@ class RichJupyterWidget(RichIPythonWidget):
         text version.
     """
 
+# <done>
     # RichJupyterWidget protected class variables.
     _payload_source_plot = 'ipykernel.pylab.backend_payload.add_plot_payload'
     _jpg_supported = Bool(False)
+# </done>
 
     # Used to determine whether a given html export attempt has already
     # displayed a warning about being unable to convert a png to svg.
@@ -55,12 +57,13 @@ class RichJupyterWidget(RichIPythonWidget):
         # Dictionary for resolving document resource names to SVG data.
         self._name_to_svg_map = {}
 
+# <done>
         # Do we support jpg ?
         # it seems that sometime jpg support is a plugin of QT, so try to assume
         # it is not always supported.
         _supported_format = map(str, QtGui.QImageReader.supportedImageFormats())
         self._jpg_supported = 'jpeg' in _supported_format
-
+# </done>
 
     #---------------------------------------------------------------------------
     # 'ConsoleWidget' public interface overides
@@ -105,6 +108,7 @@ class RichJupyterWidget(RichIPythonWidget):
     #---------------------------------------------------------------------------
     # 'BaseFrontendMixin' abstract interface
     #---------------------------------------------------------------------------
+# <done>
     def _pre_image_append(self, msg, prompt_number):
         """Append the Out[] prompt  and make the output nicer
 
@@ -176,7 +180,6 @@ class RichJupyterWidget(RichIPythonWidget):
     # 'RichJupyterWidget' protected interface
     #---------------------------------------------------------------------------
 
-# <done>
     def _append_latex(self, latex, before_prompt=False, metadata=None):
         """ Append latex data to the widget."""
         try:
@@ -301,6 +304,7 @@ class RichJupyterWidget(RichIPythonWidget):
         else:
             return '<b>Unrecognized image format</b>'
 
+# <done>
     def _insert_jpg(self, cursor, jpg, metadata=None):
         """ Insert raw PNG data into the widget."""
         self._insert_img(cursor, jpg, 'jpg', metadata=metadata)
@@ -310,7 +314,6 @@ class RichJupyterWidget(RichIPythonWidget):
         """
         self._insert_img(cursor, png, 'png', metadata=metadata)
 
-# <done>
     def _insert_img(self, cursor, img, fmt, metadata=None):
         """ insert a raw image, jpg or png """
         if metadata:
@@ -335,6 +338,8 @@ class RichJupyterWidget(RichIPythonWidget):
             cursor.insertImage(format)
             cursor.insertBlock()
 
+# </done>
+
     def _insert_svg(self, cursor, svg):
         """ Insert raw SVG data into the widet.
         """
@@ -349,7 +354,6 @@ class RichJupyterWidget(RichIPythonWidget):
             cursor.insertImage(format)
             cursor.insertBlock()
 
-# </done>
 
     def _save_image(self, name, format='PNG'):
         """ Shows a save dialog for the ImageResource with 'name'.
