@@ -141,21 +141,29 @@ def _(item, target):
     target.clear_cursor = None
     cursor.insertText('\n')
 
-    if is_comment(item.code):
+    # Why does highlighting for comments not work?
+    if item.code and is_comment(item.code):
+        before_prompt = cursor.position()
         in_prompt = _make_in_prompt(target.chat_prompt, item.execution_count)
         target.insert_html(in_prompt, cursor)
-        split_code = item.code.split('\n')
-        if not (len(split_code) == 1 or (len(split_code) == 2 and split_code[2] == '')):
+        after_prompt = cursor.position()
+        if after_prompt-2 >= before_prompt:
+            after_prompt -= 2
+        if len(item.code.split('\n')) != 1:
             cursor.insertText('\n')
+        target.highlighter.enable(after_prompt-before_prompt)
         target.insert_ansi_text(de_comment(item.code), item.ansi_codes and target.use_ansi, cursor)
+        target.ansi_processor.reset_sgr()
+        target.highlighter.disable()
     else:
         before_prompt = cursor.position()
         in_prompt = _make_in_prompt(target.in_prompt, item.execution_count)
         target.insert_html(in_prompt, cursor)
         after_prompt = cursor.position()
         target.highlighter.enable(after_prompt-before_prompt)
-        target.insert_ansi_text(item.code, item.ansi_codes and target.use_ansi, cursor)
-        target.ansi_processor.reset_sgr()
+        if item.code:
+            target.insert_ansi_text(item.code, item.ansi_codes and target.use_ansi, cursor)
+            target.ansi_processor.reset_sgr()
         target.highlighter.disable()
     if item.code and item.code[-1] != '\n':
         cursor.insertText('\n')

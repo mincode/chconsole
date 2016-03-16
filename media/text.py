@@ -58,14 +58,14 @@ def starts_with(s, init='#'):
 
 def is_comment(s, init='#'):
     """
-    Determine whether the string represents a (multi-line) comment.
+    Determine whether the string represents a (multi-line) comment, accepting empty lines as well.
     :param s: string to be checked.
     :param init: initial chars denoting a line comment.
     :return: True if all the lines in the string start with whitespace followed by the pound sign.
     """
     lines = LineIter(s)
     for i in lines:
-        if not(starts_with(i, init)):
+        if not(starts_with(i, init) or i == ''):
             return False
     return True
 
