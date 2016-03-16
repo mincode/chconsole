@@ -1,6 +1,3 @@
-fix the restarting message:
-    some times the application picks up the status message restarting on start up;
-    clean up starting message
 import qtconsole files
 document code
 add more testers

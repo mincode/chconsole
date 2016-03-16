@@ -125,18 +125,19 @@ def _(item, target):
 
 @_receive.register(Banner)
 def _(item, target):
-    cursor = target.end_cursor
-    target.clear_cursor = None
-    stream = item.stream
-    stream.content.text = target.banner + stream.content.text
-    _receive(stream, target)
-    if item.help_links:
-        cursor.insertText('Help Links')
-        for helper in item.help_links:
-            target.insert_ansi_text('\n' + helper['text'] + ': ', item.ansi_codes and target.use_ansi, cursor)
-            url = helper['url']
-            target.insert_html('<a href="' + url + '">' + url + '</a>', cursor)
-    cursor.insertText('\n')
+    if target.show_banner.tryAcquire():
+        cursor = target.end_cursor
+        target.clear_cursor = None
+        stream = item.stream
+        stream.content.text = target.banner + stream.content.text
+        _receive(stream, target)
+        if item.help_links:
+            cursor.insertText('Help Links')
+            for helper in item.help_links:
+                target.insert_ansi_text('\n' + helper['text'] + ': ', item.ansi_codes and target.use_ansi, cursor)
+                url = helper['url']
+                target.insert_html('<a href="' + url + '">' + url + '</a>', cursor)
+        cursor.insertText('\n')
 
 
 @_receive.register(Input)
@@ -204,6 +205,8 @@ def receiver_template(edit_class):
         timing_guard = None  # QSemaphore
         receive_time = 0
 
+        show_banner = None  # QSemaphore; allow showing the banner only once
+
         insert_start = 0  # position of the start of the last insert that is clearable
         clear_cursor = None  # QTextCursor, used for clearing previous item received
 
@@ -252,6 +255,8 @@ def receiver_template(edit_class):
             self._out_buffer = OutBuffer(self, self)
             self._out_buffer.item_ready.connect(self.on_item_ready)
             self._out_buffer.start()
+
+            self.show_banner = QtCore.QSemaphore(1)
 
             self.setAcceptDrops(True)
 

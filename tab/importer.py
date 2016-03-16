@@ -75,6 +75,11 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             self.please_process.emit(Stdout(content['text']))
 
     def _handle_kernel_info_reply(self, msg):
+        """
+        Kernel info reply banner on startup.
+        :param msg:
+        :return:
+        """
         to_show = msg.content['banner']
         help_links = msg.content['help_links']
         banner = Banner(to_show, help_links=help_links.copy())
@@ -108,6 +113,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
                 # so we don't suddenly clear the console without asking.
                 self.please_process.emit(ExitRequested(False, confirm=not msg.local_kernel))
 
+    # FrontendWidget
     def _handle_status(self, msg):
         """Handle status message"""
         # This is where a busy/idle indicator would be triggered,

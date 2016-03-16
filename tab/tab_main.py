@@ -6,6 +6,7 @@ from traitlets import Bool, Float
 from traitlets.config.configurable import LoggingConfigurable
 from tab import tab_content_template
 from messages import Exit, Execute, Inspect, Complete, Restart, Interrupt, ClearAll, KernelMessage, TailHistory
+from messages import Stderr
 from standards import Importable
 from . import Importer
 
@@ -181,13 +182,12 @@ def tab_main_template(edit_class):
         def _started_channels(self):
             """Make a history request and load %guiref, if possible."""
             self.main_content.input_reply.connect(self.kernel_client.input)
-            # 1) send clear, rather send ClearAll, why?
-            ansi_clear = {'header': {'msg_type': 'stream'}, 'content': {'text': '\x0c\n', 'name': 'stdout'}}
-            self.message_arrived.emit(KernelMessage(ansi_clear, from_here=True))
+            # 1) send clear
+            self.message_arrived.emit(ClearAll())
             # 2) send kernel info request
             # The reply will trigger %guiref load provided language=='python' (not implemented)
-            # The following kernel request is masked because the kernel automatically sends the info on startup
-            # self.kernel_client.kernel_info()
+            # The kernel also automatically sends the info on startup
+            self.kernel_client.kernel_info()
             # 3) load history
             self.kernel_client.history(hist_access_type='tail', n=1000)
 
@@ -226,25 +226,23 @@ def tab_main_template(edit_class):
                     # confirm_restart is False, so we don't need to ask user
                     # anything, just do the restart
                     do_restart = True
+
                 if do_restart:
                     try:
                         self.kernel_manager.restart_kernel(now=now)
                     except RuntimeError as e:
                         text = 'Error restarting kernel: %s' % e
-                        msg = {'header': {'msg_type': 'stream'}, 'content': {'text': text, 'name': 'stderr'}}
-                        self.message_arrived.emit(KernelMessage(msg, from_here=True))
                     else:
                         self.message_arrived.emit(ClearAll())
                         text = '\nRestarting kernel...\n'
-                        msg = {'header': {'msg_type': 'stream'}, 'content': {'text': text, 'name': 'stderr'}}
-                        self.message_arrived.emit(KernelMessage(msg, from_here=True))
+                    self.message_arrived.emit(Stderr(text))
                 else:
                     self.kernel_client.hb_channel.unpause()
 
             else:
-                text = 'Cannot restart a Kernel I did not start'
-                msg = {'header': {'msg_type': 'stream'}, 'content': {'text': text, 'name': 'stderr'}}
-                self.message_arrived.emit(KernelMessage(msg, from_here=True))
+                text = '\nCannot restart a Kernel I did not start\n'
+                self.message_arrived.emit(Stderr(text))
+                self.kernel_client.hb_channel.unpause()
 
         # FrontendWidget
         # required by MainWindow
@@ -259,9 +257,8 @@ def tab_main_template(edit_class):
             if self.kernel_manager:
                 self.kernel_manager.interrupt_kernel()
             else:
-                text = 'Cannot interrupt a kernel I did not start'
-                msg = {'header': {'msg_type': 'stream'}, 'content': {'text': text, 'name': 'stderr'}}
-                self.message_arrived.emit(KernelMessage(msg, from_here=True))
+                text = '\nCannot interrupt a kernel I did not start\n'
+                self.message_arrived.emit(Stderr(text))
 
         # FrontendWidget
         # required by MainWindow
@@ -274,9 +271,8 @@ def tab_main_template(edit_class):
             Handle the kernel's death (if we do not own the kernel).
             """
             self.log.warn("kernel died: %s", since_last_heartbeat)
-            text = 'Kernel died'
-            msg = {'header': {'msg_type': 'stream'}, 'content': {'text': text, 'name': 'stderr'}}
-            self.message_arrived.emit(KernelMessage(msg, from_here=True))
+            text = '\nKernel died\n'
+            self.message_arrived.emit(Stderr(text))
 
 
         # FrontendWidget
@@ -303,11 +299,8 @@ def tab_main_template(edit_class):
                     reply = kc.shell_channel.get_msg(block=True, timeout=self.is_complete_timeout)
                 except Empty:
                     # assume incomplete output if we get no reply in time
-                    print('no reply in time')
                     return False, u''
                 if reply['parent_header'].get('msg_id', None) == msg_id:
-                    print('reply')
-                    print(reply['content'])
                     status = reply['content'].get('status', u'complete')
                     indent = reply['content'].get('indent', u'')
                     return status != 'incomplete', indent
