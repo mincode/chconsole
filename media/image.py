@@ -1,11 +1,9 @@
-from functools import singledispatch
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.svg import svg_to_image
 try:
     from IPython.lib.latextools import latex_to_png
 except ImportError:
     latex_to_png = None
-from messages import SvgXml, Jpeg, Png, LaTeX
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -56,31 +54,6 @@ def jpg_png_to_qimage(img, fmt='png', metadata=None):
 def latex_to_qimage(text):
     png = latex_to_png(text)
     return jpg_png_to_qimage(png, 'png')
-
-
-@singledispatch
-def to_qimage(item):
-    raise NotImplementedError
-
-
-@to_qimage.register(SvgXml)
-def _(item):
-    return svg_to_qimage(item.image)
-
-
-@to_qimage.register(Jpeg)
-def _(item):
-    return jpg_to_qimage(item.image, item.metadata)
-
-
-@to_qimage.register(Png)
-def _(item):
-    return png_to_qimage(item.image, item.metadata)
-
-
-@to_qimage.register(LaTeX)
-def _(item):
-    return latex_to_qimage(item.text)
 
 
 # RichJupyterWidget add_image

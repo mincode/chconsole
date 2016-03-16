@@ -1,12 +1,10 @@
 import sys
 from functools import singledispatch
 from subprocess import Popen
-
-from qtconsole.qt import QtGui, QtCore
-from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Integer, Unicode, Bool
 from traitlets.config.configurable import LoggingConfigurable
-
+from qtconsole.qt import QtGui, QtCore
+from qtconsole.util import MetaQObjectHasTraits
 from messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
 from messages import Stderr, Stdout
 from messages import Source, ExportItem
@@ -14,8 +12,6 @@ from messages import Exit, Execute, ClearAll, History
 from entry import entry_template, LinePrompt
 from receiver import receiver_template
 from pager import pager_template
-from standards import Importable
-from . import Importer
 from standards import NoDefaultEditor, CommandError
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'

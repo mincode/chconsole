@@ -1,4 +1,6 @@
+from functools import singledispatch
 from standards import Importable
+from media import svg_to_qimage, jpg_to_qimage, png_to_qimage, latex_to_qimage
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -288,9 +290,9 @@ class Stream(SplitItem):
         return self.content.ansi_codes
 
     @ansi_codes.setter
-    def ansi_codes(self, ansi_codes):
+    def ansi_codes(self, x):
         if hasattr(self.content, 'ansi_codes'):
-            self.content.ansi_codes = ansi_codes
+            self.content.ansi_codes = x
 
     def split(self, num_lines):
         """
@@ -429,3 +431,28 @@ class Input(Execution):
 class Result(Execution):
     def __init__(self, content=None, execution_count=0, clearable=False):
         super(Result, self).__init__(content, execution_count=execution_count, clearable=clearable)
+
+
+@singledispatch
+def to_qimage(item):
+    raise NotImplementedError
+
+
+@to_qimage.register(SvgXml)
+def _(item):
+    return svg_to_qimage(item.image)
+
+
+@to_qimage.register(Jpeg)
+def _(item):
+    return jpg_to_qimage(item.image, item.metadata)
+
+
+@to_qimage.register(Png)
+def _(item):
+    return png_to_qimage(item.image, item.metadata)
+
+
+@to_qimage.register(LaTeX)
+def _(item):
+    return latex_to_qimage(item.text)

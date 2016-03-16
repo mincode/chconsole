@@ -1,5 +1,4 @@
 from qtconsole.qt import QtCore, QtGui
-
 from standards import BaseEventFilter
 from messages import Exit
 

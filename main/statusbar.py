@@ -77,7 +77,7 @@ class StatusBar(QtGui.QStatusBar):
     kernel_clicked = QtCore.Signal()
 
     def __init__(self, coding_checked=True, code_checked_color=QtCore.Qt.black, chat_checked_color=QtCore.Qt.red,
-                 front_end_msg=True, kernel_msg=True,
+                 front_end_msg=False, kernel_msg=False,
                  parent=None):
         super(StatusBar, self).__init__(parent)
         self.chat_button = _ToggleButton()

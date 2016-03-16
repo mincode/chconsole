@@ -1,5 +1,4 @@
 from qtconsole.qt import QtCore
-
 from messages.import_item import SplitItem, ClearOutput
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'

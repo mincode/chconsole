@@ -1,7 +1,5 @@
 import sys
-
 from qtconsole.qt import QtCore, QtGui
-
 from standards import BaseEventFilter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'

@@ -8,7 +8,6 @@ from qtconsole.kill_ring import QtKillRing
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool
-from standards.selective_highlighter import SelectiveHighlighter
 from messages import InText, CompleteItems, CallTip
 from messages import Source, ExportItem, Inspect
 from standards.document_config import DocumentConfig

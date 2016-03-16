@@ -1,20 +1,19 @@
 import re
 from functools import singledispatch
 from queue import Queue
-
+from traitlets import Integer, Unicode
 from qtconsole.qt import QtCore, QtGui
 from qtconsole.util import MetaQObjectHasTraits
-from traitlets import Integer, Unicode
 
 from _version import __version__
 
 from messages import Stderr, Stdout, HtmlText, PageDoc, Banner, Input, Result, ClearOutput, SplitItem
-from messages import ExportItem, AtomicText, SvgXml, Jpeg, Png, SplitText, LaTeX
+from messages import ExportItem, AtomicText, SvgXml, Jpeg, Png, SplitText, LaTeX, to_qimage
 from .outbuffer import OutBuffer
 from standards import DocumentConfig
 from standards import ViewportFilter, TextAreaFilter
 from .receiver_filter import ReceiverFilter
-from media import to_qimage, register_qimage, insert_qimage_format
+from media import register_qimage, insert_qimage_format
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 

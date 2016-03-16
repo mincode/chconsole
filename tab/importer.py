@@ -91,7 +91,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         There's nothing to do but show a message.
         """
         self.log.warn("kernel restarted")
-        msg = "Kernel has been restarted."
+        msg = "Kernel has been started."
         text = "<br>%s<hr><br>" % msg
         self.please_process.emit(Stderr(HtmlText(text)))
 

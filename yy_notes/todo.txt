@@ -7,6 +7,14 @@ split code and chat widget?, or just remove chat mode:
     later expand classifier to recognize code with syntax errors and propose corrections
     automatic code correction literature?
 
+recognize comments
+show user names
+
+connect to Sage?
+
 Collaboration:
 let other clients know that there is an input request going on in one client because code execution is blocked
 possibly add facility to kernel to send custom messages to clients to notify
+
+Other features:
+Allow drop in of images as in DrRacket

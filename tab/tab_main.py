@@ -1,9 +1,9 @@
 from functools import singledispatch
+from traitlets import Bool, Float
+from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from traitlets import Bool, Float
-from traitlets.config.configurable import LoggingConfigurable
 from tab import tab_content_template
 from messages import Exit, Execute, Inspect, Complete, Restart, Interrupt, ClearAll, KernelMessage, TailHistory
 from messages import Stderr

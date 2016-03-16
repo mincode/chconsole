@@ -2,16 +2,16 @@ import sys, os, re
 from ipython_genutils import py3compat
 from ipython_genutils.importstring import import_item
 from ipython_genutils.path import ensure_dir_exists
+from traitlets import Integer, Unicode, DottedObjectName, Any, Float, Instance
+from traitlets.config.configurable import LoggingConfigurable
 from qtconsole import styles
 from qtconsole.ansi_code_processor import QtAnsiCodeProcessor
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.rich_text import HtmlExporter
 from qtconsole.util import get_font
-from traitlets import Integer, Unicode, DottedObjectName, Any, Float, Instance
-from traitlets.config.configurable import LoggingConfigurable
-from .selective_highlighter import SelectiveHighlighter
 from media import set_top_cursor, insert_qimage_format, get_image
 from menus import TextContextMenu, ImageContextMenu
+from .selective_highlighter import SelectiveHighlighter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
