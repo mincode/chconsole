@@ -13,11 +13,12 @@ from .outbuffer import OutBuffer
 from standards import DocumentConfig
 from standards import ViewportFilter, TextAreaFilter
 from .receiver_filter import ReceiverFilter
-from media import register_qimage, insert_qimage_format
+from media import register_qimage, is_comment, de_comment
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 default_in_prompt = 'In [<span class="in-prompt-number">%i</span>]: '
+default_chat_prompt = 'In [<span class="in-prompt-number">%i</span>]# '
 default_out_prompt = 'Out[<span class="out-prompt-number">%i</span>]: '
 default_output_sep = ''
 default_output_sep2 = '\n'
@@ -47,11 +48,6 @@ def _make_out_prompt(prompt_template, number):
         from xml.sax.saxutils import escape
         body = escape(prompt_template)
     return '<span class="out-prompt">%s</span>' % body
-
-
-# def clear_to_beginning_of_line(cursor):
-#     cursor.movePosition(cursor.StartOfLine, cursor.KeepAnchor)
-#     cursor.insertText('')
 
 
 def _covers(edit_widget, text):
@@ -144,14 +140,23 @@ def _(item, target):
     cursor = target.end_cursor
     target.clear_cursor = None
     cursor.insertText('\n')
-    before_prompt = cursor.position()
-    in_prompt = _make_in_prompt(target.in_prompt, item.execution_count)
-    target.insert_html(in_prompt, cursor)
-    after_prompt = cursor.position()
-    target.highlighter.enable(after_prompt-before_prompt)
-    target.insert_ansi_text(item.code, item.ansi_codes and target.use_ansi, cursor)
-    target.ansi_processor.reset_sgr()
-    target.highlighter.disable()
+
+    if is_comment(item.code):
+        in_prompt = _make_in_prompt(target.chat_prompt, item.execution_count)
+        target.insert_html(in_prompt, cursor)
+        split_code = item.code.split('\n')
+        if not (len(split_code) == 1 or (len(split_code) == 2 and split_code[2] == '')):
+            cursor.insertText('\n')
+        target.insert_ansi_text(de_comment(item.code), item.ansi_codes and target.use_ansi, cursor)
+    else:
+        before_prompt = cursor.position()
+        in_prompt = _make_in_prompt(target.in_prompt, item.execution_count)
+        target.insert_html(in_prompt, cursor)
+        after_prompt = cursor.position()
+        target.highlighter.enable(after_prompt-before_prompt)
+        target.insert_ansi_text(item.code, item.ansi_codes and target.use_ansi, cursor)
+        target.ansi_processor.reset_sgr()
+        target.highlighter.disable()
     if item.code and item.code[-1] != '\n':
         cursor.insertText('\n')
 
@@ -196,6 +201,7 @@ def receiver_template(edit_class):
             Specifying a non-positive number disables truncation (not recommended).
             """)
         in_prompt = Unicode(default_in_prompt, config=True)
+        chat_prompt = Unicode(default_chat_prompt, config=True)
         out_prompt = Unicode(default_out_prompt, config=True)
 
         output_q = None  # Queue
