@@ -143,18 +143,12 @@ def _(item, target):
 
     # Why does highlighting for comments not work?
     if item.code and is_comment(item.code):
-        before_prompt = cursor.position()
         in_prompt = _make_in_prompt(target.chat_prompt, item.execution_count)
         target.insert_html(in_prompt, cursor)
-        after_prompt = cursor.position()
-        if after_prompt-2 >= before_prompt:
-            after_prompt -= 2
         if len(item.code.split('\n')) != 1:
             cursor.insertText('\n')
-        target.highlighter.enable(after_prompt-before_prompt)
         target.insert_ansi_text(de_comment(item.code), item.ansi_codes and target.use_ansi, cursor)
         target.ansi_processor.reset_sgr()
-        target.highlighter.disable()
     else:
         before_prompt = cursor.position()
         in_prompt = _make_in_prompt(target.in_prompt, item.execution_count)
@@ -255,8 +249,6 @@ def receiver_template(edit_class):
             """
             edit_class.__init__(self, text, parent)
             DocumentConfig.__init__(self, **kwargs)
-            if isinstance(self, QtGui.QTextEdit):
-                self.html_exporter.image_tag = self.get_image_tag
 
             self.use_ansi = use_ansi
 

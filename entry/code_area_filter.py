@@ -16,9 +16,9 @@ def complete_possible(cursor):
     return bool(text[:cursor.columnNumber()].strip())
 
 
-class EntryFilter(BaseEventFilter):
+class CodeAreaFilter(BaseEventFilter):
     def __init__(self, target):
-        super(EntryFilter, self).__init__(target)
+        super(CodeAreaFilter, self).__init__(target)
 
     def eventFilter(self, obj, event):
         intercepted = False

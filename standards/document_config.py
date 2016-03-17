@@ -9,7 +9,7 @@ from qtconsole.ansi_code_processor import QtAnsiCodeProcessor
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.rich_text import HtmlExporter
 from qtconsole.util import get_font
-from media import set_top_cursor, insert_qimage_format, get_image
+from media import set_top_cursor, insert_qimage_format, is_letter_or_number
 from menus import TextContextMenu, ImageContextMenu
 from .selective_highlighter import SelectiveHighlighter
 
@@ -18,7 +18,8 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 class DocumentConfig(LoggingConfigurable):
     """
-    Mixin for configuring text properties of a QTextEdit or QPlainTextEdit.
+    Mixin for configuring text properties of a subclass of an editor class, QTextEdit or QPlainTextEdit.
+    It should be initialized after the editor class has been initialized.
     """
     highlighter = Instance(SelectiveHighlighter, allow_none=True)
 
@@ -77,7 +78,7 @@ class DocumentConfig(LoggingConfigurable):
     # RichJupyterWidget:
     # Used to determine whether a given html export attempt has already
     # displayed a warning about being unable to convert a png to svg.
-    svg_warning_displayed = False
+    svg_warning = None  # QSemaphore(0)
 
     def __init__(self, use_ansi=True, **kwargs):
         """
@@ -88,6 +89,7 @@ class DocumentConfig(LoggingConfigurable):
 
         # Text interaction
         self.name_to_svg_map = {}
+        self.svg_warning = QtCore.QSemaphore()
         self.highlighter = SelectiveHighlighter(self, lexer=self.lexer)
         self.use_ansi = use_ansi
         self.setMouseTracking(True)
@@ -164,6 +166,8 @@ class DocumentConfig(LoggingConfigurable):
         self.print_action = action
 
         self.html_exporter = HtmlExporter(self)
+        if isinstance(self, QtGui.QTextEdit):
+            self.html_exporter.image_tag = self.get_image_tag
         action = QtGui.QAction('Save as HTML/XML', None)
         action.setShortcut(QtGui.QKeySequence.Save)
         action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
@@ -413,7 +417,7 @@ class DocumentConfig(LoggingConfigurable):
             try:
                 svg = str(self.name_to_svg_map[match.group("name")])
             except KeyError:
-                if not self.svg_warning_displayed:
+                if self.svg_warning.tryAcquire():
                     QtGui.QMessageBox.warning(self, 'Error converting PNG to SVG.',
                         'Cannot convert PNG images to SVG, export with PNG figures instead. '
                         'If you want to export matplotlib figures as SVG, add '
@@ -421,7 +425,6 @@ class DocumentConfig(LoggingConfigurable):
                         '\tc.InlineBackend.figure_format = \'svg\'\n\n'
                         'And regenerate the figures.',
                                               QtGui.QMessageBox.Ok)
-                    self.svg_warning_displayed = True
                 return ("<b>Cannot convert  PNG images to SVG.</b>  "
                         "You must export this session with PNG images. "
                         "If you want to export matplotlib figures as SVG, add to your config "
@@ -586,7 +589,8 @@ class DocumentConfig(LoggingConfigurable):
     def export_html(self):
         """ Shows a dialog to export HTML/XML in various formats.
         """
-        self.svg_warning_displayed = False
+        self.svg_warning.tryAcquire()  # svg_warning can be 0 or 1.
+        self.svg_warning.release()  # svg warning should be 1 before export.
         self.html_exporter.export()
 
     # ConsoleWidget

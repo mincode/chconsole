@@ -44,7 +44,6 @@ class SelectiveHighlighter(PygmentsHighlighter):
         """ Highlight a block of text. Reimplemented to highlight selectively.
         """
         if self._highlighting_on:
-            self._current_offset = 0
             # The input to this function is a unicode string that may contain
             # paragraph break characters, non-breaking spaces, etc. Here we acquire
             # the string as plain text so we can compare it.

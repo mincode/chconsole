@@ -8,7 +8,7 @@ from qtconsole.util import MetaQObjectHasTraits
 from messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
 from messages import Stderr, Stdout
 from messages import Source, ExportItem
-from messages import Exit, Execute, ClearAll, History
+from messages import Exit, Execute, ClearAll, History, KernelMessage
 from entry import entry_template, LinePrompt
 from receiver import receiver_template
 from pager import pager_template
@@ -173,8 +173,6 @@ def tab_content_template(edit_class):
         _console_stack_layout = None  # QStackedLayout
         _console_area = None  # QSplitter
 
-        please_execute = QtCore.Signal(Source)  # source to be executed
-        please_inspect = QtCore.Signal(Source, int)  # source to be inspected at cursor position int
         input_reply = QtCore.Signal(str)  # text given by the user to an input request
 
         print_action = None  # action for printing
@@ -222,9 +220,9 @@ def tab_content_template(edit_class):
             LoggingConfigurable.__init__(self, **kwargs)
             # Layout overview:
             # pager_top
-            # view  |      pager_right
-            #       | pager_inside
-            # entry |
+            # receiver  |      pager_right
+            #           | pager_inside
+            # entry     |
 
             self._console_stack = QtGui.QWidget()
             self._console_stack_layout = QtGui.QStackedLayout()
@@ -240,6 +238,7 @@ def tab_content_template(edit_class):
 
             self.receiver = receiver_template(edit_class)(use_ansi=self.ansi_codes)
             self.receiver.please_export.connect(self.please_export)
+
             self._console_area.addWidget(self.receiver)
             self._console_area.addWidget(self.entry)
 
