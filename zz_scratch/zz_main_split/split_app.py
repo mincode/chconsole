@@ -1,15 +1,12 @@
-from qtconsole.qt import QtCore, QtGui
-
+import qtconsole.qtconsoleapp
 from qtconsole.jupyter_widget import JupyterWidget
+from qtconsole.qt import QtCore, QtGui
+from qtconsole.qtconsoleapp import JupyterQtConsoleApp
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 
-from qtconsole.qtconsoleapp import JupyterQtConsoleApp
+from zz_scratch.zz_main_split.signal_content import SignalContent, TextSignal, HtmlSignal
 
-from zz_main_split.signal_content import SignalContent, TextSignal, HtmlSignal
-
-import qtconsole.qtconsoleapp
-import zz_main_split.split_main_window
-qtconsole.qtconsoleapp.MainWindow = zz_main_split.split_main_window.MainWindow
+qtconsole.qtconsoleapp.MainWindow = zz_scratch.zz_main_split.split_main_window.MainWindow
 
 
 def split_control(self):

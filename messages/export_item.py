@@ -25,6 +25,17 @@ class Restart(ExportItem):
         self.clear = clear
 
 
+class UserInput(ExportItem):
+    """
+    User input given to an input request from the kernel.
+    """
+    text = ''  # user input as text
+
+    def __init__(self, text=''):
+        super(UserInput, self).__init__()
+        self.text = text
+
+
 class TailHistory(ExportItem):
     """
     Tail history request.

@@ -1,11 +1,25 @@
+from functools import singledispatch
 from traitlets.config.configurable import LoggingConfigurable
-from traitlets import Bool
+from traitlets import Unicode
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from messages import ExportItem
+from messages import ExportItem, ClearCurrentEntry
 from .named_stacked_layout import NamedStackedLayout
 from .code_area import code_area_template
+from .chat_area import chat_area_template
+from standards import code_active_color, chat_active_color
+
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
+
+
+@singledispatch
+def _post(item, target):
+    target.code_area.post(item)
+
+
+@_post.register(ClearCurrentEntry)
+def _(item, target):
+    target.current_widget.clear()
 
 
 def entry_template(edit_class):
@@ -14,31 +28,70 @@ def entry_template(edit_class):
     :param edit_class: QTGui.QTextEdit or QtGui.QPlainTextEdit
     :return: Instantiated class.
     """
-    class Entry(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QWidget), {})):
+    class Entry(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QFrame), {})):
         """
         Text edit that has two modes, code and chat mode,
         accepting code to be executed or arbitrary text (chat messages).
         """
-        code_mode = Bool(True)  # True if document contains code to be executed; rather than a chat message
+        comment_prefix = Unicode('#')  # prefix for line comments
 
         _layout = None  # NamedStackedLayout
         please_export = QtCore.Signal(ExportItem)  # tasks for the kernel
         release_focus = QtCore.Signal()  # signal release focus
+        new_current = QtCore.Signal(str)  # name of new current widget
 
-        _code_area = None  # CodeArea
+        code_area = None  # CodeArea
+        chat_area = None  # ChatArea
+        _frame_color = None  # dict: name -> color, frame color of widget
 
         def __init__(self, is_complete, use_ansi, parent=None, **kwargs):
             QtGui.QWidget.__init__(self, parent)
             LoggingConfigurable.__init__(self, **kwargs)
             self._layout = NamedStackedLayout(self)
-            self._code_area = code_area_template(edit_class)(is_complete=is_complete, use_ansi=use_ansi)
-            self._code_area.please_export.connect(self.please_export)
-            self._code_area.release_focus.connect(self.release_focus)
-            self._layout.insert_widget(0, self._code_area, 'Code')
+            self._layout.currentChanged.connect(self._on_current_changed)
+
+            self._frame_color = dict()
+
+            name = 'Code'
+            self._frame_color[name] = code_active_color
+            self.code_area = code_area_template(edit_class)(is_complete=is_complete, use_ansi=use_ansi,
+                                                            comment_prefix=self.comment_prefix)
+            self.code_area.to_next.connect(self.move)
+            self.code_area.please_export.connect(self.please_export)
+            self.code_area.release_focus.connect(self.release_focus)
+            self._layout.insert_widget(0, self.code_area, name)
+            self.switch(name)
+
+            name = 'Chat'
+            self._frame_color[name] = chat_active_color
+            self.chat_area = chat_area_template(edit_class)(comment_prefix=self.comment_prefix)
+            self.chat_area.to_next.connect(self.move)
+            self.chat_area.please_export.connect(self.please_export)
+            self.chat_area.release_focus.connect(self.release_focus)
+            self._layout.insert_widget(0, self.chat_area, 'Chat')
+
+            self.setFrameStyle(QtGui.QFrame.Box | QtGui.QFrame.Plain)
+            self.setLineWidth(2)
+
+        def _on_current_changed(self, index):
+            self.set_frame_color(self._frame_color[self._layout.widget(index).name])
+
+        def set_frame_color(self, color):
+            new_palette = self.palette()
+            new_palette.setColor(QtGui.QPalette.WindowText, color)
+            self.setPalette(new_palette)
 
         @property
         def history(self):
-            return self._code_area.history
+            return self.code_area.history
+
+        @property
+        def current_widget(self):
+            """
+            Currently active widget in stack.
+            :return: active widget.
+            """
+            return self._layout.currentWidget()
 
         def clear(self):
             """
@@ -47,21 +100,39 @@ def entry_template(edit_class):
             """
             self._layout.clear()
 
+        def set_read_only(self, state=False):
+            """
+            Set to read only mode.
+            :param state: Boolean.
+            :return:
+            """
+            self._layout.set_read_only(state)
+
         def post(self, item):
             """
             Process the item received.
             :param item: ImportItem for the input area.
             :return:
             """
-            self._layout.current_widget.post(item)
+            _post(item, self)
 
-        def update_code_mode(self, code_mode):
+        @property
+        def source(self):
             """
-            Update code flag that indicates whether coding mode is active.
-            :param code_mode: to update code flag with.
+            Source object in entry area.
+            :return: Source.
+            """
+            return self.current_widget.source
+
+        @QtCore.Slot(str)
+        def switch(self, name):
+            """
+            Switch to named widget.
+            :param name: name of widget to switch to.
             :return:
             """
-            self._layout.current_widget.update_code_mode(code_mode)
+            self._layout.set_current_widget(name)
+            self.set_focus()
 
         @QtCore.Slot()
         def set_focus(self):
@@ -69,6 +140,16 @@ def entry_template(edit_class):
             Set the focus to this widget.
             :return:
             """
-            self.setFocus()
+            self.current_widget.setFocus()
+
+        @QtCore.Slot()
+        def move(self):
+            """
+            Switch to the next widget.
+            :return:
+            """
+            self._layout.move()
+            self.set_focus()
+            self.new_current.emit(self.current_widget.name)
 
     return Entry

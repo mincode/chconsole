@@ -1,8 +1,9 @@
-from qtconsole.qt import QtCore, QtGui
 from functools import singledispatch
-from qtconsole import mainwindow
 
-from zz_main_split.signal_content import SignalContent, HtmlSignal, TextSignal
+from qtconsole import mainwindow
+from qtconsole.qt import QtCore, QtGui
+
+from zz_scratch.zz_main_split.signal_content import SignalContent, HtmlSignal, TextSignal
 
 
 def resize_splitter(splitter):

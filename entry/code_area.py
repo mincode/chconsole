@@ -10,15 +10,11 @@ from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool
 from messages import InText, CompleteItems, CallTip
 from messages import Source, ExportItem, Inspect
-from standards.document_config import DocumentConfig
+from standards import DocumentConfig, ViewportFilter, TextAreaFilter
 from .code_area_filter import CodeAreaFilter
 from .history import History
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
-
-
-code_active_color = QtCore.Qt.black  # color used for widget's frame if in code mode
-chat_active_color = QtCore.Qt.red  # color used for the widget's frame if in chat mode
 
 
 @singledispatch
@@ -55,7 +51,7 @@ def code_area_template(edit_class):
         Text edit that has two modes, code and chat mode,
         accepting code to be executed or arbitrary text (chat messages).
         """
-        code_mode = Bool(True)  # True if document contains code to be executed; rather than a chat message
+        name = 'Code'  # name of the widget
 
         font_changed = QtCore.Signal(QtGui.QFont)          # Signal emitted when the font is changed.
 
@@ -87,13 +83,17 @@ def code_area_template(edit_class):
         entry_filter = None
         text_area_filter = None
         release_focus = QtCore.Signal()
+        to_next = QtCore.Signal()
 
         completer = None  # completion object
 
         kill_ring = None  # QKillRing
         history = None  # History object
 
-        def __init__(self, is_complete=None, code=True, text='', use_ansi=True, parent=None, **kwargs):
+        _comment_prefix = '#'  # prefix for line comments
+
+        def __init__(self, is_complete=None, text='', use_ansi=True, comment_prefix='#',
+                     parent=None, **kwargs):
             """
             Initialize.
             :param is_complete: function str->(bool, str) that checks whether the input is complete code
@@ -123,14 +123,8 @@ def code_area_template(edit_class):
             self._bracket_matcher = BracketMatcher(self)
             self.document().contentsChange.connect(self._document_contents_change)
 
-            self.setFrameStyle(QtGui.QFrame.Box | QtGui.QFrame.Plain)
-            self.setLineWidth(2)
-            if self.code_mode == code:
-                self._code_mode_changed(new=self.code_mode)
-                # ensure that the frame color is set, even without change traitlets handler
-            else:
-                self.update_code_mode(code)
-                # will initiate change traitlets handler
+            self.setFrameStyle(QtGui.QFrame.NoFrame)
+
             self.setAcceptDrops(True)
 
             self._control = self  # required for completer
@@ -139,22 +133,19 @@ def code_area_template(edit_class):
             self.completer.setFont(self.font)
             self.is_complete = is_complete
 
+            self.viewport_filter = ViewportFilter(self)
+            self.viewport().installEventFilter(self.viewport_filter)
             self.entry_filter = CodeAreaFilter(self)
             self.installEventFilter(self.entry_filter)
+            self.text_area_filter = TextAreaFilter(self)
+            self.installEventFilter(self.text_area_filter)
 
             # Text interaction
             self.setTextInteractionFlags(QtCore.Qt.TextEditable | QtCore.Qt.TextEditorInteraction)
             self.setUndoRedoEnabled(True)
             self.kill_ring = QtKillRing(self)
             self.history = History(self)
-
-        def update_code_mode(self, code_mode):
-            """
-            Update code flag that indicates whether coding mode is active.
-            :param code_mode: to update code flag with.
-            :return:
-            """
-            self.code_mode = code_mode
+            self._comment_prefix = comment_prefix
 
         def _set_font(self, font):
             DocumentConfig.set_font(self, font)
@@ -185,17 +176,6 @@ def code_area_template(edit_class):
             :return:
             """
             self.setFocus()
-
-        # traitlets handler
-        def _code_mode_changed(self, name=None, old=None, new=None):
-            """
-            Set the frame color according to self.code.
-            :return:
-            """
-            new_palette = self.palette()
-            new_color = code_active_color if new else chat_active_color
-            new_palette.setColor(QtGui.QPalette.WindowText, new_color)
-            self.setPalette(new_palette)
 
         # JupyterWidget
         def process_complete(self, items):

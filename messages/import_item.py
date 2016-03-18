@@ -39,6 +39,13 @@ class ClearAll(ImportItem):
     pass
 
 
+class ClearCurrentEntry(ImportItem):
+    """
+    Clear current entry widget.
+    """
+    pass
+
+
 class History(ImportItem):
     """
     History list.

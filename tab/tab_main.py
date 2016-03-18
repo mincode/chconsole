@@ -6,7 +6,7 @@ from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from tab import tab_content_template
 from messages import Exit, Execute, Inspect, Complete, Restart, Interrupt, ClearAll, KernelMessage, TailHistory
-from messages import Stderr
+from messages import Stderr, UserInput
 from standards import Importable
 from . import Importer
 
@@ -31,6 +31,8 @@ def _(item, target):
 
 @_export.register(Restart)
 def _(item, target):
+    if target.main_content.clear_on_kernel_restart:
+        target.message_arrived.emit(ClearAll())
     target.request_restart_kernel()
 
 
@@ -38,6 +40,11 @@ def _(item, target):
 def _(item, target):
     target.keep_kernel_on_exit = True if item.keep_kernel else None
     target.exit_requested.emit(target)
+
+
+@_export.register(UserInput)
+def _(item, target):
+    target.kernel_client.input(item.text)
 
 
 @_export.register(TailHistory)
@@ -181,7 +188,6 @@ def tab_main_template(edit_class):
 
         def _started_channels(self):
             """Make a history request and load %guiref, if possible."""
-            self.main_content.input_reply.connect(self.kernel_client.input)
             # 1) send clear
             self.message_arrived.emit(ClearAll())
             # 2) send kernel info request

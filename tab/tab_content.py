@@ -7,8 +7,8 @@ from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
 from messages import Stderr, Stdout
-from messages import Source, ExportItem
-from messages import Exit, Execute, ClearAll, History, KernelMessage
+from messages import ExportItem, UserInput
+from messages import Exit, Execute, ClearAll, History, KernelMessage, ClearCurrentEntry
 from entry import entry_template, LinePrompt
 from receiver import receiver_template
 from pager import pager_template
@@ -84,6 +84,7 @@ def _(item, target):
 @_post.register(InText)
 @_post.register(CompleteItems)
 @_post.register(CallTip)
+@_post.register(ClearCurrentEntry)
 def _(item, target):
     target.entry.post(item)
 
@@ -121,8 +122,8 @@ def _(item, target):
 
 @_post.register(InputRequest)
 def _(item, target):
-    target.entry.setReadOnly(True)
-    target.line_prompt.setParent(target.entry)
+    target.entry.set_read_only(True)
+    target.line_prompt.setParent(target.entry.current_widget)
     target.line_prompt.clear()
     target.line_prompt.prompt = item.prompt
     target.line_prompt.password = item.password
@@ -160,6 +161,8 @@ def tab_content_template(edit_class):
         1/entry_size is the height of the whole console to height of the command entry field.
         """)
         ansi_codes = Bool(True, config=True, help="Whether to process ANSI escape codes.")
+        clear_on_kernel_restart = Bool(True, config=True,
+            help="Whether to clear the console when the kernel is restarted")
 
         default_pager_location = Unicode('right', config=True, help='Default location of the pager: right, inside or top')
 
@@ -172,8 +175,6 @@ def tab_content_template(edit_class):
         _console_stack = None  # QWidget
         _console_stack_layout = None  # QStackedLayout
         _console_area = None  # QSplitter
-
-        input_reply = QtCore.Signal(str)  # text given by the user to an input request
 
         print_action = None  # action for printing
         export_action = None # action for exporting
@@ -361,10 +362,12 @@ def tab_content_template(edit_class):
         @QtCore.Slot()
         def on_enter_clicked(self):
             """
-            After the user clicks send, emit the source to be executed.
+            After the user clicks enter, emit the source to be executed.
             :return:
             """
-            self.please_export.emit(Execute(self.entry.source))
+            source = self.entry.source
+            self.post(ClearCurrentEntry())
+            self.please_export.emit(Execute(source))
 
         @QtCore.Slot()
         def on_frontend_clicked(self):
@@ -379,12 +382,12 @@ def tab_content_template(edit_class):
         def on_text_input(self, text):
             self.line_prompt.setEnabled(False)
             self.line_prompt.hide()
-            self.input_reply.emit(text)
+            self.please_export.emit(UserInput(text))
             if self.line_prompt.password:
                 text = '****'
-            out = self.line_prompt.prompt + text
+            out = self.line_prompt.prompt + text +'\n'
             self.post(Stdout(out))
-            self.entry.setFocus()
-            self.entry.setReadOnly(False)
+            self.entry.set_focus()
+            self.entry.set_read_only(False)
 
     return TabContent

@@ -16,6 +16,10 @@ from .selective_highlighter import SelectiveHighlighter
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
+code_active_color = QtCore.Qt.black  # color used for widget's frame if in code mode
+chat_active_color = QtCore.Qt.red  # color used for the widget's frame if in chat mode
+
+
 class DocumentConfig(LoggingConfigurable):
     """
     Mixin for configuring text properties of a subclass of an editor class, QTextEdit or QPlainTextEdit.
@@ -313,6 +317,17 @@ class DocumentConfig(LoggingConfigurable):
             self.syntax_style = styles.default_bw_syntax_style
         else:
             raise KeyError("No such color scheme: %s"%colors)
+
+    def set_frame_color(self, new_color):
+        """
+        Set the frame color according.
+        :param new_color color to set.
+        :return:
+        """
+        new_palette = self.palette()
+        # new_palette.setColor(QtGui.QPalette.WindowText, new_color)
+        new_palette.setColor(QtGui.QPalette.Window, new_color)
+        self.setPalette(new_palette)
 
     # traitlets
 

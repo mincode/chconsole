@@ -157,7 +157,9 @@ class CodeAreaFilter(BaseEventFilter):
                 anchor_mode = QtGui.QTextCursor.KeepAnchor if shift_down else QtGui.QTextCursor.MoveAnchor
 
                 if key == QtCore.Qt.Key_Tab:
-                    if complete_possible(self.target.textCursor()):
+                    if self.target.textCursor().position() == 0:
+                        self.target.to_next.emit()
+                    elif complete_possible(self.target.textCursor()):
                         self.target.please_export.emit(Complete(self.target.source,
                                                                 self.target.textCursor().position()))
                     else:

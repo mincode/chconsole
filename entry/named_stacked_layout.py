@@ -19,6 +19,7 @@ class NamedStackedLayout(QtGui.QStackedLayout):
         :return: actual index of the inserted widget.
         """
         self.by_name[name] = w
+        setattr(w, 'name', name)
         return self.insertWidget(index, w)
 
     def set_current_widget(self, name):
@@ -29,18 +30,33 @@ class NamedStackedLayout(QtGui.QStackedLayout):
         """
         self.setCurrentWidget(self.by_name[name])
 
-    @property
-    def current_widget(self):
+    def move(self):
         """
-        Current widget on top of the stack.
-        :return: the current widget.
+        Make next widget in the stack the current widget.
+        :return:
         """
-        return self.current_widget()
+        index = self.currentIndex() + 1
+        if self.widget(index) is None:
+            index = 0
+        self.setCurrentIndex(index)
+
+    def apply(self, command, *args, **kwargs):
+        """
+        Apply command to all members of the stack.
+        :param command: name of the command.
+        :param args: arguments for the command.
+        :param kwargs: keyword arguments for the command.
+        :return:
+        """
+        for name in self.by_name:
+            getattr(self.by_name[name], command, None)(*args, **kwargs)
 
     def clear(self):
         """
         Clear all widgets in stack.
         :return:
         """
-        for name in self.by_name:
-            self.by_name[name].clear()
+        self.apply('clear')
+
+    def set_read_only(self, state=False):
+        self.apply('setReadOnly', state)

@@ -3,7 +3,7 @@ import sys
 from qtconsole import mainwindow
 from qtconsole.qt import QtGui, QtCore
 
-from entry import code_active_color, chat_active_color
+from standards import code_active_color, chat_active_color
 from .statusbar import StatusBar
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -14,8 +14,8 @@ class ExpandedMainWindow(mainwindow.MainWindow):
     Expansion of qtconsole.mainwindow.MainWindow
     """
     status_bar = None
-    _entry_update_code = None  # handler connected with main_content to update the code flag of the entry field
-    _act_on_send = None  # handler connected with main_content to act on send clicked
+    _entry_update_current = None  # handler connected with main_content to update the code flag of the entry field
+    _act_on_enter = None  # handler connected with main_content to act on send clicked
     _act_on_frontend = None  # handler connected with main_content to act on message to frontend
 
     def __init__(self,
@@ -32,20 +32,22 @@ class ExpandedMainWindow(mainwindow.MainWindow):
         if self.active_frontend is None:
             return
         active = self.active_frontend
-        if self._entry_update_code:
-            self.status_bar.code_toggled.disconnect(self._entry_update_code)
-        self._entry_update_code = active.main_content.entry.update_code_mode
+        if self._entry_update_current:
+            self.status_bar.activated.disconnect(self._entry_update_current)
+        self._entry_update_current = active.main_content.entry.switch
 
-        self.status_bar.code_toggled.connect(self._entry_update_code)
-        self.status_bar.update_code(active.main_content.entry.code_mode)
+        self.status_bar.activated.connect(self._entry_update_current)
+        self.status_bar.update_current(active.main_content.entry.current_widget.name)
 
-        if self._act_on_send:
-            self.status_bar.send_clicked.disconnect(self._act_on_send)
-        self._act_on_send = active.main_content.on_enter_clicked
-        self.status_bar.send_clicked.connect(self._act_on_send)
+        active.main_content.entry.new_current.connect(self.status_bar.update_current)
+
+        if self._act_on_enter:
+            self.status_bar.enter_clicked.disconnect(self._act_on_enter)
+        self._act_on_enter = active.main_content.on_enter_clicked
+        self.status_bar.enter_clicked.connect(self._act_on_enter)
 
         if self._act_on_frontend:
-            self.status_bar.send_clicked.disconnect(self._act_on_frontend)
+            self.status_bar.frontend_clicked.disconnect(self._act_on_frontend)
         self._act_on_frontend = active.main_content.on_frontend_clicked
         self.status_bar.frontend_clicked.connect(self._act_on_frontend)
 
@@ -56,7 +58,6 @@ class ExpandedMainWindow(mainwindow.MainWindow):
         active = self.active_frontend
         active.is_complete('def f():\n\treturn 0\n\n')
         active.is_complete('x=1')
-
 
     def set_paging_active_frontend(self, paging):
         """
@@ -189,7 +190,7 @@ class ExpandedMainWindow(mainwindow.MainWindow):
 
     # MM: This method does not seem to be in use.
     def _set_active_frontend_focus(self):
-        QtCore.QTimer.singleShot(200, self.active_frontend.main_content.entry.setFocus)
+        QtCore.QTimer.singleShot(200, self.active_frontend.main_content.entry.set_focus)
 
     # The following depend on where the focus is in the active frontend.
     def print_action_active_frontend(self):
