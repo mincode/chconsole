@@ -141,7 +141,6 @@ def _(item, target):
     target.clear_cursor = None
     cursor.insertText('\n')
 
-    # Why does highlighting for comments not work?
     if item.code and is_comment(item.code):
         in_prompt = _make_in_prompt(target.chat_prompt, item.execution_count)
         target.insert_html(in_prompt, cursor)

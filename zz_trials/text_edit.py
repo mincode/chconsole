@@ -1,7 +1,7 @@
 
 import sys
 from qtconsole.qt import QtGui, QtCore
-
+from media import FlexibleText
 
 class Example(QtGui.QMainWindow):
     text_edit = None
@@ -40,6 +40,27 @@ class Example(QtGui.QMainWindow):
         button_undo.clicked.connect(self.on_undo)
         status_bar.addPermanentWidget(button_undo)
 
+        cursor = self.text_edit.textCursor()
+        cursor.insertText('first')
+        self.flex = FlexibleText(self.text_edit, 'Second', cursor)
+        self.flex.show()
+        cursor.insertText('third')
+        print('after third pos: {}'.format(cursor.position()))
+        self.flex2 = FlexibleText(self.text_edit, 'Fourth', cursor)
+        self.flex2.show()
+
+        button_show = QtGui.QToolButton()
+        button_show.setToolButtonStyle(QtCore.Qt.ToolButtonTextOnly)
+        button_show.setText('Show')
+        button_show.clicked.connect(self.on_show)
+        status_bar.addPermanentWidget(button_show)
+
+        button_hide = QtGui.QToolButton()
+        button_hide.setToolButtonStyle(QtCore.Qt.ToolButtonTextOnly)
+        button_hide.setText('Hide')
+        button_hide.clicked.connect(self.on_hide)
+        status_bar.addPermanentWidget(button_hide)
+
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu('&File')
         file_menu.addAction(exitAction)
@@ -47,6 +68,16 @@ class Example(QtGui.QMainWindow):
         self.setGeometry(300, 300, 350, 250)
         self.setWindowTitle('Main window')
         self.show()
+
+    @QtCore.Slot()
+    def on_show(self):
+        self.flex.show()
+        self.flex2.show()
+
+    @QtCore.Slot()
+    def on_hide(self):
+        self.flex2.hide()
+        self.flex.hide()
 
     @QtCore.Slot()
     def on_insert(self):
