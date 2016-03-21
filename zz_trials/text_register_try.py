@@ -1,7 +1,6 @@
 
 import sys
 from qtconsole.qt import QtGui, QtCore
-from media.centered_text import CenteredText
 from media.text_register import TextRegister
 
 
@@ -51,6 +50,9 @@ class Example(QtGui.QMainWindow):
         cursor.insertText('|third|')
         print('after third pos: {}'.format(cursor.position()))
         self.register.append(cursor.position(), '_Fourth_')
+        cursor.insertText('|')
+
+        self.register.append(cursor.position(), '_FifthFFF_')
         cursor.insertText('|')
 
         button_show = QtGui.QToolButton()

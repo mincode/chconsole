@@ -1,5 +1,6 @@
+import os, getpass
 from functools import singledispatch
-from traitlets import Bool, Float
+from traitlets import Bool, Float, Any
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
 from qtconsole.qt import QtGui, QtCore
@@ -142,6 +143,7 @@ def tab_main_template(edit_class):
             Isolates Jupyter code from this project's code.
         """
 
+        user_name = Any(help='user name')  # default user name
         main_content = None  # QWidget
 
         message_arrived = QtCore.Signal(Importable)  # signal to send a message that has arrived from the kernel
@@ -186,11 +188,28 @@ def tab_main_template(edit_class):
             # Set flag for whether we are connected via localhost.
             self.local_kernel = kw.get('local_kernel', TabMain.local_kernel)
 
+        def _assign_user_name(self):
+            """
+            Assign the user name to the application. Either self.user_name if it is not '' or None,
+            or USER environment variable if it is assigned, or getpass.getuser(), or '' if getpass.getuser() fails.
+            :return:
+            """
+            if not self.user_name:
+                self.user_name = os.getenv('USER', default=None)
+                if self.user_name is None:
+                    try:
+                        self.user_name = getpass.getuser()
+                    except Exception:
+                        self.user_name = ''
+                    else:
+                        self.kernel_client.session.username = self.user_name
+            else:
+                self.kernel_client.session.username = self.user_name
+
         def _started_channels(self):
             """Make a history request and load %guiref, if possible."""
-            # self.kernel_client.session.username = 'Manfred'
-            # --user option on command line may not be officially supported even though it works
-            # env USER=Manfred assigns the user name in command.com
+            self._assign_user_name()
+
             # 1) send clear
             self.message_arrived.emit(ClearAll())
             # 2) send kernel info request

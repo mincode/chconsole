@@ -188,6 +188,24 @@ class ExpandedMainWindow(mainwindow.MainWindow):
                     triggered=self.set_paging_active_frontend(location))
                 self.pager_menu.addAction(pager_action)
 
+        self.view_menu.addSeparator()
+
+    #     self.confirm_restart_kernel_action = QtGui.QAction("&Confirm kernel restart",
+    #         self,
+    #         checkable=True,
+    #         checked=self.active_frontend.confirm_restart,
+    #         triggered=self.toggle_confirm_restart_active_frontend
+    #         )
+    #     self.add_menu_action(self.view_menu, self.confirm_restart_kernel_action)
+    #     self.tab_widget.currentChanged.connect(self.update_show_users_checkbox)
+    #
+    # def update_show_users_checkbox(self):
+    #     if self.active_frontend is None:
+    #         return
+    #     widget = self.active_frontend
+    #     self.confirm_restart_kernel_action.setChecked(widget.confirm_restart)
+
+
     # MM: This method does not seem to be in use.
     def _set_active_frontend_focus(self):
         QtCore.QTimer.singleShot(200, self.active_frontend.main_content.entry.set_focus)

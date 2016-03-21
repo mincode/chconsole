@@ -1,6 +1,6 @@
 from traitlets import Int
 from traitlets.config.configurable import LoggingConfigurable
-from .centered_text import CenteredText
+from .right_aligned import RightAligned
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -27,32 +27,33 @@ class TextRegister(LoggingConfigurable):
         self._visible = visible
         self._register = list()
 
-    def _update_field(self, new_field):
+    def _update_field(self, new_text):
         """
-        Update the field length.
-        :param new_field: new field length; > self._field
+        Update the field length; if the new text is longer than the existing field.
+        :param new_text: new text
         :return: total offset resulting from updating the field length.
         """
-        new_field = min(new_field, self.max_field)
         offset = 0
-        if new_field > self._field:
-            if self._visible:
-                for item in self._register:
-                    item.shift(offset)
-                    item.center(self._target, self._field, new_field)
-                    offset += new_field - self._field
-            self._field = new_field
+        if new_text is not None:
+            new_field = min(len(new_text), self.max_field)
+            if new_field > self._field:
+                if self._visible:
+                    for item in self._register:
+                        item.shift(offset)
+                        item.adjust(self._target, self._field, new_field)
+                        offset += new_field - self._field
+                self._field = new_field
         return offset
 
-    def append(self, pos, text=''):
+    def append(self, pos, text=None):
         """
         Append text to the register and update the field length to accommodate the string.
         :param pos: position of the text in the document; assumed to be after all other positions in the register.
         :param text: string to be inserted.
         :return:
         """
-        new_text = CenteredText(pos, text)
-        offset = self._update_field(len(text))
+        new_text = RightAligned(pos, text)
+        offset = self._update_field(text)
         new_text.shift(offset)
         self._register.append(new_text)
         if self._visible:
@@ -68,7 +69,7 @@ class TextRegister(LoggingConfigurable):
             for item in self._register:
                 item.shift(offset)
                 item.insert(self._target, self._field)
-                offset += self._field
+                offset += self._field + item.right_length
             self._visible = True
 
     def hide(self):
@@ -81,7 +82,7 @@ class TextRegister(LoggingConfigurable):
             for item in self._register:
                 item.shift(offset)
                 item.remove(self._target, self._field)
-                offset -= self._field
+                offset -= (self._field + item.right_length)
             self._visible = False
 
     @property

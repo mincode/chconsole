@@ -1,7 +1,7 @@
 
 import sys
 from qtconsole.qt import QtGui, QtCore
-from media.centered_text import CenteredText
+from media.right_aligned import RightAligned
 
 
 class Example(QtGui.QMainWindow):
@@ -43,11 +43,11 @@ class Example(QtGui.QMainWindow):
 
         cursor = self.text_edit.textCursor()
         cursor.insertText('first|')
-        self.flex = CenteredText(cursor.position(), '_Second_')
+        self.flex = RightAligned(cursor.position(), '_Second_')
         self.flex.insert(self.text_edit.document(), 11)
         cursor.insertText('|third|')
         print('after third pos: {}'.format(cursor.position()))
-        self.flex2 = CenteredText(cursor.position(), '_Fourth_')
+        self.flex2 = RightAligned(cursor.position(), '_Fourth_')
         self.flex2.insert(self.text_edit.document(), 11)
         cursor.insertText('|')
 
@@ -89,8 +89,8 @@ class Example(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def on_center(self):
-        self.flex2.center(self.text_edit.document(), 11, 15)
-        self.flex.center(self.text_edit.document(), 11, 15)
+        self.flex2.adjust(self.text_edit.document(), 11, 15)
+        self.flex.adjust(self.text_edit.document(), 11, 15)
 
     @QtCore.Slot()
     def on_insert(self):
