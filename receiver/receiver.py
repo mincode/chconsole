@@ -18,8 +18,11 @@ from media import register_qimage, is_comment, de_comment
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 default_in_prompt = 'In [<span class="in-prompt-number">%i</span>]: '
+default_in_prompt_end = ''
 default_chat_prompt = 'In [<span class="in-prompt-number">%i</span>]# '
+default_chat_prompt_end = ''
 default_out_prompt = 'Out[<span class="out-prompt-number">%i</span>]: '
+default_out_prompt_end = ''
 default_output_sep = ''
 default_output_sep2 = '\n'
 
@@ -143,7 +146,9 @@ def _(item, target):
 
     if item.code and is_comment(item.code):
         in_prompt = _make_in_prompt(target.chat_prompt, item.execution_count)
+        cursor.insertText(item.username + '> ')
         target.insert_html(in_prompt, cursor)
+        cursor.insertText(target.chat_prompt_end)
         if len(item.code.split('\n')) != 1:
             cursor.insertText('\n')
         target.insert_ansi_text(de_comment(item.code), item.ansi_codes and target.use_ansi, cursor)
@@ -151,7 +156,9 @@ def _(item, target):
     else:
         before_prompt = cursor.position()
         in_prompt = _make_in_prompt(target.in_prompt, item.execution_count)
+        cursor.insertText(item.username + '> ')
         target.insert_html(in_prompt, cursor)
+        cursor.insertText(target.in_prompt_end)
         after_prompt = cursor.position()
         target.highlighter.enable(after_prompt-before_prompt)
         if item.code:
@@ -167,7 +174,9 @@ def _(item, target):
     cursor = target.end_cursor
     target.clear_cursor = None
     cursor.insertText(target.output_sep)
+    cursor.insertText(' '*len(item.username) + ' ')
     target.insert_html(_make_out_prompt(target.out_prompt, item.execution_count), cursor)
+    cursor.insertText(target.out_prompt_end)
     # JupyterWidget: If the repr is multiline, make sure we start on a new line,
     # so that its lines are aligned.
     if "\n" in item.content.text and not target.output_sep.endswith("\n"):
@@ -204,6 +213,10 @@ def receiver_template(edit_class):
         in_prompt = Unicode(default_in_prompt, config=True)
         chat_prompt = Unicode(default_chat_prompt, config=True)
         out_prompt = Unicode(default_out_prompt, config=True)
+
+        in_prompt_end = Unicode(default_in_prompt_end, config=True)
+        chat_prompt_end = Unicode(default_chat_prompt_end, config=True)
+        out_prompt_end = Unicode(default_out_prompt_end, config=True)
 
         output_q = None  # Queue
         _out_buffer = None  # OutBuffer

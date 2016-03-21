@@ -57,7 +57,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
     @QtCore.Slot(Importable)
     def convert(self, msg):
-        print('dispatch: ' + msg.type)
+        print('convert: ' + msg.type + ', user: ' + msg.username)
         if isinstance(msg, ImportItem):
             self.please_process.emit(msg)
         else:  # KernelMessage
@@ -70,9 +70,9 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         content = msg.content
         name = content['name']
         if name == 'stderr':
-            self.please_process.emit(Stderr(content['text']))
+            self.please_process.emit(Stderr(content['text'], username=msg.username))
         else:
-            self.please_process.emit(Stdout(content['text']))
+            self.please_process.emit(Stdout(content['text'], username=msg.username))
 
     def _handle_kernel_info_reply(self, msg):
         """
@@ -82,7 +82,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         """
         to_show = msg.content['banner']
         help_links = msg.content['help_links']
-        banner = Banner(to_show, help_links=help_links.copy())
+        banner = Banner(to_show, help_links=help_links.copy(), username=msg.username)
         self.please_process.emit(banner)
 
     # FrontendWidget
@@ -93,7 +93,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         self.log.warn("kernel restarted")
         msg = "Kernel has been started."
         text = "<br>%s<hr><br>" % msg
-        self.please_process.emit(Stderr(HtmlText(text)))
+        self.please_process.emit(Stderr(HtmlText(text, username=msg.username), username=msg.username))
 
     # FrontendWidget
     def _handle_shutdown_reply(self, msg):
@@ -111,7 +111,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
                 # this triggers exit_requested if the kernel was local,
                 # and a dialog if the kernel was remote,
                 # so we don't suddenly clear the console without asking.
-                self.please_process.emit(ExitRequested(False, confirm=not msg.local_kernel))
+                self.please_process.emit(ExitRequested(False, confirm=not msg.local_kernel, username=msg.username))
 
     # FrontendWidget
     def _handle_status(self, msg):
@@ -141,7 +141,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
                     self.log.error("Retrying aborted history request")
                     # wait out the kernel's queue flush, which is currently timed at 0.1s
                     time.sleep(0.25)
-                    self.please_export.emit(TailHistory(1000))
+                    self.please_export.emit(TailHistory(1000, username=msg.username))
                 else:
                     self._retry_history.release()
         else:
@@ -151,20 +151,21 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
             history_items = content['history']
             self.log.debug("Received history reply with %i entries", len(history_items))
-            self.please_process.emit(History(history_items))
+            self.please_process.emit(History(history_items, username=msg.username))
 
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""
         content = msg.content
         self.log.debug("execute_input: %s", content)
 
-        self.please_process.emit(Input(content['code'], execution_count=content['execution_count']))
+        self.please_process.emit(Input(content['code'], execution_count=content['execution_count'],
+                                       username=msg.parent_username))
 
     def _handle_display_data(self, msg):
         data = msg.content['data']
         # metadata = msg.content['metadata']
         if 'text/plain' in data:
-            self.please_process.emit(Stdout(data['text/plain']))
+            self.please_process.emit(Stdout(data['text/plain'], username=msg.username))
 
     def _handle_execute_result(self, msg):
         """Handle an execute_result message"""
@@ -172,18 +173,18 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         data = msg.content['data']
         metadata = msg.content.get('metadata', None)
 
-        result = Result(data.get('text/plain', None), execution_count=prompt_number)
+        result = Result(data.get('text/plain', None), execution_count=prompt_number, username=msg.username)
 
         if 'image/svg+xml' in data:
-            result.content.append(SvgXml(data['image/svg+xml']))
+            result.content.append(SvgXml(data['image/svg+xml'], username=msg.username))
         elif 'image/png' in data:
             img = decodebytes(data['image/png'].encode('ascii'))
-            result.content.append(Png(img, metadata=metadata.get('image/png', None)))
+            result.content.append(Png(img, metadata=metadata.get('image/png', None), username=msg.username))
         elif 'image/jpeg' in data:
             img = decodebytes(data['image/jpeg'].encode('ascii'))
-            result.content.append(Jpeg(img, metadata=metadata.get('image/jpeg', None)))
+            result.content.append(Jpeg(img, metadata=metadata.get('image/jpeg', None), username=msg.username))
         elif 'text/latex' in data:
-            result.content.append(LaTeX(data['text/latex']))
+            result.content.append(LaTeX(data['text/latex'], username=msg.username))
 
         self.please_process.emit(result)
 
@@ -194,7 +195,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         # {'header': {'msg_type': 'stream'}, 'content': {'name': 'stdout', 'text': 'XYZ'}}
         content = msg.content
         # print('wait: ' + str(content['wait']))
-        self.please_process.emit(ClearOutput(wait=content['wait']))
+        self.please_process.emit(ClearOutput(wait=content['wait'], username=msg.username))
 
     def _handle_complete_reply(self, msg):
         self.log.debug("complete: %s", msg.content)
@@ -202,7 +203,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             matches = msg.content['matches']
             start = msg.content['cursor_start']
             end = msg.content['cursor_end']
-            self.please_process.emit(CompleteItems(matches=matches, start=start, end=end))
+            self.please_process.emit(CompleteItems(matches=matches, start=start, end=end, username=msg.username))
 
     # frontend_widget
     def _handle_execute_reply(self, msg):
@@ -251,17 +252,17 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         text = data.get('text/plain', '')
         print(text)
         html = data.get('text/html', '')
-        self.please_process.emit(PageDoc(text=text, html=html))
+        self.please_process.emit(PageDoc(text=text, html=html, username=item.username))
 
     def _handle_payload_edit(self, item):
-        self.please_process.emit(EditFile(item['filename'], item['line_number']))
+        self.please_process.emit(EditFile(item['filename'], item['line_number'], username=item.username))
 
     def _handle_payload_exit(self, item):
         keep_kernel_on_exit = True if item['keepkernel'] else False
-        self.please_process.emit(ExitRequested(keep_kernel_on_exit))
+        self.please_process.emit(ExitRequested(keep_kernel_on_exit, username=item.username))
 
     def _handle_payload_next_input(self, item):
-        self.please_process.emit(InText(item['text']))
+        self.please_process.emit(InText(item['text'], username=item.username))
 
     # JupyterWidget
     def _process_execute_error(self, msg):
@@ -274,7 +275,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             traceback = traceback.replace(' ', '&nbsp;')
             traceback = traceback.replace('\n', '<br/>')
 
-            ename = content['ename']
+            ename = msg.content['ename']
             ename_styled = '<span class="error">%s</span>' % ename
             traceback = traceback.replace(ename, ename_styled)
 
@@ -282,20 +283,21 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             # post traceback as html
         else:
             # This is the fallback for now, using plain text with ansi escapes
-            self.please_process.emit(Stderr(traceback))
+            self.please_process.emit(Stderr(traceback, username=msg.username))
 
     # FrontendWidget
     def _process_execute_abort(self, msg):
         """ Process a reply for an aborted execution request.
         """
-        self.please_process.emit(Stderr('ERROR: execution aborted'))
+        self.please_process.emit(Stderr('ERROR: execution aborted', username=msg.username))
 
     # FrontendWidget
     def _handle_inspect_reply(self, msg):
         """Handle replies for call tips."""
         self.log.debug("info: %s", msg.content)
         if msg.from_here and msg.content.get('status') == 'ok' and msg.content.get('found', False):
-            self.please_process.emit(CallTip(msg.content))
+            self.please_process.emit(CallTip(msg.content, username=msg.username))
 
     def _handle_input_request(self, msg):
-        self.please_process.emit(InputRequest(msg.content.get('prompt', ''), msg.content.get('password', False)))
+        self.please_process.emit(InputRequest(msg.content.get('prompt', ''), msg.content.get('password', False),
+                                              username=msg.username))

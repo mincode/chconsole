@@ -15,3 +15,9 @@ possibly add facility to kernel to send custom messages to clients to notify
 
 Other features:
 Allow drop in of images as in DrRacket
+Clone environment for try out
+
+import getpass
+>>> getpass.getuser()
+'kostya'
+

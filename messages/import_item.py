@@ -25,6 +25,12 @@ def _split_lines(num_lines, text):
 
 
 class ImportItem(Importable):
+    username = ''
+
+    def __init__(self, username=''):
+        super(ImportItem, self).__init__()
+        self.username = username
+
     @property
     def type(self):
         return type(self).__name__
@@ -52,7 +58,8 @@ class History(ImportItem):
     """
     items = None  # history items
 
-    def __init__(self, items):
+    def __init__(self, items, username=''):
+        super(History, self).__init__(username=username)
         self.items = items
 
 
@@ -60,8 +67,8 @@ class ExitRequested(ImportItem):
     keep_kernel_on_exit = False  # keep kernel when exit main widget
     confirm = False  # whether exit should be confirmed from the user
 
-    def __init__(self, keep_kernel_on_exit, confirm=False):
-        super(ExitRequested, self).__init__()
+    def __init__(self, keep_kernel_on_exit, confirm=False, username=''):
+        super(ExitRequested, self).__init__(username=username)
         self.keep_kernel_on_exit = keep_kernel_on_exit
         self.confirm = confirm
 
@@ -70,8 +77,8 @@ class EditFile(ImportItem):
     filename = ''
     line_number = None  # line number
 
-    def __init__(self, filename, line_number=None):
-        super(EditFile, self).__init__()
+    def __init__(self, filename, line_number=None, username=''):
+        super(EditFile, self).__init__(username=username)
         self.filename = filename
         self.line_number = line_number
 
@@ -80,8 +87,8 @@ class InputRequest(ImportItem):
     prompt = ''  # prompt to show on input request
     password = False  # whether the request is for a password; if True the input should not be echoed
 
-    def __init__(self, prompt='', password=False):
-        super(InputRequest, self).__init__()
+    def __init__(self, prompt='', password=False, username=''):
+        super(InputRequest, self).__init__(username=username)
         self.prompt = prompt
         self.password = password
 
@@ -94,8 +101,8 @@ class InText(ImportItem):
     """
     text = ''
 
-    def __init__(self, text=''):
-        super(InText, self).__init__()
+    def __init__(self, text='', username=''):
+        super(InText, self).__init__(username=username)
         self.text = text
 
 
@@ -107,8 +114,8 @@ class CompleteItems(ImportItem):
     start = 0  # start position of cursor
     end = 0  # end position of cursor where to complete
 
-    def __init__(self, matches, start=0, end=0):
-        super(CompleteItems, self).__init__()
+    def __init__(self, matches, start=0, end=0, username=''):
+        super(CompleteItems, self).__init__(username=username)
         self.matches = matches
         self.start = start
         self.end = end
@@ -120,8 +127,8 @@ class CallTip(ImportItem):
     """
     content = None  # content of the call tip reply message
 
-    def __init__(self, content):
-        super(CallTip, self).__init__()
+    def __init__(self, content=None, username=''):
+        super(CallTip, self).__init__(username=username)
         self.content = content
 
 
@@ -131,8 +138,8 @@ class CallTip(ImportItem):
 # The stream content can either be one of these, or a list representing a choice.
 # By default SplitText
 class SplitItem(ImportItem):
-    def __init__(self):
-        super(SplitItem, self).__init__()
+    def __init__(self, username=''):
+        super(SplitItem, self).__init__(username=username)
 
     def split(self, num_lines):
         """
@@ -155,15 +162,15 @@ class AtomicText(SplitItem):
     text = ''
     ansi_codes = True  # whether text has ansi_codes
 
-    def __init__(self, text='', ansi_codes=True):
-        super(AtomicText, self).__init__()
+    def __init__(self, text='', ansi_codes=True, username=''):
+        super(AtomicText, self).__init__(username=username)
         self.text = text
         self.ansi_codes = ansi_codes
 
 
 class SplitText(AtomicText):
-    def __init__(self, text='', ansi_codes=True):
-        super(SplitText, self).__init__(text=text, ansi_codes=ansi_codes)
+    def __init__(self, text='', ansi_codes=True, username=''):
+        super(SplitText, self).__init__(text=text, ansi_codes=ansi_codes, username=username)
 
     def split(self, num_lines):
         """
@@ -174,22 +181,22 @@ class SplitText(AtomicText):
                     it is empty.
         """
         count, first_text, rest_text = _split_lines(num_lines, self.text)
-        first = type(self)(text=first_text, ansi_codes=self.ansi_codes)
-        rest = type(self)(text=rest_text, ansi_codes=self.ansi_codes) if rest_text else None
+        first = type(self)(text=first_text, ansi_codes=self.ansi_codes, username=self.username)
+        rest = type(self)(text=rest_text, ansi_codes=self.ansi_codes, username=self.username) if rest_text else None
         return count, first, rest
 
 
 class HtmlText(AtomicText):
-    def __init__(self, text=''):
-        super(HtmlText, self).__init__(text=text, ansi_codes=False)
+    def __init__(self, text='', username=''):
+        super(HtmlText, self).__init__(text=text, ansi_codes=False, username=username)
 
 
 class Image(SplitItem):
     image = None   # the image
     metadata = None  # metadata on the image such as dimensions
 
-    def __init__(self, image, metadata=None):
-        super(Image, self).__init__()
+    def __init__(self, image, metadata=None, username=''):
+        super(Image, self).__init__(username=username)
         self.image = image
         self.metadata = metadata
 
@@ -210,15 +217,15 @@ class LaTeX(AtomicText):
     """
     LaTeX text.
     """
-    def __init__(self, text):
-        super(LaTeX, self).__init__(text, ansi_codes=False)
+    def __init__(self, text, username=''):
+        super(LaTeX, self).__init__(text, ansi_codes=False, username=username)
 
 
 class Content(SplitItem):
     data = None  # list of SplitItem
 
-    def __init__(self, first=None):
-        super(Content, self).__init__()
+    def __init__(self, first=None, username=''):
+        super(Content, self).__init__(username=username)
         self.data = list()
         if first is not None:
             self.data.append(first)
@@ -248,8 +255,8 @@ class Content(SplitItem):
 
     def split(self, num_lines):
         count_max = 0
-        first_content = Content()
-        rest_content = Content()
+        first_content = Content(username=self.username)
+        rest_content = Content(username=self.username)
         for item in self.data:
             if item:
                 count, first, rest = item.split(num_lines)
@@ -282,15 +289,15 @@ class Stream(SplitItem):
     clearable = True  # True if text can be cleared by ClearOutput
     content = None  # AtomicText, SplitText, HtmlText
 
-    def __init__(self, content=None, clearable=True):
-        super(Stream, self).__init__()
+    def __init__(self, content=None, clearable=True, username=''):
+        super(Stream, self).__init__(username=username)
         self.clearable = clearable
         if isinstance(content, str):
-            self.content = Content(SplitText(content))
+            self.content = Content(SplitText(content, username=username), username=username)
         elif isinstance(content, Content):
             self.content = content
         else:
-            self.content = Content(content)
+            self.content = Content(content, username=username)
 
     @property
     def ansi_codes(self):
@@ -313,14 +320,14 @@ class Stream(SplitItem):
             count, first, rest = self.content.split(num_lines)
         else:
             count, first, rest = 0, None, None
-        first_stream = type(self)(content=first, clearable=self.clearable)
-        rest_stream = type(self)(content=rest, clearable=self.clearable) if rest else None
+        first_stream = type(self)(content=first, clearable=self.clearable, username=self.username)
+        rest_stream = type(self)(content=rest, clearable=self.clearable, username=self.username) if rest else None
         return count, first_stream, rest_stream
 
 
 class Stdout(Stream):
-    def __init__(self, content=None, clearable=True):
-        super(Stdout, self).__init__(content=content, clearable=clearable)
+    def __init__(self, content=None, clearable=True, username=''):
+        super(Stdout, self).__init__(content=content, clearable=clearable, username=username)
 
 
 ################################################################################################
@@ -329,11 +336,11 @@ class PageDoc(SplitItem):
     text_stream = None  # text version of text if available
     html_stream = None  # html version of text if available
 
-    def __init__(self, text='', html=''):
-        super(PageDoc, self).__init__()
-        self.text_stream = Stdout(SplitText(text), clearable=False)
+    def __init__(self, text='', html='', username=''):
+        super(PageDoc, self).__init__(username=username)
+        self.text_stream = Stdout(SplitText(text, username=username), clearable=False, username=username)
         if html:
-            self.html_stream = Stdout(HtmlText(html), clearable=False)
+            self.html_stream = Stdout(HtmlText(html, username=username), clearable=False, username=username)
 
     @property
     def ansi_codes(self):
@@ -351,15 +358,15 @@ class PageDoc(SplitItem):
 ################################################################################################
 # Receiver
 class Stderr(Stream):
-    def __init__(self, content=None, clearable=False):
-        super(Stderr, self).__init__(content=content, clearable=clearable)
+    def __init__(self, content=None, clearable=False, username=''):
+        super(Stderr, self).__init__(content=content, clearable=clearable, username=username)
 
 
 class ClearOutput(SplitItem):
     wait = False  # Wait to clear the output until new output is available
 
-    def __init__(self, wait=False):
-        super(ClearOutput, self).__init__()
+    def __init__(self, wait=False, username=''):
+        super(ClearOutput, self).__init__(username=username)
         self.wait = wait
 
     def split(self, num_lines):
@@ -381,14 +388,14 @@ class ClearOutput(SplitItem):
 class Banner(Stdout):
     help_links = None  # list of dict: ('text', 'url')
 
-    def __init__(self, content='', help_links=None, clearable=False):
-        new_content = AtomicText(content) if isinstance(content, str) else content
-        super(Banner, self).__init__(content=new_content, clearable=clearable)
+    def __init__(self, content='', help_links=None, clearable=False, username=''):
+        new_content = AtomicText(content, username=username) if isinstance(content, str) else content
+        super(Banner, self).__init__(content=new_content, clearable=clearable, username=username)
         self.help_links = help_links
 
     @property
     def stream(self):
-        return Stdout(content=self.content, clearable=self.clearable)
+        return Stdout(content=self.content, clearable=self.clearable, username=self.username)
 
     def split(self, num_lines):
         """
@@ -409,16 +416,14 @@ class Banner(Stdout):
 class Execution(Stream):
     execution_count = 0  # int
 
-    def __init__(self, content='', execution_count=0, ansi_codes=False, clearable=False):
-        new_content = SplitText(text=content, ansi_codes=ansi_codes) if isinstance(content, str) else content
-        super(Execution, self).__init__(content=new_content, clearable=clearable)
+    def __init__(self, content='', execution_count=0, ansi_codes=False, clearable=False, username=''):
+        new_content = SplitText(text=content, ansi_codes=ansi_codes, username=username) \
+            if isinstance(content, str) else content
+        super(Execution, self).__init__(content=new_content, clearable=clearable, username=username)
         self.execution_count = execution_count
 
     def split(self, num_lines):
         count, first, rest = super(Execution, self).split(num_lines)
-        if rest:
-            print(rest.content.data)
-
         if first:
             first.execution_count = self.execution_count
         if rest:
@@ -427,8 +432,9 @@ class Execution(Stream):
 
 
 class Input(Execution):
-    def __init__(self, content='', execution_count=0, clearable=False):
-        super(Input, self).__init__(content, execution_count=execution_count, ansi_codes=True, clearable=clearable)
+    def __init__(self, content='', execution_count=0, clearable=False, username=''):
+        super(Input, self).__init__(content, execution_count=execution_count, ansi_codes=True, clearable=clearable,
+                                    username=username)
 
     @property
     def code(self):
@@ -436,8 +442,8 @@ class Input(Execution):
 
 
 class Result(Execution):
-    def __init__(self, content=None, execution_count=0, clearable=False):
-        super(Result, self).__init__(content, execution_count=execution_count, clearable=clearable)
+    def __init__(self, content=None, execution_count=0, clearable=False, username=''):
+        super(Result, self).__init__(content, execution_count=execution_count, clearable=clearable, username=username)
 
 
 @singledispatch

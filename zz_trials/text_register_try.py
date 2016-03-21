@@ -2,10 +2,12 @@
 import sys
 from qtconsole.qt import QtGui, QtCore
 from media.centered_text import CenteredText
+from media.text_register import TextRegister
 
 
 class Example(QtGui.QMainWindow):
     text_edit = None
+    register = None
 
     def __init__(self):
         super(Example, self).__init__()
@@ -15,6 +17,8 @@ class Example(QtGui.QMainWindow):
     def initUI(self):
 
         self.text_edit = QtGui.QTextEdit()
+        self.register = TextRegister(self.text_edit.document(), True)
+
         self.text_edit.setFrameStyle(QtGui.QFrame.Box | QtGui.QFrame.Plain)
         self.text_edit.setLineWidth(2)
         # self.text_edit.setAutoFillBackground(True)
@@ -43,12 +47,10 @@ class Example(QtGui.QMainWindow):
 
         cursor = self.text_edit.textCursor()
         cursor.insertText('first|')
-        self.flex = CenteredText(cursor.position(), '_Second_')
-        self.flex.insert(self.text_edit.document(), 11)
+        self.register.append(cursor.position(), '_Second_')
         cursor.insertText('|third|')
         print('after third pos: {}'.format(cursor.position()))
-        self.flex2 = CenteredText(cursor.position(), '_Fourth_')
-        self.flex2.insert(self.text_edit.document(), 11)
+        self.register.append(cursor.position(), '_Fourth_')
         cursor.insertText('|')
 
         button_show = QtGui.QToolButton()
@@ -79,18 +81,15 @@ class Example(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def on_show(self):
-        self.flex.insert(self.text_edit.document(), 11)
-        self.flex2.insert(self.text_edit.document(), 11)
+        self.register.show()
 
     @QtCore.Slot()
     def on_hide(self):
-        self.flex2.remove(self.text_edit.document(), 11)
-        self.flex.remove(self.text_edit.document(), 11)
+        self.register.hide()
 
     @QtCore.Slot()
     def on_center(self):
-        self.flex2.center(self.text_edit.document(), 11, 15)
-        self.flex.center(self.text_edit.document(), 11, 15)
+        self.register._update_field(15)
 
     @QtCore.Slot()
     def on_insert(self):

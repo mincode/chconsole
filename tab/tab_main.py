@@ -188,6 +188,9 @@ def tab_main_template(edit_class):
 
         def _started_channels(self):
             """Make a history request and load %guiref, if possible."""
+            # self.kernel_client.session.username = 'Manfred'
+            # --user option on command line may not be officially supported even though it works
+            # env USER=Manfred assigns the user name in command.com
             # 1) send clear
             self.message_arrived.emit(ClearAll())
             # 2) send kernel info request

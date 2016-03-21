@@ -18,5 +18,15 @@ class KernelMessage(Importable):
         return self.raw['header']['msg_type']
 
     @property
+    def username(self):
+        return self.raw['header']['username']
+
+    @property
+    def parent_username(self):
+        parent_header = self.raw.get('parent_header', None)
+        username = parent_header.get('username', '')
+        return username
+
+    @property
     def content(self):
         return self.raw['content']
