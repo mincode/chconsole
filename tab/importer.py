@@ -57,11 +57,14 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
     @QtCore.Slot(Importable)
     def convert(self, msg):
-        print('convert: ' + msg.type + ', user: ' + msg.username)
+        show_msg = False  # mainly for debugging to show messages as they arrive
+        if show_msg:
+            print('convert: ' + msg.type + ', user: ' + msg.username)
         if isinstance(msg, ImportItem):
             self.please_process.emit(msg)
         else:  # KernelMessage
-            print(msg.raw)
+            if show_msg:
+                print(msg.raw)
             handler = getattr(self, '_handle_' + msg.type, None)
             if handler and _show_msg(msg, self.target.show_other):
                 handler(msg)

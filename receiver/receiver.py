@@ -241,10 +241,12 @@ def receiver_template(edit_class):
 
         please_export = QtCore.Signal(ExportItem)  # signal items to be handled by the kernel
 
-        def __init__(self, text='', use_ansi=True, parent=None, **kwargs):
+        def __init__(self, text='', use_ansi=True, show_users=False, parent=None, **kwargs):
             """
             Initialize.
             :param text: initial text.
+            :param use_ansi: whether to use ansi codes in output.
+            :param show_users: whether to show user names in command listings.
             :param parent: parent widget.
             :return:
             """
@@ -252,7 +254,7 @@ def receiver_template(edit_class):
             DocumentConfig.__init__(self, **kwargs)
 
             self.use_ansi = use_ansi
-            self.text_register = TextRegister(self.document())
+            self.text_register = TextRegister(self.document(), visible=show_users)
 
             # Setting a positive maximum block count will automatically
             # disable the undo/redo history

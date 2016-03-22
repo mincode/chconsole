@@ -156,7 +156,7 @@ def tab_content_template(edit_class):
     :return: Instantiated class.
     """
     class TabContent(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QSplitter), {})):
-        entry_proportion = Integer(5, config=True,
+        entry_proportion = Integer(8, config=True,
                                    help="""
         1/entry_size is the height of the whole console to height of the command entry field.
         """)
@@ -210,6 +210,8 @@ def tab_content_template(edit_class):
         line_prompt = None  # LinePrompt for entering input requested by the kernel
         history = None  # History
 
+        show_users = Bool(False, help='Whether to show the users in command input and output listings')
+
         def __init__(self, is_complete, **kwargs):
             """
             Initialize
@@ -237,7 +239,7 @@ def tab_content_template(edit_class):
             self.entry.please_export.connect(self.please_export)
             self.history = self.entry.history
 
-            self.receiver = receiver_template(edit_class)(use_ansi=self.ansi_codes)
+            self.receiver = receiver_template(edit_class)(use_ansi=self.ansi_codes, show_users=self.show_users)
             self.receiver.please_export.connect(self.please_export)
 
             self._console_area.addWidget(self.receiver)
@@ -266,6 +268,11 @@ def tab_content_template(edit_class):
 
             self.line_prompt = LinePrompt()
             self.line_prompt.text_input.connect(self.on_text_input)
+
+            self.show_users = self.receiver.text_register.get_visible()
+
+        def _show_users_changed(self):
+            self.receiver.text_register.set_visible(self.show_users)
 
         def clear_all(self):
             """

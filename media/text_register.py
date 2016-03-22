@@ -85,16 +85,14 @@ class TextRegister(LoggingConfigurable):
                 offset -= (self._field + item.right_length)
             self._visible = False
 
-    @property
-    def viewable(self):
+    def get_visible(self):
         """
         Check whether text is visible.
         :return: whether text is visible.
         """
         return self._visible
 
-    @viewable.setter
-    def viewable(self, new_visible):
+    def set_visible(self, new_visible):
         """
         Set the visibility of the text.
         :param new_visible: whether text should be visible.

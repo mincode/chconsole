@@ -193,21 +193,22 @@ class ExpandedMainWindow(mainwindow.MainWindow):
         self.show_users_action = QtGui.QAction("&Show User Names",
             self,
             checkable=True,
-            checked=self.active_frontend.show_users,
+#            checked=self.active_frontend.main_content.show_users,
             triggered=self.toggle_confirm_show_users)
+        self.show_users_action.setChecked(self.active_frontend.main_content.show_users)
         self.add_menu_action(self.view_menu, self.show_users_action)
         self.tab_widget.currentChanged.connect(self.update_show_users_checkbox)
 
     def toggle_confirm_show_users(self):
         widget = self.active_frontend
-        widget.show_users = not widget.show_users
-        self.show_users_action.setChecked(widget.show_users)
+        widget.main_content.show_users = not widget.main_content.show_users
+        self.show_users_action.setChecked(widget.main_content.show_users)
 
     def update_show_users_checkbox(self):
         if self.active_frontend is None:
             return
         widget = self.active_frontend
-        self.show_users_action.setChecked(widget.show_users)
+        self.show_users_action.setChecked(widget.main_content.show_users)
 
 
     # MM: This method does not seem to be in use.

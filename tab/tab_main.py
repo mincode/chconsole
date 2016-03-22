@@ -161,8 +161,6 @@ def tab_main_template(edit_class):
         show_other = Bool(True, config=True, help='True if messages from other clients are to be included.')
         _importer = None  # Importer
 
-        users_viewable = True  # whether the user names are shown in input and output
-
         def __init__(self, parent=None, **kw):
             """
             Initialize the main widget.
@@ -175,7 +173,6 @@ def tab_main_template(edit_class):
             self.main_content = tab_content_template(edit_class)(self.is_complete)
             self.main_content.please_export.connect(self.export)
             # MainContent -> export
-            self.user_viewable = self.main_content.receiver.text_register.viewable
 
             # Import and handle kernel messages
             # message_arrived -> Importer -> MainContent
