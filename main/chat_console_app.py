@@ -10,6 +10,7 @@ qtconsole.qtconsoleapp.MainWindow = main.expanded_main_window.ExpandedMainWindow
 
 
 class ChatConsoleApp(JupyterQtConsoleApp):
+    name = 'chatconsole'
     widget_factory = RichTabMain
     # widget_factory = PlainTabMain
 
