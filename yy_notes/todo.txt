@@ -6,6 +6,8 @@ connect to Sage?
 document code
 add more testers
 
+first user name is shown in blue? why? probably need to restore font color after insert_html
+
 Collaboration:
 let other clients know that there is an input request going on in one client because code execution is blocked
 possibly add facility to kernel to send custom messages to clients to notify
