@@ -1,12 +1,14 @@
 <component name="ProjectDictionaryState">
   <dictionary name="minimair">
     <words>
+      <w>cconsole</w>
       <w>jupyter</w>
       <w>minimair</w>
       <w>qimage</w>
       <w>scrollbars</w>
       <w>stderr</w>
       <w>stdout</w>
+      <w>subprocesses</w>
       <w>traitlets</w>
     </words>
   </dictionary>

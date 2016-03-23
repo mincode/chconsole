@@ -1,9 +1,17 @@
+import sys
 import re
 from unicodedata import category
 from qtconsole.qt import QtGui
 from .line_iter import LineIter
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
+
+
+# JupyterWidget
+if sys.platform.startswith('win'):
+    default_editor = 'notepad'
+else:
+    default_editor = ''
 
 
 # ConsoleWidget

@@ -89,14 +89,16 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         self.please_process.emit(banner)
 
     # FrontendWidget
-    def _kernel_restarted(self):
-        """Notice that the autorestarter restarted the kernel.
-        There's nothing to do but show a message.
+    def _kernel_restarted(self, msg):
+        """
+        Notice kernel has been restarted.
+        :param msg: message that is associated with the restart.
+        :return:
         """
         self.log.warn("kernel restarted")
-        msg = "Kernel has been started."
-        text = "<br>%s<hr><br>" % msg
-        self.please_process.emit(Stderr(HtmlText(text, username=msg.username), username=msg.username))
+        notice = "Kernel has been started."
+        html_text = "<br>%s<hr><br>" % notice
+        self.please_process.emit(Stderr(HtmlText(html_text, username=msg.username), username=msg.username))
 
     # FrontendWidget
     def _handle_shutdown_reply(self, msg):
@@ -108,7 +110,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             # got shutdown reply, request came from session other than ours
             if restart:
                 # someone restarted the kernel, handle it
-                self._kernel_restarted()
+                self._kernel_restarted(msg)
             else:
                 # kernel was shutdown permanently
                 # this triggers exit_requested if the kernel was local,
@@ -123,7 +125,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         # when we make one.
         state = msg.content.get('execution_state', '')
         if state == 'starting':
-            self._kernel_restarted()
+            self._kernel_restarted(msg)
         elif state == 'idle':
             pass
         elif state == 'busy':

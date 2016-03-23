@@ -13,6 +13,7 @@ from entry import entry_template, LinePrompt
 from receiver import receiver_template
 from pager import pager_template
 from standards import NoDefaultEditor, CommandError
+from media import default_editor
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -56,13 +57,6 @@ def _resize_last(splitter, fraction=4):
     new_sizes = [height_rest for i in range(num_widgets - 1)]
     new_sizes.append(height_last)
     splitter.setSizes(new_sizes)
-
-
-# JupyterWidget
-if sys.platform.startswith('win'):
-    default_editor = 'notepad'
-else:
-    default_editor = ''
 
 
 # Receiver
@@ -190,11 +184,11 @@ def tab_content_template(edit_class):
         custom_edit = Bool(False)
         custom_edit_requested = QtCore.Signal(object, object)
 
-        editor = Unicode(default_editor, config=True,
+        editor = Unicode(default_editor, config=False,
             help="""
             A command for invoking a system text editor. If the string contains a
             {filename} format specifier, it will be used. Otherwise, the filename
-            will be appended to the end the command.
+            will be appended to the end of the command.
             """)
 
         editor_line = Unicode(config=True,
@@ -212,7 +206,7 @@ def tab_content_template(edit_class):
 
         show_users = Bool(False, help='Whether to show the users in command input and output listings')
 
-        def __init__(self, is_complete, **kwargs):
+        def __init__(self, is_complete, editor=default_editor, **kwargs):
             """
             Initialize
             :param is_complete: function str->(bool, str) that checks whether the input is complete code
@@ -226,6 +220,8 @@ def tab_content_template(edit_class):
             # receiver  |      pager_right
             #           | pager_inside
             # entry     |
+
+            self.editor = editor
 
             self._console_stack = QtGui.QWidget()
             self._console_stack_layout = QtGui.QStackedLayout()

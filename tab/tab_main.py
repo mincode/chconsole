@@ -1,6 +1,6 @@
 import os, getpass
 from functools import singledispatch
-from traitlets import Bool, Float, Any
+from traitlets import Bool, Float, Any, Unicode
 from traitlets.config.configurable import LoggingConfigurable
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
 from qtconsole.qt import QtGui, QtCore
@@ -9,6 +9,7 @@ from tab import tab_content_template
 from messages import Exit, Execute, Inspect, Complete, Restart, Interrupt, ClearAll, KernelMessage, TailHistory
 from messages import Stderr, UserInput
 from standards import Importable
+from media import default_editor
 from . import Importer
 
 try:
@@ -106,44 +107,49 @@ def _(item, target):
     # """
 
 
-class _BaseTabWidget(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QWidget), {})):
-    """ The base class for the main widget to be inserted into a tab of the Jupyter MainWindow object.
-    """
-
-    ###############################################################################################################
-    # The following data members are required to launch qtconsole.qtconsoleapp with this widget as widget_factory:
-
-    # Emitted when an exit request has been received from the kernel.
-    exit_requested = QtCore.Signal(object)
-
-    confirm_restart = Bool(True, config=True,
-                           help="Whether to ask for user confirmation when restarting kernel")
-
-    ###############################################################################################################
-
-    def __init__(self, parent=None, **kw):
-        """
-        Initialize the main widget.
-        :param parent:
-        :param kw:
-        :return:
-        """
-        QtGui.QWidget.__init__(self, parent)
-        LoggingConfigurable.__init__(self, **kw)
-
-
 def tab_main_template(edit_class):
     """
     Template for TabMain.
     :param edit_class: QTGui.QTextEdit or QtGui.QPlainTextEdit
     :return: Instantiated class.
     """
-    class TabMain(_BaseTabWidget, BaseFrontendMixin):
+    class TabMain(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtGui.QWidget, BaseFrontendMixin), {})):
         """ The main widget to be inserted into a tab of the Jupyter MainWindow object.
-            Isolates Jupyter code from this project's code.
         """
 
-        user_name = Any(help='user name')  # default user name
+        ###############################################################################################################
+        # The following data members are required to launch qtconsole.qtconsoleapp with this widget as widget_factory:
+
+        # Emitted when an exit request has been received from the kernel.
+        exit_requested = QtCore.Signal(object)
+
+        confirm_restart = Bool(True, config=True,
+                               help="Whether to ask for user confirmation when restarting kernel")
+
+        ###############################################################################################################
+
+        user_name = Any(help='user name', config=True)  # default user name if assigned
+        style_sheet = Unicode(config=True,
+            help="""
+            A CSS stylesheet. The stylesheet can contain classes for:
+                1. Qt: QPlainTextEdit, QFrame, QWidget, etc
+                2. Pygments: .c, .k, .o, etc. (see PygmentsHighlighter)
+                3. ChatConsole: .error, .in-prompt, .out-prompt, etc
+            """)
+
+        syntax_style = Unicode(config=True,
+            help="""
+            If not empty, use this Pygments style for syntax highlighting.
+            Otherwise, the style sheet is queried for Pygments style
+            information.
+            """)
+        editor = Unicode(default_editor, config=True,
+            help="""
+            A command for invoking a system text editor. If the string contains a
+            {filename} format specifier, it will be used. Otherwise, the filename
+            will be appended to the end of the command.
+            """)
+
         main_content = None  # QWidget
 
         message_arrived = QtCore.Signal(Importable)  # signal to send a message that has arrived from the kernel
@@ -160,6 +166,7 @@ def tab_main_template(edit_class):
 
         show_other = Bool(True, config=True, help='True if messages from other clients are to be included.')
         _importer = None  # Importer
+        display_banner = Bool(True)  # whether to show a banner on startup
 
         def __init__(self, parent=None, **kw):
             """
@@ -168,9 +175,11 @@ def tab_main_template(edit_class):
             :param kw:
             :return:
             """
-            super(TabMain, self).__init__(parent, **kw)
+            # super(TabMain, self).__init__(parent, **kw)
+            QtGui.QWidget.__init__(self, parent)
+            LoggingConfigurable.__init__(self, **kw)
 
-            self.main_content = tab_content_template(edit_class)(self.is_complete)
+            self.main_content = tab_content_template(edit_class)(self.is_complete, editor=self.editor)
             self.main_content.please_export.connect(self.export)
             # MainContent -> export
 
@@ -340,6 +349,33 @@ def tab_main_template(edit_class):
             :return:
             """
             _export(item, self)
+
+        # traitlets
+        def _style_sheet_changed(self):
+            """
+            Update style sheet of the tab.
+            :return:
+            """
+            self.main_content.entry.style_sheet = self.style_sheet
+            self.main_content.receiver.style_sheet = self.style_sheet
+            self.main_content.pager.style_sheet = self.style_sheet
+
+        def _syntax_style_changed(self):
+            """
+            Update the syntax style of the tab.
+            :return:
+            """
+            self.main_content.entry.syntax_style = self.syntax_style
+            self.main_content.receiver.syntax_style = self.syntax_style
+            self.main_content.pager.syntax_style = self.syntax_style
+
+        def _display_banner_changed(self):
+            """
+            Update display banner flag.
+            :return:
+            """
+            if not self.display_banner:
+                self.main_content.receiver.show_banner.tryAcquire()
 
     return TabMain
 

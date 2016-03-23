@@ -40,15 +40,15 @@ class DocumentConfig(LoggingConfigurable):
 
     standard_tab_width = Integer(4, config=True, help="Number of spaces used for tab.")
 
-    style_sheet = Unicode(config=True,
+    style_sheet = Unicode(config=False,
         help="""
         A CSS stylesheet. The stylesheet can contain classes for:
             1. Qt: QPlainTextEdit, QFrame, QWidget, etc
             2. Pygments: .c, .k, .o, etc. (see PygmentsHighlighter)
-            3. QtConsole: .error, .in-prompt, .out-prompt, etc
+            3. ChatConsole: .error, .in-prompt, .out-prompt, etc
         """)
 
-    syntax_style = Unicode(config=True,
+    syntax_style = Unicode(config=False,
         help="""
         If not empty, use this Pygments style for syntax highlighting.
         Otherwise, the style sheet is queried for Pygments style

@@ -1,23 +1,21 @@
-document code
-add more testers
-
-show user names
+make a package
+make help page
 
 connect to Sage?
 
-    automatically recognize non-Python code and propose as chat
-    later expand classifier to recognize code with syntax errors and propose corrections
-    automatic code correction literature?
+document code
+add more testers
 
 Collaboration:
 let other clients know that there is an input request going on in one client because code execution is blocked
 possibly add facility to kernel to send custom messages to clients to notify
 
 Other features:
+
+    automatically recognize non-Python code and propose as chat
+    later expand classifier to recognize code with syntax errors and propose corrections
+    automatic code correction literature?
+
+
 Allow drop in of images as in DrRacket
 Clone environment for try out
-
-import getpass
->>> getpass.getuser()
-'kostya'
-
