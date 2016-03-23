@@ -231,12 +231,12 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         """
         payload = msg.content.get('payload', [])
         for item in payload:
-            if not self._process_execute_payload(item):
+            if not self._process_execute_payload(item, msg.username):
                 warning = 'Warning: received unknown payload of type %s'
                 print(warning % repr(item['source']))
 
     # JupyterWidget
-    def _process_execute_payload(self, item):
+    def _process_execute_payload(self, item, username):
         """ Reimplemented to dispatch payloads to handler methods.
         """
         handler = self._payload_handlers.get(item['source'])
@@ -244,30 +244,30 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             # We have no handler for this type of payload, simply ignore it
             return False
         else:
-            handler(item)
+            handler(item, username)
             return True
 
     # Payload handlers with a generic interface: each takes the opaque payload
     # dict, unpacks it and calls the underlying functions with the necessary
     # arguments.
 
-    def _handle_payload_page(self, item):
+    def _handle_payload_page(self, item, username):
         print('payload page message')
         data = item['data']
         text = data.get('text/plain', '')
         print(text)
         html = data.get('text/html', '')
-        self.please_process.emit(PageDoc(text=text, html=html, username=item.username))
+        self.please_process.emit(PageDoc(text=text, html=html, username=username))
 
-    def _handle_payload_edit(self, item):
-        self.please_process.emit(EditFile(item['filename'], item['line_number'], username=item.username))
+    def _handle_payload_edit(self, item, username):
+        self.please_process.emit(EditFile(item['filename'], item['line_number'], username=username))
 
-    def _handle_payload_exit(self, item):
+    def _handle_payload_exit(self, item, username):
         keep_kernel_on_exit = True if item['keepkernel'] else False
-        self.please_process.emit(ExitRequested(keep_kernel_on_exit, username=item.username))
+        self.please_process.emit(ExitRequested(keep_kernel_on_exit, username=username))
 
-    def _handle_payload_next_input(self, item):
-        self.please_process.emit(InText(item['text'], username=item.username))
+    def _handle_payload_next_input(self, item, username):
+        self.please_process.emit(InText(item['text'], username=username))
 
     # JupyterWidget
     def _process_execute_error(self, msg):
