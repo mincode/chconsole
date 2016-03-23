@@ -254,7 +254,7 @@ def receiver_template(edit_class):
             DocumentConfig.__init__(self, **kwargs)
 
             self.use_ansi = use_ansi
-            self.text_register = TextRegister(self.document(), visible=show_users)
+            self.text_register = TextRegister(self, visible=show_users)
 
             # Setting a positive maximum block count will automatically
             # disable the undo/redo history

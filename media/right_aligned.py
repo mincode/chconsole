@@ -1,3 +1,4 @@
+from xml.sax.saxutils import escape
 from qtconsole.qt import QtGui
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -23,30 +24,40 @@ class RightAligned:
         """
         return len(self._right_end)
 
-    def insert(self, target, field):
+    def insert(self, target, field, style=None):
         """
         Show the text; or blanks instead of text and the right terminator if the text is None.
-        :param target: QTextDocument where to show the text.
+        :param target: Q(Plain)TextEdit where to show the text.
         :param field: length of the field for the text; if the text is longer than field, only the
         initial fitting chars of text are used.
+        :param style: string indicating html style to use to show the text; if None then plain text is inserted.
         :return:
         """
-        cursor = QtGui.QTextCursor(target)
+        cursor = QtGui.QTextCursor(target.document())
         cursor.setPosition(self._pos)
         if self._text is None:
             cursor.insertText(' '*(field + self.right_length))
         else:
             text = self._text if len(self._text) <= field else self._text[:field]
-            cursor.insertText('{{:>{}}}'.format(field).format(text) + self._right_end)
+            num_blanks = field - len(text)
+            cursor.insertText(' '*num_blanks)
+            text += self._right_end
+            if style:
+                escaped = escape(text, {' ': '&nbsp;'})
+                label = '<span class="{style}">{text}</span>'
+                html_text = label.format(style=style, text=escaped)
+                target.insert_html(html_text, cursor)
+            else:
+                cursor.insertText(text)
 
     def remove(self, target, field):
         """
         Remove text of a given length, as well as the right terminator.
-        :param target: QTextDocument where to remove the text.
+        :param target: Q(Plain)TextEdit where to remove the text.
         :param field: length of the field to remove.
         :return:
         """
-        cursor = QtGui.QTextCursor(target)
+        cursor = QtGui.QTextCursor(target.document())
         cursor.setPosition(self._pos)
         cursor.movePosition(QtGui.QTextCursor.Right, QtGui.QTextCursor.KeepAnchor, field + len(self._right_end))
         cursor.deleteChar()
@@ -64,13 +75,13 @@ class RightAligned:
     def adjust(self, target, field, new_field):
         """
         Right align text in a new field.
-        :param target: QTextDocument target.
+        :param target: Q(Plain)TextEdit target.
         :param field: existing field length within which text has been centered.
         :param new_field: new field length >= field.
         :return:
         """
         new_spaces = new_field - field
         if new_spaces > 0:
-            cursor = QtGui.QTextCursor(target)
+            cursor = QtGui.QTextCursor(target.document())
             cursor.setPosition(self._pos)
             cursor.insertText(' '*new_spaces)

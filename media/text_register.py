@@ -13,18 +13,22 @@ class TextRegister(LoggingConfigurable):
     _visible = True  # whether the text is shown.
     _register = None  # list of CenteredText
     _field = 0  # length of the field to show the text.
-    max_field = Int(30, help='Maximum field length')
+    _style = None  # html style to use for text; plain text if None
 
-    def __init__(self, target, visible=True, **kwargs):
+    max_field = Int(30, config=True, help='Maximum field length')
+
+    def __init__(self, target, visible=True, style=None, **kwargs):
         """
         Initialize.
-        :param target: QTextDocument
+        :param target: Q(Plain)TextEdit
         :param visible: whether the text should be visible by default
+        :param style: html style to use for text; plain text if None.
         :return:
         """
         super(LoggingConfigurable, self).__init__(**kwargs)
         self._target = target
         self._visible = visible
+        self._style = style
         self._register = list()
 
     def _update_field(self, new_text):
@@ -57,7 +61,7 @@ class TextRegister(LoggingConfigurable):
         new_text.shift(offset)
         self._register.append(new_text)
         if self._visible:
-            new_text.insert(self._target, self._field)
+            new_text.insert(self._target, self._field, style=self._style)
 
     def show(self):
         """
@@ -68,7 +72,7 @@ class TextRegister(LoggingConfigurable):
             offset = 0
             for item in self._register:
                 item.shift(offset)
-                item.insert(self._target, self._field)
+                item.insert(self._target, self._field, style=self._style)
                 offset += self._field + item.right_length
             self._visible = True
 
