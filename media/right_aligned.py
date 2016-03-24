@@ -10,11 +10,13 @@ class RightAligned:
     _pos = None  # start cursor position of text
     _text = None  # text to be inserted, or None
     _right_end = '> '  # right terminator of the text when shown
+    _style = None  # html style to use for text; plain text if None
 
-    def __init__(self, start=0, text=None, right_end='> '):
+    def __init__(self, start=0, text=None, right_end='> ', style=None):
         self._pos = start
         self._text = text
         self._right_end = right_end
+        self._style = style
 
     @property
     def right_length(self):
@@ -24,13 +26,12 @@ class RightAligned:
         """
         return len(self._right_end)
 
-    def insert(self, target, field, style=None):
+    def insert(self, target, field):
         """
         Show the text; or blanks instead of text and the right terminator if the text is None.
         :param target: Q(Plain)TextEdit where to show the text.
         :param field: length of the field for the text; if the text is longer than field, only the
         initial fitting chars of text are used.
-        :param style: string indicating html style to use to show the text; if None then plain text is inserted.
         :return:
         """
         cursor = QtGui.QTextCursor(target.document())
@@ -42,10 +43,10 @@ class RightAligned:
             num_blanks = field - len(text)
             cursor.insertText(' '*num_blanks)
             text += self._right_end
-            if style:
+            if self._style:
                 escaped = escape(text, {' ': '&nbsp;'})
                 label = '<span class="{style}">{text}</span>'
-                html_text = label.format(style=style, text=escaped)
+                html_text = label.format(style=self._style, text=escaped)
                 target.insert_html(html_text, cursor)
             else:
                 cursor.insertText(text)

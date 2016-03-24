@@ -1,4 +1,4 @@
-import sys, os, re
+import sys, os, re, webbrowser
 from ipython_genutils import py3compat
 from ipython_genutils.importstring import import_item
 from ipython_genutils.path import ensure_dir_exists
@@ -371,6 +371,18 @@ class DocumentConfig(LoggingConfigurable):
     def _lexer_default(self):
         lexer_class = import_item(self.lexer_class)
         return lexer_class()
+
+    # ConsoleWidget
+    def copy_anchor(self, anchor):
+        """ Copy anchor text to the clipboard
+        """
+        QtGui.QApplication.clipboard().setText(anchor)
+
+    # ConsoleWidget
+    def open_anchor(self, anchor):
+        """ Open selected anchor in the default webbrowser
+        """
+        webbrowser.open(anchor)
 
     @property
     def end_cursor(self):

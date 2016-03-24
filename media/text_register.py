@@ -13,11 +13,10 @@ class TextRegister(LoggingConfigurable):
     _visible = True  # whether the text is shown.
     _register = None  # list of CenteredText
     _field = 0  # length of the field to show the text.
-    _style = None  # html style to use for text; plain text if None
 
     max_field = Int(30, config=True, help='Maximum field length')
 
-    def __init__(self, target, visible=True, style=None, **kwargs):
+    def __init__(self, target, visible=True, **kwargs):
         """
         Initialize.
         :param target: Q(Plain)TextEdit
@@ -28,7 +27,6 @@ class TextRegister(LoggingConfigurable):
         super(LoggingConfigurable, self).__init__(**kwargs)
         self._target = target
         self._visible = visible
-        self._style = style
         self._register = list()
 
     def _update_field(self, new_text):
@@ -49,19 +47,20 @@ class TextRegister(LoggingConfigurable):
                 self._field = new_field
         return offset
 
-    def append(self, pos, text=None):
+    def append(self, pos, text=None, style=None):
         """
         Append text to the register and update the field length to accommodate the string.
         :param pos: position of the text in the document; assumed to be after all other positions in the register.
         :param text: string to be inserted.
+        :param style: html style of text; plain text if None.
         :return:
         """
-        new_text = RightAligned(pos, text)
+        new_text = RightAligned(pos, text, style=style)
         offset = self._update_field(text)
         new_text.shift(offset)
         self._register.append(new_text)
         if self._visible:
-            new_text.insert(self._target, self._field, style=self._style)
+            new_text.insert(self._target, self._field)
 
     def show(self):
         """
@@ -72,7 +71,7 @@ class TextRegister(LoggingConfigurable):
             offset = 0
             for item in self._register:
                 item.shift(offset)
-                item.insert(self._target, self._field, style=self._style)
+                item.insert(self._target, self._field)
                 offset += self._field + item.right_length
             self._visible = True
 

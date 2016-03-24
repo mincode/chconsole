@@ -138,7 +138,7 @@ def _(item, target):
     cursor = target.end_cursor
     target.clear_cursor = None
     cursor.insertText('\n')
-    target.text_register.append(cursor.position(), item.username)
+    target.text_register.append(cursor.position(), item.username, style='in-prompt')
 
     if item.code and is_comment(item.code):
         in_prompt = _make_in_prompt(target.chat_prompt, item.execution_count)
