@@ -3,11 +3,12 @@
 
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-
-from __future__ import print_function
+# Modifications:
+# Copyright 2016 (C) Manfred Minimair
+# Distributed under the terms of the Modified BSD License.
 
 # the name of the package
-name = 'qtconsole'
+name = 'chconsole'
 
 #-----------------------------------------------------------------------------
 # Minimal Python version sanity check
@@ -16,8 +17,8 @@ name = 'qtconsole'
 import sys
 
 v = sys.version_info
-if v[:2] < (2,7) or (v[0] >= 3 and v[:2] < (3,3)):
-    error = "ERROR: %s requires Python version 2.7 or 3.3 or above." % name
+if v[0] < 3 or (v[0] >= 3 and v[:2] < (3,3)):
+    error = "ERROR: {} requires Python version 3.3 or above.".format(name)
     print(error, file=sys.stderr)
     sys.exit(1)
 
@@ -42,7 +43,7 @@ for d, _, _ in os.walk(pjoin(here, name)):
         packages.append(d[len(here)+1:].replace(os.path.sep, '.'))
 
 package_data = {
-    'qtconsole' : ['resources/icon/*.svg'],
+    'chconsole' : ['main/resources/icon/*.svg'],
 }
 
 version_ns = {}
@@ -56,11 +57,11 @@ setup_args = dict(
     scripts         = glob(pjoin('scripts', '*')),
     packages        = packages,
     package_data    = package_data,
-    description     = "Jupyter Qt console",
-    long_description= "Qt-based console for Jupyter with support for rich media output",
-    author          = 'Jupyter Development Team',
-    author_email    = 'jupyter@googlegroups.com',
-    url             = 'http://jupyter.org',
+    description     = "Jupyter/Qt-based Chat Console",
+    long_description= "Jupyter/Qt-based console with support for chat and rich media output",
+    author          = 'Manfred Minimair',
+    author_email    = 'chconsole@gmail.com',
+    url             = 'https://github.com/mincode/chconsole',
     license         = 'BSD',
     platforms       = "Linux, Mac OS X, Windows",
     keywords        = ['Interactive', 'Interpreter', 'Shell'],
@@ -70,7 +71,6 @@ setup_args = dict(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
     ],
@@ -97,7 +97,7 @@ extras_require = setuptools_args['extras_require'] = {
 if 'setuptools' in sys.modules:
     setup_args['entry_points'] = {
         'gui_scripts': [
-            'jupyter-qtconsole = qtconsole.qtconsoleapp:main',
+            'jupyter-chconsole = chconsole.main.launch_app:main',
         ]
     }
     setup_args.pop('scripts')

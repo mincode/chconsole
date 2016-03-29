@@ -1,4 +1,4 @@
-from chconsole.main import ChatConsoleApp
+from chconsole.main.chat_console_app import ChatConsoleApp
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 

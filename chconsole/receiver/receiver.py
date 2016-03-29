@@ -6,7 +6,7 @@ from qtconsole.qt import QtCore, QtGui
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Integer, Unicode
 
-from _version import __version__
+from chconsole._version import __version__
 from chconsole.media import register_qimage, is_comment, de_comment, TextRegister
 from chconsole.messages import ExportItem, AtomicText, SvgXml, Jpeg, Png, SplitText, LaTeX, to_qimage
 from chconsole.messages import Stderr, Stdout, HtmlText, PageDoc, Banner, Input, Result, ClearOutput, SplitItem

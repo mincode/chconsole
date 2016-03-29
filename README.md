@@ -1,13 +1,13 @@
-# Jupyter Qt Console
+# Chat Console
 
 [![Google Group](https://img.shields.io/badge/-Google%20Group-lightgrey.svg)](https://groups.google.com/forum/#!forum/jupyter)
 [![Build Status](https://travis-ci.org/jupyter/qtconsole.svg?branch=master)](https://travis-ci.org/jupyter/qtconsole)
 [![Documentation Status](https://readthedocs.org/projects/qtconsole/badge/?version=stable)](http://qtconsole.readthedocs.org/en/stable/)
 
 A rich Qt-based console for working with Jupyter kernels,
-supporting rich media output, session export, and more.
+supporting collaboration via chat messages, rich media output, session export, and more.
 
-The Qt console is a very lightweight application that largely feels like a terminal, but
+The chat console is a very lightweight application that largely feels like a terminal, but
 provides a number of enhancements only possible in a GUI, such as inline
 figures, proper multiline editing with syntax highlighting, graphical calltips,
 and more.
