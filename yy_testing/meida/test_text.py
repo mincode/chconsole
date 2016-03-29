@@ -1,6 +1,6 @@
 import unittest
 
-from media import is_comment, to_comment, de_comment
+from chconsole.media import is_comment, to_comment, de_comment
 
 __author__ = 'minimair'
 

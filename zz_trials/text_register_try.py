@@ -1,7 +1,8 @@
-
 import sys
+
 from qtconsole.qt import QtGui, QtCore
-from media.text_register import TextRegister
+
+from chconsole.media.text_register import TextRegister
 
 
 class Example(QtGui.QMainWindow):

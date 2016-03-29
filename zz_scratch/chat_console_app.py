@@ -7,12 +7,12 @@ A Qt- and Jupyter-based console application.
 import qtconsole.qtconsoleapp
 from qtconsole.qtconsoleapp import JupyterQtConsoleApp
 
-import main.expanded_main_window
-from tab import RichTabMain, PlainTabMain
+import chconsole.main.expanded_main_window
+from chconsole.tab import RichTabMain, PlainTabMain
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
-qtconsole.qtconsoleapp.MainWindow = main.expanded_main_window.ExpandedMainWindow
+qtconsole.qtconsoleapp.MainWindow = chconsole.main.expanded_main_window.ExpandedMainWindow
 
 
 class ChatConsoleApp(JupyterQtConsoleApp):

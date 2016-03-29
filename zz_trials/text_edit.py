@@ -1,7 +1,8 @@
-
 import sys
+
 from qtconsole.qt import QtGui, QtCore
-from media.right_aligned import RightAligned
+
+from chconsole.media.right_aligned import RightAligned
 
 
 class Example(QtGui.QMainWindow):

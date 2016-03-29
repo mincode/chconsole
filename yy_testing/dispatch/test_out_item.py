@@ -1,6 +1,6 @@
 import unittest
 
-from messages.import_item import _split_lines
+from chconsole.messages import _split_lines
 
 __author__ = 'minimair'
 

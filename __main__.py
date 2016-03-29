@@ -1,3 +1,3 @@
 if __name__ == '__main__':
-    from main.launch_app import main
+    from chconsole.main.launch_app import main
     main()

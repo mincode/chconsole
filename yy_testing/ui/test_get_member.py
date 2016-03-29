@@ -1,6 +1,6 @@
 import unittest
 
-from tab import get_member
+from chconsole.tab import get_member
 
 __author__ = 'minimair'
 
