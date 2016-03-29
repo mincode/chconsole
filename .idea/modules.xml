@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/ChatConsole.iml" filepath="$PROJECT_DIR$/.idea/ChatConsole.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/chconsole.iml" filepath="$PROJECT_DIR$/.idea/chconsole.iml" />
     </modules>
   </component>
 </project>
