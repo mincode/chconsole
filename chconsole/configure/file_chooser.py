@@ -42,7 +42,7 @@ class FileChooser(QtGui.QFileDialog):
             file = file_names[0]
             path, base = os.path.split(file)
             if re.match(r".*\."+self._default_ext+r"$", base) is None:
-                base += '.json'
+                base += ('.' + self._default_ext)
             self._dir.set(path)
             self._name.set(base)
         return accepted
