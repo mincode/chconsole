@@ -178,7 +178,6 @@ def tab_main_template(edit_class):
             :param kw:
             :return:
             """
-            # super(TabMain, self).__init__(parent, **kw)
             QtGui.QWidget.__init__(self, parent)
             LoggingConfigurable.__init__(self, **kw)
 
