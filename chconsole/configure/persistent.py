@@ -35,3 +35,5 @@ class Persistent:
         :param value: value to set.
         """
         self._storage.set(self._item, value)
+
+

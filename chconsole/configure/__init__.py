@@ -1,4 +1,3 @@
-from .persistent import Persistent
 from .storage import Storage
 from .paths import chconsole_data_dir
 
