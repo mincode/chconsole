@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# Copyright (c) Jupyter Development Team.
-# Distributed under the terms of the Modified BSD License.
-# Modifications:
 # Copyright 2016 (C) Manfred Minimair
+# Distributed under the terms of the Modified BSD License.
+# Based on setup.py from qtconsole
+# Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 # the name of the package
@@ -84,6 +84,7 @@ install_requires = setuptools_args['install_requires'] = [
     'traitlets',
     'jupyter_core',
     'jupyter_client>=4.1',
+    'qtconsole>=4.1'
     'pygments',
     'ipykernel>=4.1', # not a real dependency, but require the reference kernel
 ]
