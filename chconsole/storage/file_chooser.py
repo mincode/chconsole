@@ -38,7 +38,6 @@ class FileChooser(QtGui.QFileDialog):
         accepted = self.exec_()
         if accepted:
             file_names = self.selectedFiles()
-            print(file_names)
             file = file_names[0]
             path, base = os.path.split(file)
             if re.match(r".*\."+self._default_ext+r"$", base) is None:
@@ -62,3 +61,11 @@ class FileChooser(QtGui.QFileDialog):
         :return: chosen file name
         """
         return self._name.get()
+
+    @property
+    def file(self):
+        """
+        Chosen file.
+        :return: chosen file including path as a string
+        """
+        return os.path.normpath(os.path.join(self.dir, self.name))

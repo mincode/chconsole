@@ -99,6 +99,7 @@ if 'setuptools' in sys.modules:
     setup_args['entry_points'] = {
         'gui_scripts': [
             'jupyter-chconsole = chconsole.main.launch_app:main',
+            'chc-python = chconsole.run_kernel.chc_python:main',
         ]
     }
     setup_args.pop('scripts')

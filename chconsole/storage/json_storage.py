@@ -3,7 +3,7 @@ import os, json
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class Storage:
+class JSONStorage:
     """
     File storage for a dictionary.
     """
@@ -24,9 +24,9 @@ class Storage:
                 self.data = json.load(data_file)
         except FileNotFoundError:
             self.data = dict()
-            self._dump()
+            self.dump()
 
-    def _dump(self):
+    def dump(self):
         """
         Dump data into storage file.
         """
@@ -48,4 +48,4 @@ class Storage:
         :param value: value to set.
         """
         self.data[item] = value
-        self._dump()
+        self.dump()
