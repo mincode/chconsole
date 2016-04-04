@@ -1,15 +1,13 @@
 import sys, socket, re
 from subprocess import Popen
 from qtconsole.qt import QtGui
-from chconsole.storage import JSONStorage, FileChooser, chconsole_data_dir, get_home_dir
+from chconsole.storage import JSONStorage, FileChooser, chconsole_data_dir, get_home_dir, DefaultNames
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class AppMain(QtGui.QMainWindow):
-    default_file = 'kernel-chc.json'  # default file name for connection file
+class AppMain(QtGui.QMainWindow, DefaultNames):
     storage = None  # JSONStorage
-    storage_key = 'chc'  # prefix to identify items corresponding to this application in Storage
     chooser = None  # FileChooser
     text_area = None  # QPlainTextEdit, output text area
 
@@ -38,7 +36,10 @@ class AppMain(QtGui.QMainWindow):
             lan_name = re.sub(r"\.json$", '-lan.json', self.chooser.name)
             lan_connect = JSONStorage(self.chooser.dir, lan_name)
             lan_connect.data = local_connect.data.copy()
-            lan_connect.set('ip', socket.gethostname())
+            hostname = socket.gethostname()
+            lan_connect.set('hostname', hostname)
+            ip = socket.gethostbyname(hostname)
+            lan_connect.set('ip', ip)
 
             self.text_area.insertPlainText('\nThis window may be closed. The kernel will keep running!')
             self.show()

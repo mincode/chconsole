@@ -9,11 +9,11 @@ A Qt- and Jupyter-based console application.
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-__author__ = 'Manfred Minimair <manfred@minimair.org>'
+import os, signal, sys, socket
+from chconsole.storage import JSONStorage, FileChooser, chconsole_data_dir, get_home_dir, DefaultNames
 
-import os
-import signal
-import sys
+
+__author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 # If run on Windows:
 #
@@ -93,6 +93,7 @@ flags = dict(base_flags)
 qt_flags = {
     'plain' : ({'ChatConsoleApp' : {'plain' : True}},
             "Disable rich text support."),
+    'localkernel' : ({'ChatConsoleApp' : {'local_kernel' : True}}, "Launch local kernel.")
 }
 qt_flags.update(boolean_flag(
     'banner', 'ChatConsoleApp.display_banner',
@@ -127,7 +128,7 @@ qt_aliases = set(qt_aliases.keys())
 qt_flags = set(qt_flags.keys())
 
 
-class ChatConsoleApp(JupyterApp, JupyterConsoleApp):
+class ChatConsoleApp(JupyterApp, JupyterConsoleApp, DefaultNames):
     name = 'jupyter-chconsole'
     version = __version__
     description = """
@@ -164,7 +165,12 @@ class ChatConsoleApp(JupyterApp, JupyterConsoleApp):
         help="Whether to display a banner upon starting the console."
     )
 
-    # traitlets handler
+    local_kernel = CBool(False, config=True, help='Whether to launch a local kernel automatically on start.')
+
+
+    storage = None  # JSONStorage
+    chooser = None  # FileChooser  # traitlets handler
+
     def _plain_changed(self, name, old, new):
         """
         Change type of text edit used.
@@ -376,7 +382,25 @@ class ChatConsoleApp(JupyterApp, JupyterConsoleApp):
             cfg = self._deprecate_config(self.config, old_name, new_name)
             if cfg:
                 self.update_config(cfg)
+
+        if not self.existing:
+            if not self.local_kernel:
+                self.storage = JSONStorage(chconsole_data_dir(), self.default_file)
+                self.chooser = FileChooser(self.storage, self.storage_key, get_home_dir(), self.default_file,
+                                           parent=None, caption='Choose Existing Connection File', file_filter='*.json',
+                                           default_ext='json')
+                if self.chooser.choose_file():
+                    connection_data = JSONStorage(self.chooser.dir, self.chooser.name)
+                    try:
+                        hostname = connection_data.get('hostname')
+                        ip = socket.gethostbyname(hostname)
+                        connection_data.set('ip', ip)
+                    except KeyError:
+                        pass
+                    self.existing = self.chooser.file
+
         JupyterConsoleApp.initialize(self,argv)
+
         self.init_qt_elements()
         self.init_signal()
 
