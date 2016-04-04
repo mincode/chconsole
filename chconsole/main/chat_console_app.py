@@ -393,8 +393,7 @@ class ChatConsoleApp(JupyterApp, JupyterConsoleApp, DefaultNames):
                     connection_data = JSONStorage(self.chooser.dir, self.chooser.name)
                     try:
                         hostname = connection_data.get('hostname')
-                        ip = socket.gethostbyname(hostname)
-                        connection_data.set('ip', ip)
+                        self.sshserver = socket.gethostbyname(hostname)
                     except KeyError:
                         pass
                     self.existing = self.chooser.file

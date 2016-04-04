@@ -28,20 +28,17 @@ class AppMain(QtGui.QMainWindow, DefaultNames):
 
     def launch(self, app):
         if self.chooser.choose_file():
+            local_connect = JSONStorage(self.chooser.dir, self.chooser.name)
+            local_connect.set('hostname', socket.gethostname())
+
             Popen(['ipython', 'kernel', '-f', self.chooser.file])
-            self.text_area.insertPlainText('Local connection file:\n')
+
+            self.text_area.insertPlainText('Connection file for Chat Console:\n')
             self.text_area.insertPlainText('    ' + self.chooser.file + '\n')
 
-            local_connect = JSONStorage(self.chooser.dir, self.chooser.name)
-            lan_name = re.sub(r"\.json$", '-lan.json', self.chooser.name)
-            lan_connect = JSONStorage(self.chooser.dir, lan_name)
-            lan_connect.data = local_connect.data.copy()
-            hostname = socket.gethostname()
-            lan_connect.set('hostname', hostname)
-            ip = socket.gethostbyname(hostname)
-            lan_connect.set('ip', ip)
-
-            self.text_area.insertPlainText('\nThis window may be closed. The kernel will keep running!')
+            self.text_area.insertPlainText('\nThis window may be closed. The kernel will keep running!\n')
+            self.text_area.insertPlainText('The kernel can be stopped by connecting a console\n'
+                                           'and entering the quit command.')
             self.show()
         else:
             sys.exit(app.quit())
