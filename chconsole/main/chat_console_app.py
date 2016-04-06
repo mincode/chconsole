@@ -9,7 +9,10 @@ A Qt- and Jupyter-based console application.
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import os, signal, sys, socket
+import os
+import signal
+import sys
+import socket
 from chconsole.storage import JSONStorage, FileChooser, chconsole_data_dir, get_home_dir, DefaultNames
 
 
@@ -389,7 +392,7 @@ class ChatConsoleApp(JupyterApp, JupyterConsoleApp, DefaultNames):
                 self.chooser = FileChooser(self.storage, self.storage_key, get_home_dir(), self.default_file,
                                            parent=None, caption='Choose Existing Connection File', file_filter='*.json',
                                            default_ext='json')
-                if self.chooser.choose_file():
+                if self.chooser.choose_file() and os.path.exists(self.chooser.file):
                     connection_data = JSONStorage(self.chooser.dir, self.chooser.name)
                     try:
                         hostname = connection_data.get('hostname')
@@ -398,7 +401,7 @@ class ChatConsoleApp(JupyterApp, JupyterConsoleApp, DefaultNames):
                         pass
                     self.existing = self.chooser.file
 
-        JupyterConsoleApp.initialize(self,argv)
+        JupyterConsoleApp.initialize(self, argv)
 
         self.init_qt_elements()
         self.init_signal()

@@ -7,8 +7,9 @@ class JSONStorage:
     """
     File storage for a dictionary.
     """
-    name = ''  # file name of storage file
+    file = ''  # file name of storage file
     data = None  # data dict
+    indent = '  '  # indent prefix for pretty printing json files
 
     def __init__(self, path, name):
         """
@@ -18,9 +19,9 @@ class JSONStorage:
         """
         if path:
             os.makedirs(path, exist_ok=True)
-        self.name = os.path.join(path, name)
+        self.file = os.path.normpath(os.path.join(path, name))
         try:
-            with open(self.name) as data_file:
+            with open(self.file) as data_file:
                 self.data = json.load(data_file)
         except FileNotFoundError:
             self.data = dict()
@@ -30,8 +31,8 @@ class JSONStorage:
         """
         Dump data into storage file.
         """
-        with open(self.name, 'w') as out_file:
-            json.dump(self.data, out_file)
+        with open(self.file, 'w') as out_file:
+            json.dump(self.data, out_file, indent=self.indent)
 
     def get(self, item):
         """

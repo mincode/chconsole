@@ -202,7 +202,7 @@ class MainWindow(QtGui.QMainWindow):
                         background(kernel_client.stop_channels)
                 else:
                     reply = QtGui.QMessageBox.question(self, title,
-                        "Are you sure you want to close this Console?"+
+                        "Are you sure you want to close this Console?" +
                         "\nThe Kernel and other Consoles will remain active.",
                         okay|cancel,
                         defaultButton=okay

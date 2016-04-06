@@ -127,7 +127,7 @@ def _(item, target):
         stream.content.text = target.banner + stream.content.text
         _receive(stream, target)
         if item.help_links:
-            cursor.insertText('Help Links')
+            cursor.insertText('\nHelp Links')
             for helper in item.help_links:
                 target.insert_ansi_text('\n' + helper['text'] + ': ', item.ansi_codes and target.use_ansi, cursor)
                 url = helper['url']

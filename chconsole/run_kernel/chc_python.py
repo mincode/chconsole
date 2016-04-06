@@ -1,4 +1,8 @@
-import sys, socket, re
+import sys
+import socket
+import os
+import time
+import getpass
 from subprocess import Popen
 from qtconsole.qt import QtGui
 from chconsole.storage import JSONStorage, FileChooser, chconsole_data_dir, get_home_dir, DefaultNames
@@ -7,16 +11,23 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
 class AppMain(QtGui.QMainWindow, DefaultNames):
+    max_ipython_start_time = 5
+    # maximum number of seconds allowed for ipython to create a connection file,
+    # if it does not exist
+    sleep_time = 0.1  # time to repeatedly wait until connection file has been created by the kernel.
     storage = None  # JSONStorage
     chooser = None  # FileChooser
     text_area = None  # QPlainTextEdit, output text area
+
+    default_user_name = ''  # default user name to be used for the kernel
 
     def __init__(self):
         super(AppMain, self).__init__()
 
         self.storage = JSONStorage(chconsole_data_dir(), self.default_file)
         self.chooser = FileChooser(self.storage, self.storage_key, get_home_dir(), self.default_file,
-                                   parent=None, caption='Choose Connection File', file_filter='*.json',
+                                   parent=None, caption='Choose Connection File or Enter New File Name',
+                                   file_filter='*.json',
                                    default_ext='json')
 
         self.text_area = QtGui.QPlainTextEdit()
@@ -26,12 +37,42 @@ class AppMain(QtGui.QMainWindow, DefaultNames):
         self.setGeometry(300, 300, 500, 200)
         self.setWindowTitle('Python Kernel Launched')
 
+    @property
+    def _user_name(self):
+        """
+        Get the user name to the application. Either self.user_name if it is not '' or None,
+        or kernel-USER environment variable if it is assigned, or kernel-getpass.getuser(), or 'kernel-user'
+        if getpass.getuser() fails.
+        :return: user name
+        """
+        prefix = 'kernel-'
+        user_name = self.default_user_name
+        if not user_name:
+            user_name = os.getenv('USER', default=None)
+            if user_name is None:
+                try:
+                    user_name = getpass.getuser()
+                except Exception:
+                    user_name = 'user'
+            user_name = prefix + user_name
+        return user_name
+
     def launch(self, app):
         if self.chooser.choose_file():
+            Popen(['ipython', 'kernel', '-f', self.chooser.file,
+                   "--KernelClient.Session.username={}".format(self._user_name)])
+
+            wait_time = 0
+            while wait_time < self.max_ipython_start_time and not os.path.exists(self.chooser.file):
+                time.sleep(self.sleep_time)
+                wait_time += self.sleep_time
+            if not os.path.exists(self.chooser.file):
+                print('Error: Kernel did not create the chosen connection file:')
+                print(self.chooser.file)
+                sys.exit(app.exit(1))
+
             local_connect = JSONStorage(self.chooser.dir, self.chooser.name)
             local_connect.set('hostname', socket.gethostname())
-
-            Popen(['ipython', 'kernel', '-f', self.chooser.file])
 
             self.text_area.insertPlainText('Connection file for Chat Console:\n')
             self.text_area.insertPlainText('    ' + self.chooser.file + '\n')
