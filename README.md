@@ -8,6 +8,7 @@ work by supporting chat and displaying commands of multiple users asynchronously
 ![qtconsole](docs/_static/example_dialog.png)
 
 ## Install Chat Console
+
 The Chat Console requires Qt, such as
 [PyQt5](http://www.riverbankcomputing.com/software/pyqt/intro),
 [PyQt4](https://www.riverbankcomputing.com/software/pyqt/download),
