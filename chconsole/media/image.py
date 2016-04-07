@@ -42,11 +42,11 @@ def jpg_png_to_qimage(img, fmt='png', metadata=None):
     image = QtGui.QImage()
     image.loadFromData(img, fmt.upper())
     if width and height:
-        image = image.scaled(width, height, transformMode=QtCore.Qt.SmoothTransformation)
+        image = image.scaled(width, height, mode=QtCore.Qt.SmoothTransformation)
     elif width and not height:
-        image = image.scaledToWidth(width, transformMode=QtCore.Qt.SmoothTransformation)
+        image = image.scaledToWidth(width, mode=QtCore.Qt.SmoothTransformation)
     elif height and not width:
-        image = image.scaledToHeight(height, transformMode=QtCore.Qt.SmoothTransformation)
+        image = image.scaledToHeight(height, mode=QtCore.Qt.SmoothTransformation)
 
     return image
 

@@ -1,0 +1,7 @@
+ Fred> Can you please show me the Bezier curve you generated following the matplotlib documentation?
+
+Cindy> Sure
+Cindy> from IPython.display import Image
+Cindy> Image(filename='bezier.png', width=500)
+
+ Fred> Interesting ...
