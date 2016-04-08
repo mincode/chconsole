@@ -34,8 +34,8 @@ class AppMain(QtGui.QMainWindow, DefaultNames):
         self.text_area.setReadOnly(True)
         self.setCentralWidget(self.text_area)
 
-        self.setGeometry(300, 300, 500, 200)
-        self.setWindowTitle('Python Kernel Launched')
+        self.setGeometry(300, 300, 700, 200)
+        self.setWindowTitle('IPython Kernel Launched')
 
     @property
     def _user_name(self):
@@ -45,7 +45,7 @@ class AppMain(QtGui.QMainWindow, DefaultNames):
         if getpass.getuser() fails.
         :return: user name
         """
-        prefix = 'kernel-'
+        prefix = 'kernel_'
         user_name = self.default_user_name
         if not user_name:
             user_name = os.getenv('USER', default=None)
@@ -59,9 +59,19 @@ class AppMain(QtGui.QMainWindow, DefaultNames):
 
     def launch(self, app):
         if self.chooser.choose_file():
-            Popen(['ipython', 'kernel', '-f', self.chooser.file,
-                   "--KernelClient.Session.username={}".format(self._user_name)])
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(('8.8.8.8', 1))  # connecting to a UDP address doesn't send packets
+                local_ip_address = s.getsockname()[0]
+            except (socket.timeout, InterruptedError):
+                local_ip_address = socket.gethostbyname(socket.getfqdn())
 
+            cmd = ['ipython', 'kernel', '-f', self.chooser.file,
+                   '--ip', local_ip_address, '--user', self._user_name]
+
+            Popen(cmd)
+
+            # Ensure the connection file has been created
             wait_time = 0
             while wait_time < self.max_ipython_start_time and not os.path.exists(self.chooser.file):
                 time.sleep(self.sleep_time)
@@ -71,14 +81,14 @@ class AppMain(QtGui.QMainWindow, DefaultNames):
                 print(self.chooser.file)
                 sys.exit(app.exit(1))
 
-            local_connect = JSONStorage(self.chooser.dir, self.chooser.name)
-            local_connect.set('hostname', socket.gethostname())
-
             self.text_area.insertPlainText('Connection file for Chat Console:\n')
-            self.text_area.insertPlainText('    ' + self.chooser.file + '\n')
+            self.text_area.insertPlainText(self.chooser.file + '\n')
+
+            self.text_area.insertPlainText('\nCommand used to start IPython:\n')
+            self.text_area.insertPlainText(' '.join(cmd) + '\n')
 
             self.text_area.insertPlainText('\nThis window may be closed. The kernel will keep running!\n')
-            self.text_area.insertPlainText('The kernel can be stopped by connecting a console\n'
+            self.text_area.insertPlainText('The kernel can be stopped by connecting a console '
                                            'and entering the quit command.')
             self.show()
         else:

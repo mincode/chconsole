@@ -394,11 +394,6 @@ class ChatConsoleApp(JupyterApp, JupyterConsoleApp, DefaultNames):
                                            default_ext='json')
                 if self.chooser.choose_file() and os.path.exists(self.chooser.file):
                     connection_data = JSONStorage(self.chooser.dir, self.chooser.name)
-                    try:
-                        hostname = connection_data.get('hostname')
-                        self.sshserver = socket.gethostbyname(hostname)
-                    except KeyError:
-                        pass
                     self.existing = self.chooser.file
 
         JupyterConsoleApp.initialize(self, argv)
