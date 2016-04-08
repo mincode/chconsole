@@ -47,9 +47,17 @@ used.
 ## Usage
 To run the Chat Console:
 
+    chconsole
+
+or
+
     jupyter chconsole
 
-To start an IPython kernel to which Chat Console may be connected:
+Chat Console can either start its own IPython kernel or
+attach to an independent Jupyter kernel, including
+ IPython, through a connection file.
+For convenience, a script to start an
+independent Ipython kernel is included:
 
     chc-python
 

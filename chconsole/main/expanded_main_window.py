@@ -1,5 +1,5 @@
 import sys
-
+import webbrowser
 import qtconsole.mainwindow
 from qtconsole import mainwindow
 from qtconsole.qt import QtGui, QtCore
@@ -371,3 +371,6 @@ class ExpandedMainWindow(mainwindow.MainWindow):
 
         self.update_tab_bar_visibility()
 
+    def _open_online_help(self):
+        filename = "http://chconsole.readthedocs.org/en/latest/"
+        webbrowser.open(filename, new=1, autoraise=True)
