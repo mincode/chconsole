@@ -1,5 +1,8 @@
 # Chat Console
 
+[![Build Status](https://travis-ci.org/jupyter/qtconsole.svg?branch=master)](https://travis-ci.org/jupyter/qtconsole)
+[![Documentation Status](https://readthedocs.org/projects/chconsole/badge/?version=stable)](http://chconsole.readthedocs.org/en/stable/)
+
 Chat Console is a command console (shell) for Jupyter kernels, with enhancements for inline graphics,
 syntax highlighting, and much more.
 It facilitates collaborative
