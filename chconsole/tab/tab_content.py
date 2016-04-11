@@ -159,7 +159,8 @@ def tab_content_template(edit_class):
         clear_on_kernel_restart = Bool(True, config=True,
             help="Whether to clear the console when the kernel is restarted")
 
-        default_pager_location = Unicode('right', config=True, help='Default location of the pager: right, inside or top')
+        default_pager_location = Unicode('inside', config=True,
+                                         help='Default location of the pager: right, inside or top')
 
         receiver = None  # Area of the console where chat messages, commands and outputs are shown
         entry = None  # Area of the console to enter commands and chat

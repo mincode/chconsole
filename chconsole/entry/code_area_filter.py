@@ -102,7 +102,7 @@ class CodeAreaFilter(BaseEventFilter):
                     cursor = self.target.word_end_cursor
                     position = self.target.textCursor().position()
                     cursor.setPosition(position, QtGui.QTextCursor.KeepAnchor)
-                    self.target.target.kill_ring.kill_cursor(cursor)
+                    self.target.kill_ring.kill_cursor(cursor)
 
             elif ctrl_down:
                 if key == QtCore.Qt.Key_I:
@@ -116,7 +116,7 @@ class CodeAreaFilter(BaseEventFilter):
 
                 elif key == QtCore.Qt.Key_D:
                     new_event = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, QtCore.Qt.Key_Delete, QtCore.Qt.NoModifier)
-                    QtGui.qApp.sendEvent(self._control, new_event)
+                    QtGui.qApp.sendEvent(self.target, new_event)
 
                 # Kill ring
                 elif key == QtCore.Qt.Key_K:
@@ -152,7 +152,7 @@ class CodeAreaFilter(BaseEventFilter):
                     cursor = self.target.word_end_cursor
                     position = self.target.textCursor().position()
                     cursor.setPosition(position, QtGui.QTextCursor.KeepAnchor)
-                    self.target.target.kill_ring.kill_cursor(cursor)
+                    self.target.kill_ring.kill_cursor(cursor)
 
             else:
                 anchor_mode = QtGui.QTextCursor.KeepAnchor if shift_down else QtGui.QTextCursor.MoveAnchor

@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Chat Console's documentation!
+Welcome to Chat Console's Documentation!
 ========================================
 
 Chat Console is a command console (shell) for Jupyter kernels, with enhancements for inline graphics,
