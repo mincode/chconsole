@@ -1,12 +1,11 @@
 import os
 from functools import singledispatch
 
-from qtconsole import qt
 from qtconsole.bracket_matcher import BracketMatcher
 from qtconsole.call_tip_widget import CallTipWidget
 from qtconsole.completion_widget import CompletionWidget
 from qtconsole.kill_ring import QtKillRing
-from qtconsole.qt import QtGui, QtCore
+from qtconsole.qt import QtGui, QtCore, QT_API, QT_API_PYSIDE
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Bool
 
@@ -113,7 +112,7 @@ def code_area_template(edit_class):
 
             # Call tips
             # forcefully disable calltips if PySide is < 1.0.7, because they crash
-            if qt.QT_API == qt.QT_API_PYSIDE:
+            if QT_API == QT_API_PYSIDE:
                 import PySide
                 if PySide.__version_info__ < (1,0,7):
                     self.log.warn("PySide %s < 1.0.7 detected, disabling calltips" % PySide.__version__)
