@@ -371,6 +371,23 @@ class ExpandedMainWindow(mainwindow.MainWindow):
 
         self.update_tab_bar_visibility()
 
+    def init_help_menu(self):
+        # please keep the Help menu in Mac Os even if empty. It will
+        # automatically contain a search field to search inside menus and
+        # please keep it spelled in English, as long as Qt Doesn't support
+        # a QAction.MenuRole like HelpMenuRole otherwise it will lose
+        # this search field functionality
+        self.help_menu = self.menuBar().addMenu("&Help")
+
+        # Help Menu
+        # Don't use
+        #self.help_action = QtGui.QAction("Show &QtConsole help", self,
+        #                                 triggered=self._show_help)
+        self.online_help_action = QtGui.QAction("Open online &help", self,
+                                                triggered=self._open_online_help)
+        #self.add_menu_action(self.help_menu, self.help_action)
+        self.add_menu_action(self.help_menu, self.online_help_action)
+
     def _open_online_help(self):
         filename = "http://chconsole.readthedocs.org/en/latest/"
         webbrowser.open(filename, new=1, autoraise=True)
