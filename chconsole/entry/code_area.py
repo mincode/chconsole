@@ -1,6 +1,7 @@
 import os
 from functools import singledispatch
 
+import qtconsole
 from qtconsole.bracket_matcher import BracketMatcher
 from qtconsole.call_tip_widget import CallTipWidget
 from qtconsole.completion_widget import CompletionWidget
