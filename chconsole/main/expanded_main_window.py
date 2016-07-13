@@ -388,6 +388,14 @@ class ExpandedMainWindow(mainwindow.MainWindow):
         #self.add_menu_action(self.help_menu, self.help_action)
         self.add_menu_action(self.help_menu, self.online_help_action)
 
+        self.help_menu.addSeparator()
+        self.copyright_action = QtGui.QAction('(C) M. Minimair', self, triggered=self._go_github)
+        self.add_menu_action(self.help_menu, self.copyright_action)
+
     def _open_online_help(self):
         filename = "http://chconsole.readthedocs.org/en/latest/"
+        webbrowser.open(filename, new=1, autoraise=True)
+
+    def _go_github(self):
+        filename = "https://github.com/mincode/chconsole"
         webbrowser.open(filename, new=1, autoraise=True)
