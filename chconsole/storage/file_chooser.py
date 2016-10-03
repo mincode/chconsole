@@ -15,7 +15,7 @@ class FileChooser(QtGui.QFileDialog):
     def __init__(self, storage, key_id='', default_dir='', default_name='',
                  parent=None, caption='', file_filter='', default_ext=''):
         super(FileChooser, self).__init__(parent, caption)
-        self.setFilter(file_filter)
+        self.setNameFilter(file_filter)
         self.setFileMode(QtGui.QFileDialog.AnyFile)
 
         name_key = key_id + ': file'
