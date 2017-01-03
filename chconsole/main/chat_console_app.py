@@ -390,7 +390,8 @@ class ChatConsoleApp(JupyterApp, JupyterConsoleApp, DefaultNames):
             if not self.local_kernel:
                 self.storage = JSONStorage(chconsole_data_dir(), self.default_file)
                 self.chooser = FileChooser(self.storage, self.storage_key, get_home_dir(), self.default_file,
-                                           parent=None, caption='Choose Existing Connection File', file_filter='*.json',
+                                           parent=None,
+                                           caption='Choose Existing Connection File', file_filter='*.json',
                                            default_ext='json')
                 if self.chooser.choose_file() and os.path.exists(self.chooser.file):
                     connection_data = JSONStorage(self.chooser.dir, self.chooser.name)
@@ -402,8 +403,9 @@ class ChatConsoleApp(JupyterApp, JupyterConsoleApp, DefaultNames):
         self.init_signal()
 
     def start(self):
+        # print('chatconsole before uper start')
         super(ChatConsoleApp, self).start()
-
+        # print('chat cons after super start')
         # draw the window
         if self.maximize:
             self.window.showMaximized()

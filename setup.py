@@ -97,9 +97,12 @@ extras_require = setuptools_args['extras_require'] = {
 
 if 'setuptools' in sys.modules:
     setup_args['entry_points'] = {
-        'gui_scripts': [
+        # gui_scripts eats help output in the command shell
+        'console_scripts': [
             'jupyter-chconsole = chconsole.main.launch_app:main',
             'chconsole = chconsole.main.launch_app:main',
+        ],
+        'gui_scripts': [
             'chc-python = chconsole.run_kernel.chc_python:main',
         ]
     }
