@@ -9,7 +9,8 @@ from traitlets import Bool, Float, Any, Unicode
 from traitlets.config.configurable import LoggingConfigurable
 
 from chconsole.media import default_editor
-from chconsole.messages import Exit, Execute, Inspect, Complete, Restart, Interrupt, ClearAll, KernelMessage, TailHistory
+from chconsole.messages import Exit, Execute, Inspect, Complete, Restart, Interrupt, ClearAll, KernelMessage, \
+    TailHistory
 from chconsole.messages import Stderr, UserInput
 from chconsole.standards import Importable
 from chconsole.tab import tab_content_template

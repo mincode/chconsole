@@ -1,4 +1,5 @@
 import time
+import json
 from base64 import decodebytes
 
 from qtconsole.qt import QtCore
@@ -21,6 +22,28 @@ def _show_msg(msg, show_other):
     :return: whether the message should be shown.
     """
     return msg.from_here or show_other
+
+
+def _filter_chat_meta(session, code):
+    """
+    Determine if code represents a meta instruction for the chat system of the
+    form: whitespaces #session_id/json-string
+    :param session: session id.
+    :param code: code sent through the system.
+    :return: json representing the meta instruction or empty string if none.
+    """
+    stripped = code.lstrip()
+    instruction = ''
+    if stripped[0] == '#':
+        session_end = len(session) + 1
+        if stripped[1:session_end] == session:
+            if stripped[session_end] == '/':
+                rest = stripped[session_end+1:]
+                try:
+                    instruction = json.loads(rest)
+                except json.JSONDecodeError:
+                    pass
+    return instruction
 
 
 class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject), {})):
@@ -59,7 +82,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
     @QtCore.Slot(Importable)
     def convert(self, msg):
-        show_msg = False  # mainly for debugging to show messages as they arrive
+        show_msg = True  # mainly for debugging to show messages as they arrive
         if show_msg:
             print('convert: ' + msg.type + ', user: ' + msg.username)
         if isinstance(msg, ImportItem):
@@ -165,7 +188,11 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         content = msg.content
         self.log.debug("execute_input: %s", content)
 
-        self.please_process.emit(Input(content['code'], execution_count=content['execution_count'],
+        chat_instruction = _filter_chat_meta(msg.session, content['doce'])
+        if chat_instruction != '':
+            self._process_chat_meta(chat_instruction, ustername=msg.parent_username)
+        else:
+            self.please_process.emit(Input(content['code'], execution_count=content['execution_count'],
                                        username=msg.parent_username))
 
     def _handle_display_data(self, msg):

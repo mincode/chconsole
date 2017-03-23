@@ -30,3 +30,7 @@ class KernelMessage(Importable):
     @property
     def content(self):
         return self.raw['content']
+
+    @property
+    def session(self):
+        return self.raw['header']['session']
