@@ -73,3 +73,13 @@ class Inspect(CodeFragment):
 
 class Complete(CodeFragment):
     pass
+
+
+class AddUser(Code):
+    def __init__(self, session):
+        super(AddUser, self).__init__('#' + session + '/' + '{"type": "command", "content": {"user": "join"}}')
+
+
+class DropUser(Code):
+    def __init__(self, session):
+        super(DropUser, self).__init__('#' + session + '/' + '{"type": "command", "content": {"user": "leave"}}')

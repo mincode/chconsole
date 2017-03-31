@@ -1,5 +1,4 @@
 import time
-import json
 from base64 import decodebytes
 
 from qtconsole.qt import QtCore
@@ -9,6 +8,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from chconsole.messages import CompleteItems, PageDoc, EditFile, InText, CallTip, InputRequest, ExportItem, TailHistory, History
 from chconsole.messages import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput
 from chconsole.messages import SvgXml, Png, Jpeg, LaTeX
+from chconsole.messages import filter_meta, is_command_meta, process_command_meta
 from chconsole.standards import Importable
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -22,28 +22,6 @@ def _show_msg(msg, show_other):
     :return: whether the message should be shown.
     """
     return msg.from_here or show_other
-
-
-def _filter_chat_meta(session, code):
-    """
-    Determine if code represents a meta instruction for the chat system of the
-    form: whitespaces #session_id/json-string
-    :param session: session id.
-    :param code: code sent through the system.
-    :return: json representing the meta instruction or empty string if none.
-    """
-    stripped = code.lstrip()
-    instruction = ''
-    if stripped[0] == '#':
-        session_end = len(session) + 1
-        if stripped[1:session_end] == session:
-            if stripped[session_end] == '/':
-                rest = stripped[session_end+1:]
-                try:
-                    instruction = json.loads(rest)
-                except json.JSONDecodeError:
-                    pass
-    return instruction
 
 
 class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject), {})):
@@ -188,12 +166,13 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         content = msg.content
         self.log.debug("execute_input: %s", content)
 
-        chat_instruction = _filter_chat_meta(msg.session, content['doce'])
-        if chat_instruction != '':
-            self._process_chat_meta(chat_instruction, ustername=msg.parent_username)
+        chat_instruction = filter_meta(msg.session, content['code'])
+        if is_command_meta(chat_instruction):
+            to_process = process_command_meta(chat_instruction, username=msg.parent_username)
         else:
-            self.please_process.emit(Input(content['code'], execution_count=content['execution_count'],
-                                       username=msg.parent_username))
+            to_process = Input(content['code'], execution_count=content['execution_count'],
+                                username=msg.parent_username)
+        self.please_process.emit(to_process)
 
     def _handle_display_data(self, msg):
         data = msg.content['data']

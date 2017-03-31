@@ -38,6 +38,26 @@ class ImportItem(Importable):
 
 
 ################################################################################################
+# Meta in TabContent
+class UserJoin(ImportItem):
+    """
+    A user joins.
+    """
+
+    def __init__(self, username=''):
+        super(UserJoin, self).__init__(username=username)
+
+
+class UserLeave(ImportItem):
+    """
+    A user leaves.
+    """
+
+    def __init__(self, username):
+        super(UserLeave, self).__init__(username=username)
+
+
+################################################################################################
 # TabContent
 class ClearAll(ImportItem):
     """

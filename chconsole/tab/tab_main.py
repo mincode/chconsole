@@ -11,7 +11,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from chconsole.media import default_editor
 from chconsole.messages import Exit, Execute, Inspect, Complete, Restart, Interrupt, ClearAll, KernelMessage, \
     TailHistory
-from chconsole.messages import Stderr, UserInput
+from chconsole.messages import Stderr, UserInput, AddUser, DropUser
 from chconsole.standards import Importable
 from chconsole.tab import tab_content_template
 from . import Importer
@@ -109,6 +109,16 @@ def _(item, target):
     # -------
     # The msg_id of the message sent.
     # """
+
+
+@_export.register(AddUser)
+def _(item, target):
+    target.kernel_client.execute(item.source.code, silent=False, store_history=False)
+
+
+@_export.register(DropUser)
+def _(item, target):
+    target.kernel_client.execute(item.source.code, silent=False, store_history=False)
 
 
 def tab_main_template(edit_class):
@@ -228,8 +238,14 @@ def tab_main_template(edit_class):
             # The reply will trigger %guiref load provided language=='python' (not implemented)
             # The kernel also automatically sends the info on startup
             self.kernel_client.kernel_info()
-            # 3) load history
+            # 3) Register user
+            # Does kernel_client.session.session provide the sesion id?
+            # send user join message
+            # self.export(AddUser(kernel_client.session.session))
+            print('session1: ' + self.kernel_client.session.session)
+            # 4) load history
             self.kernel_client.history(hist_access_type='tail', n=1000)
+            print('session2: ' + self.kernel_client.session.session)
 
         def _dispatch(self, msg):
             """

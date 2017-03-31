@@ -12,9 +12,11 @@ from chconsole.messages import Exit, Execute, ClearAll, History, KernelMessage, 
 from chconsole.messages import ExportItem, UserInput
 from chconsole.messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
 from chconsole.messages import Stderr, Stdout
+from chconsole.messages import UserJoin, UserLeave
 from chconsole.pager import pager_template
 from chconsole.receiver import receiver_template
 from chconsole.standards import NoDefaultEditor, CommandError
+from .user_tracker import UserTracker
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -64,6 +66,21 @@ def _resize_last(splitter, fraction=4):
 @singledispatch
 def _post(item, target):
     target.receiver.post(item)
+
+
+# User
+@_post.register(UserJoin)
+def _(item, target):
+    # print(item.username + ' joined')
+    target.user_tracker.insert(item.username)
+    # print(target.user_tracker.users)
+
+
+@_post.register(UserLeave)
+def _(item, target):
+    # print(item.username + ' left')
+    target.user_tracker.remove(item.username)
+    # print(target.user_tracker.users)
 
 
 # Pager
@@ -207,6 +224,7 @@ def tab_content_template(edit_class):
         history = None  # History
 
         show_users = Bool(False, help='Whether to show the users in command input and output listings')
+        user_tracker = None  # UserTracker for tracking users
 
         def __init__(self, is_complete, editor=default_editor, **kwargs):
             """
@@ -268,6 +286,7 @@ def tab_content_template(edit_class):
             self.line_prompt.text_input.connect(self.on_text_input)
 
             self.show_users = self.receiver.text_register.get_visible()
+            self.user_tracker = UserTracker()
 
         def _show_users_changed(self):
             self.receiver.text_register.set_visible(self.show_users)
