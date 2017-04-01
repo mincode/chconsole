@@ -9,6 +9,7 @@ from chconsole.messages import CompleteItems, PageDoc, EditFile, InText, CallTip
 from chconsole.messages import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput
 from chconsole.messages import SvgXml, Png, Jpeg, LaTeX
 from chconsole.messages import filter_meta, is_command_meta, process_command_meta
+from chconsole.messages import AddUser, DropUser
 from chconsole.standards import Importable
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -40,15 +41,19 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
     _retry_history = None  # QSemaphore(1) allows one retry of a history request
 
-    def __init__(self, parent=None, **kwargs):
+    unique_id = ''  # unique id string for this client instance
+
+    def __init__(self, unique_id = '', parent = None, **kwargs):
         """
         Initialize.
+        :param unique_id: unique id for this client instance
         :param parent: parent object, requires data member show_other.
         :param kwargs:
         :return:
         """
         QtCore.QObject.__init__(self, parent)
         LoggingConfigurable.__init__(self, **kwargs)
+        self.unique_id = unique_id
         self.target = parent
         self._retry_history = QtCore.QSemaphore(1)
 
@@ -160,6 +165,9 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             history_items = content['history']
             self.log.debug("Received history reply with %i entries", len(history_items))
             self.please_process.emit(History(history_items, username=msg.username))
+            # Since the client sends a history request upon connecting, we send an add user for any received history
+            # request, to register the user.
+            self.please_export.emit(AddUser(msg.session, self.unique_id))
 
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""

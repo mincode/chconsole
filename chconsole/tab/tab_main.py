@@ -1,6 +1,8 @@
 import getpass
 import os
 from functools import singledispatch
+from datetime import datetime
+from uuid import uuid4
 
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
 from qtconsole.qt import QtGui, QtCore
@@ -113,12 +115,12 @@ def _(item, target):
 
 @_export.register(AddUser)
 def _(item, target):
-    target.kernel_client.execute(item.source.code, silent=False, store_history=False)
+    target.kernel_client.execute(item.source.code, silent=item.source.hidden, store_history=False)
 
 
 @_export.register(DropUser)
 def _(item, target):
-    target.kernel_client.execute(item.source.code, silent=False, store_history=False)
+    target.kernel_client.execute(item.source.code, silent=item.source.hidden, store_history=False)
 
 
 def tab_main_template(edit_class):
@@ -164,6 +166,8 @@ def tab_main_template(edit_class):
             will be appended to the end of the command.
             """)
 
+        unique_id = ''  # unique id string of this instance
+
         main_content = None  # QWidget
 
         message_arrived = QtCore.Signal(Importable)  # signal to send a message that has arrived from the kernel
@@ -192,13 +196,14 @@ def tab_main_template(edit_class):
             QtGui.QWidget.__init__(self, parent)
             LoggingConfigurable.__init__(self, **kw)
 
+            self.unique_id = str(id(self)) + ',' + datetime.isoformat(datetime.utcnow()) + ',' + str(uuid4())
             self.main_content = tab_content_template(edit_class)(self.is_complete, editor=self.editor)
             self.main_content.please_export.connect(self.export)
             # MainContent -> export
 
             # Import and handle kernel messages
             # message_arrived -> Importer -> MainContent
-            self._importer = Importer(self)
+            self._importer = Importer(self, unique_id=self.unique_id)
             self.message_arrived.connect(self._importer.convert)
             self._importer.please_process.connect(self.main_content.post)
             self._importer.please_export.connect(self.export)
@@ -238,14 +243,10 @@ def tab_main_template(edit_class):
             # The reply will trigger %guiref load provided language=='python' (not implemented)
             # The kernel also automatically sends the info on startup
             self.kernel_client.kernel_info()
-            # 3) Register user
-            # Does kernel_client.session.session provide the sesion id?
-            # send user join message
-            # self.export(AddUser(kernel_client.session.session))
-            print('session1: ' + self.kernel_client.session.session)
-            # 4) load history
+            # 3) load history
             self.kernel_client.history(hist_access_type='tail', n=1000)
-            print('session2: ' + self.kernel_client.session.session)
+            # 4) Register user
+            # is done when and through receiving the history request
 
         def _dispatch(self, msg):
             """

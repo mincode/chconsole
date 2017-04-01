@@ -18,7 +18,7 @@ class UserTracker:
         """
         return self._users
 
-    def insert(self, user):
+    def insert(self, user, unique_id):
         """
         Add user alphabethically.
         :param user: string of user name.
@@ -31,7 +31,7 @@ class UserTracker:
         if length == 0 or (i != length and user != self._users[i]) or i == length:
             self._users.insert(i, user)
 
-    def remove(self, user):
+    def remove(self, user, unique_id):
         """
         Remove user from the list; no error if no such item.
         :param user: 

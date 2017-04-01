@@ -1,3 +1,6 @@
+import json
+from .source import Source
+
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
@@ -76,10 +79,14 @@ class Complete(CodeFragment):
 
 
 class AddUser(Code):
-    def __init__(self, session):
-        super(AddUser, self).__init__('#' + session + '/' + '{"type": "command", "content": {"user": "join"}}')
+    def __init__(self, session, unique_id):
+        command = json.dumps({'unique_id': unique_id, 'type': 'command', 'content': {'user': 'join'}})
+        super(AddUser, self).__init__(Source(
+            '#' + session + '/' + command, hidden=False))
 
 
 class DropUser(Code):
-    def __init__(self, session):
-        super(DropUser, self).__init__('#' + session + '/' + '{"type": "command", "content": {"user": "leave"}}')
+    def __init__(self, session, unique_id):
+        command = json.dumps({'unique_id': unique_id, 'type': 'command', 'content': {'user': 'leave'}})
+        super(DropUser, self).__init__(Source(
+            '#' + session + '/' + command, hidden=False))
