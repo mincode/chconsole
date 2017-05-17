@@ -11,7 +11,7 @@ def filter_meta(session, code):
     form: whitespaces #session_id/json-string
     :param session: session id.
     :param code: code sent through the system.
-    :return: dict representing the meta instruction or None if none.
+    :return: dict representing the meta instruction or None if none; session parameter must match session_id in code.
     """
     stripped = code.lstrip()
     instruction = None

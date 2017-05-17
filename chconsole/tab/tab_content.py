@@ -72,14 +72,14 @@ def _post(item, target):
 @_post.register(UserJoin)
 def _(item, target):
     print(item.username + ' joined')
-    target.user_tracker.insert(item.username, item.unique_id)
+    target.user_tracker.insert(item.username, item.client_id)
     print(target.user_tracker.users)
 
 
 @_post.register(UserLeave)
 def _(item, target):
     # print(item.username + ' left')
-    target.user_tracker.remove(item.username, item.unique_id)
+    target.user_tracker.remove(item.username, item.client_id)
     # print(target.user_tracker.users)
 
 

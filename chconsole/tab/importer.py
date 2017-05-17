@@ -41,19 +41,19 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
     _retry_history = None  # QSemaphore(1) allows one retry of a history request
 
-    unique_id = ''  # unique id string for this client instance
+    client_id = ''  # unique id string for this client instance
 
-    def __init__(self, unique_id = '', parent = None, **kwargs):
+    def __init__(self, client_id='', parent=None, **kwargs):
         """
         Initialize.
-        :param unique_id: unique id for this client instance
+        :param client_id: unique id for this client instance
         :param parent: parent object, requires data member show_other.
         :param kwargs:
         :return:
         """
         QtCore.QObject.__init__(self, parent)
         LoggingConfigurable.__init__(self, **kwargs)
-        self.unique_id = unique_id
+        self.client_id = client_id
         self.target = parent
         self._retry_history = QtCore.QSemaphore(1)
 
@@ -167,7 +167,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             self.please_process.emit(History(history_items, username=msg.username))
             # Since the client sends a history request upon connecting, we send an add user for any received history
             # request, to register the user.
-            self.please_export.emit(AddUser(msg.session, self.unique_id))
+            self.please_export.emit(AddUser(msg.session, self.client_id))
 
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""

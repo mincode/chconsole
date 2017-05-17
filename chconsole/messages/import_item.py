@@ -43,22 +43,22 @@ class UserJoin(ImportItem):
     """
     A user joins.
     """
-    unique_id = ''  # unique id of this client
+    client_id = ''  # unique id of this client
 
-    def __init__(self, username='', unique_id=''):
+    def __init__(self, username='', client_id=''):
         super(UserJoin, self).__init__(username=username)
-        self.unique_id = unique_id
+        self.client_id = client_id
 
 
 class UserLeave(ImportItem):
     """
     A user leaves.
     """
-    unique_id = ''  # unique id of this client
+    client_id = ''  # unique id of this client
 
-    def __init__(self, username, unique_id=''):
+    def __init__(self, username, client_id=''):
         super(UserLeave, self).__init__(username=username)
-        self.unique_id = unique_id
+        self.client_id = client_id
 
 
 ################################################################################################

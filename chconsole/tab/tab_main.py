@@ -203,7 +203,7 @@ def tab_main_template(edit_class):
 
             # Import and handle kernel messages
             # message_arrived -> Importer -> MainContent
-            self._importer = Importer(self, unique_id=self.unique_id)
+            self._importer = Importer(self, client_id=self.unique_id)
             self.message_arrived.connect(self._importer.convert)
             self._importer.please_process.connect(self.main_content.post)
             self._importer.please_export.connect(self.export)
