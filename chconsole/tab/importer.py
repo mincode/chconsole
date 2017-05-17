@@ -43,7 +43,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
     client_id = ''  # unique id string for this client instance
 
-    def __init__(self, client_id='', parent=None, **kwargs):
+    def __init__(self, parent=None, client_id='', **kwargs):
         """
         Initialize.
         :param client_id: unique id for this client instance

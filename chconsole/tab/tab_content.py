@@ -71,9 +71,9 @@ def _post(item, target):
 # User
 @_post.register(UserJoin)
 def _(item, target):
-    print(item.username + ' joined')
+    # print(item.username + ' joined')
     target.user_tracker.insert(item.username, item.client_id)
-    print(target.user_tracker.users)
+    # print(target.user_tracker.users)
 
 
 @_post.register(UserLeave)

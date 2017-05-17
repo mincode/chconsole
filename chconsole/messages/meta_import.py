@@ -74,7 +74,7 @@ def process_command_meta(chat_instruction, username):
     """
     meta = None
     if is_user_command(chat_instruction):
-        unique_id = chat_instruction['unique_id']
+        unique_id = chat_instruction['client_id']
         if chat_instruction['content']['user'] == 'join':
             meta = UserJoin(username, unique_id)
         elif chat_instruction['content']['user'] == 'leave':

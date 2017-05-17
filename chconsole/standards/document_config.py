@@ -342,7 +342,8 @@ class DocumentConfig(LoggingConfigurable):
         """
         self.setStyleSheet(self.style_sheet)
         self.document().setDefaultStyleSheet(self.style_sheet)
-        bg_color = self.palette().window().color()
+        # bg_color = self.palette().window().color()
+        bg_color = 'default'
         self.ansi_processor.set_background_color(bg_color)
 
         # if self._page_control is not None:
