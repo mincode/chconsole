@@ -115,6 +115,7 @@ def _(item, target):
 
 @_export.register(AddUser)
 def _(item, target):
+    # print('EXPORT ADDUSER!!')
     target.kernel_client.execute(item.source.code, silent=item.source.hidden, store_history=False)
 
 

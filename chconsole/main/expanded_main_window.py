@@ -201,6 +201,12 @@ class ExpandedMainWindow(mainwindow.MainWindow):
         self.add_menu_action(self.view_menu, self.show_users_action)
         self.tab_widget.currentChanged.connect(self.update_show_users_checkbox)
 
+        self.list_users_action = QtGui.QAction("&List All Users",
+                                               self,
+                                               checkable=False,
+                                               triggered=self.list_users)
+        self.add_menu_action(self.view_menu, self.list_users_action)
+
     def toggle_confirm_show_users(self):
         widget = self.active_frontend
         widget.main_content.show_users = not widget.main_content.show_users
@@ -212,6 +218,8 @@ class ExpandedMainWindow(mainwindow.MainWindow):
         widget = self.active_frontend
         self.show_users_action.setChecked(widget.main_content.show_users)
 
+    def list_users(self):
+        self.active_frontend.main_content.list_users()
 
     # MM: This method does not seem to be in use.
     def _set_active_frontend_focus(self):

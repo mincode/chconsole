@@ -167,6 +167,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             self.please_process.emit(History(history_items, username=msg.username))
             # Since the client sends a history request upon connecting, we send an add user for any received history
             # request, to register the user.
+            print('Now ADD USER!')
             self.please_export.emit(AddUser(msg.session, self.client_id))
 
     def _handle_execute_input(self, msg):
@@ -176,6 +177,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
         chat_instruction = filter_meta(msg.session, content['code'])
         if is_command_meta(chat_instruction):
+            print("COMMAND META")
             to_process = process_command_meta(chat_instruction, username=msg.parent_username)
         else:
             to_process = Input(content['code'], execution_count=content['execution_count'],

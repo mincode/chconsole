@@ -328,6 +328,24 @@ def tab_content_template(edit_class):
             else:
                 return None
 
+        def list_users(self):
+            """
+            List all users connected to the tab.
+            """
+            names = self.user_tracker.names
+            num = len(names)
+            if num > 0:
+                out_text = 'Connected Users<hr><br>'
+                out_text = out_text + names[0]
+                print(out_text)
+                for i in range(1, num):
+                    out_text = out_text + '<br>' + names[i]
+            else:
+                out_text = ''
+
+            out = PageDoc(html=out_text)
+            self.pager.post(out)
+
         # JupyterWidget
         def external_edit(self, filename, line=None):
             """ Opens an external editor.

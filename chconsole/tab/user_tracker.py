@@ -24,6 +24,15 @@ class UserTracker:
         """
         return self._users
 
+    @property
+    def names(self):
+        """
+        List of user names.
+        :return: list of user names.
+        """
+        names_list = [user.name for user in self._users]
+        return names_list
+
     def insert(self, user, client_id):
         """
         Add user alphabethically.
