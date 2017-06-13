@@ -129,6 +129,7 @@ class UserWho(UserMessage):
         super(AddUser, self).__init__(Source(
             '#' + session + '/' + command, hidden=False), session, client_id, sender, recipient)
 
+
 class DropUser(UserMessage):
     def __init__(self, session, client_id, sender, recipient=''):
         """
