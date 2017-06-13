@@ -9,7 +9,7 @@ from chconsole.messages import CompleteItems, PageDoc, EditFile, InText, CallTip
 from chconsole.messages import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput
 from chconsole.messages import SvgXml, Png, Jpeg, LaTeX
 from chconsole.messages import filter_meta, is_command_meta, process_command_meta
-from chconsole.messages import AddUser, DropUser
+from chconsole.messages import AddUser, UserWho, DropUser
 from chconsole.standards import Importable
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -42,8 +42,9 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
     _retry_history = None  # QSemaphore(1) allows one retry of a history request
 
     client_id = ''  # unique id string for this client instance
+    user_name = ''  # user name
 
-    def __init__(self, parent=None, client_id='', **kwargs):
+    def __init__(self, parent=None, client_id='', user_name='', **kwargs):
         """
         Initialize.
         :param client_id: unique id for this client instance
@@ -54,6 +55,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         QtCore.QObject.__init__(self, parent)
         LoggingConfigurable.__init__(self, **kwargs)
         self.client_id = client_id
+        self.user_name = user_name
         self.target = parent
         self._retry_history = QtCore.QSemaphore(1)
 
@@ -167,9 +169,10 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             self.please_process.emit(History(history_items, username=msg.username))
             # Since the client sends a history request upon connecting, we send an add user for any received history
             # request, to register the user.
-            self.please_export.emit(AddUser(msg.session, self.client_id))
+            self.please_export.emit(AddUser(msg.session, self.client_id, self.user_name))
             # since it is lost occasionally, send twice
-            self.please_export.emit(AddUser(msg.session, self.client_id))
+            self.please_export.emit(AddUser(msg.session, self.client_id, self.user_name))
+            self.please_export.emit(UserWho(msg.session, self.client_id, self.user_name))
 
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""

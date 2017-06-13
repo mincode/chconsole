@@ -232,6 +232,7 @@ def tab_main_template(edit_class):
                         self.kernel_client.session.username = self.user_name
             else:
                 self.kernel_client.session.username = self.user_name
+            self._importer.user_name = self.user_name
 
         def _started_channels(self):
             """Make a history request and load %guiref, if possible."""

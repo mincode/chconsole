@@ -69,15 +69,18 @@ def process_command_meta(chat_instruction, username):
     """
     Create importable object for the command.
     :param chat_instruction: meta command dict.
-    :param username: user associated with the command.
+    :param user name of the user who has received the chat_instruction in the current client.
     :return: Importable object.
     """
     meta = None
     if is_user_command(chat_instruction):
-        unique_id = chat_instruction['client_id']
+        client_id = chat_instruction['client_id']
+        sender = chat_instruction['sender']
         if chat_instruction['content']['user'] == 'join':
-            meta = UserJoin(username, unique_id)
+            meta = UserJoin(sender, client_id)
+        elif chat_instruction['content']['user'] == 'who':
+                meta = UserName(username, client_id, sender)
         elif chat_instruction['content']['user'] == 'leave':
-            meta = UserLeave(username, unique_id)
+            meta = UserLeave(sender, client_id)
     return meta
 
