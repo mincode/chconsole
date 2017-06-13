@@ -115,7 +115,6 @@ def _(item, target):
 
 @_export.register(AddUser)
 def _(item, target):
-    # print('EXPORT ADDUSER!!')
     target.kernel_client.execute(item.source.code, silent=item.source.hidden, store_history=False)
 
 
@@ -248,6 +247,8 @@ def tab_main_template(edit_class):
             self.kernel_client.history(hist_access_type='tail', n=1000)
             # 4) Register user
             # is done when and through receiving the history request
+            # Does not work, because somehow the session id changes later
+            #self.export(AddUser(self.kernel_client.session.session, self.unique_id))
 
         def _dispatch(self, msg):
             """
