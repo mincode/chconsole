@@ -81,7 +81,7 @@ def process_command_meta(chat_instruction, session, client_id, username):
         recipient = chat_instruction['recipient']
         recipient_client_id = chat_instruction['recipient_client_id']
         if chat_instruction['content']['user'] == 'join':
-            if ((recipient_client_id != '' and recipient != '') or
+            if ((recipient_client_id == '' and recipient == '') or
                     (recipient_client_id == client_id and recipient == username)):
                 meta = UserJoin(sender_client_id, sender)
         elif chat_instruction['content']['user'] == 'who':
