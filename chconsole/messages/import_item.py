@@ -45,9 +45,29 @@ class UserJoin(ImportItem):
     """
     client_id = ''  # unique id of this client
 
-    def __init__(self, username='', client_id=''):
+    def __init__(self, client_id='', username=''):
         super(UserJoin, self).__init__(username=username)
         self.client_id = client_id
+
+
+class UserName(ImportItem):
+    """
+    Name of the current user.
+    :param username: name of the current user.
+    :param to_who_client_id: id of the client where the current user name should be sent.
+    :param to_who: name of the user to who the current user name should be sent.
+    """
+    session = ''  # current session id
+    client_id = ''  # id of the current client which sends its user name
+    to_who_client_id = ''  # unique id of the client to who to send the name of the current user
+    to_who = ''  # name of the user to who to send the current user name
+
+    def __init__(self, session='', client_id='', username='', to_who_client_id='', to_who=''):
+        super(UserName, self).__init__(username=username)
+        self.session = session
+        self.client_id = client_id
+        self.to_who_client_id = to_who_client_id
+        self.to_who = to_who
 
 
 class UserLeave(ImportItem):
@@ -56,7 +76,7 @@ class UserLeave(ImportItem):
     """
     client_id = ''  # unique id of this client
 
-    def __init__(self, username, client_id=''):
+    def __init__(self, client_id='', username=''):
         super(UserLeave, self).__init__(username=username)
         self.client_id = client_id
 

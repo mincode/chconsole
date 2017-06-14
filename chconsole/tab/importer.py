@@ -9,7 +9,7 @@ from chconsole.messages import CompleteItems, PageDoc, EditFile, InText, CallTip
 from chconsole.messages import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput
 from chconsole.messages import SvgXml, Png, Jpeg, LaTeX
 from chconsole.messages import filter_meta, is_command_meta, process_command_meta
-from chconsole.messages import AddUser, UserWho, DropUser
+from chconsole.messages import AddUser, WhoUser, DropUser
 from chconsole.standards import Importable
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -172,7 +172,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             self.please_export.emit(AddUser(msg.session, self.client_id, self.user_name))
             # since it is lost occasionally, send twice
             self.please_export.emit(AddUser(msg.session, self.client_id, self.user_name))
-            self.please_export.emit(UserWho(msg.session, self.client_id, self.user_name))
+            self.please_export.emit(WhoUser(msg.session, self.client_id, self.user_name))
 
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""
@@ -182,10 +182,11 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         chat_instruction = filter_meta(msg.session, content['code'])
         if is_command_meta(chat_instruction):
             # print("COMMAND META")
-            to_process = process_command_meta(chat_instruction, username=msg.parent_username)
+            to_process = process_command_meta(chat_instruction, session=msg.session,
+                                              client_id=self.client_id, username=msg.parent_username)
         else:
             to_process = Input(content['code'], execution_count=content['execution_count'],
-                                username=msg.parent_username)
+                            username=msg.parent_username)
         self.please_process.emit(to_process)
 
     def _handle_display_data(self, msg):

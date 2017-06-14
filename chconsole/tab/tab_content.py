@@ -9,10 +9,10 @@ from traitlets.config.configurable import LoggingConfigurable
 from chconsole.entry import entry_template, LinePrompt
 from chconsole.media import default_editor
 from chconsole.messages import Exit, Execute, ClearAll, History, KernelMessage, ClearCurrentEntry
-from chconsole.messages import ExportItem, UserInput
+from chconsole.messages import ExportItem, UserInput, AddUser
 from chconsole.messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
 from chconsole.messages import Stderr, Stdout
-from chconsole.messages import UserJoin, UserLeave
+from chconsole.messages import UserJoin, UserLeave, UserName
 from chconsole.pager import pager_template
 from chconsole.receiver import receiver_template
 from chconsole.standards import NoDefaultEditor, CommandError
@@ -74,6 +74,12 @@ def _(item, target):
     # print(item.username + ' joined')
     target.user_tracker.insert(item.username, item.client_id)
     # print(target.user_tracker.users)
+
+
+@_post.register(UserName)
+def _(item, target):
+    target.please_export.emit(AddUser(session=item.session, client_id=item.client_id, sender=item.username,
+                                      recipient_client_id=item.to_who_client_id, recipient=item.to_who))
 
 
 @_post.register(UserLeave)

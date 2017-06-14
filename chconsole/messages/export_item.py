@@ -103,42 +103,50 @@ class UserMessage(Code):
 
 
 class AddUser(UserMessage):
-    def __init__(self, session, client_id, sender, recipient=''):
+    def __init__(self, session, client_id, sender, recipient_client_id='', recipient=''):
         """
         Initialize.
         :param session: session id. 
-        :param client_id: id of the client of the user.
+        :param client_id: id of the client of the sender user.
         :param sender: name of the sender user.
+        :param recipient_client_id: id of the recipient's client; all if ''
         :param recipient: name of the recipient user; all if ''
         """
-        command = json.dumps({'client_id': client_id, 'type': 'command', 'content': {'user': 'join'}})
+        command = json.dumps({'client_id': client_id, 'sender': sender,
+                              'recipient_client_id': recipient_client_id, 'recipient': recipient,
+                              'type': 'command', 'content': {'user': 'join'}})
         super(AddUser, self).__init__(Source(
-            '#' + session + '/' + command, hidden=False), session, client_id, sender, recipient)
+            '#' + session + '/' + command, hidden=False), session, client_id, sender,
+            recipient_client_id, recipient)
 
 
-class UserWho(UserMessage):
-    def __init__(self, session, client_id, sender, recipient=''):
+class WhoUser(UserMessage):
+    def __init__(self, session, client_id, sender, recipient_client_id='', recipient=''):
         """
         Initialize.
         :param session: session id.
         :param client_id: id of the client of the user.
         :param sender: name of the sender user.
+        :param recipient_client_id: id of the recipient's client; all if ''
         :param recipient: name of the recipient user; all if ''
         """
         command = json.dumps({'client_id': client_id, 'type': 'command', 'content': {'user': 'who'}})
-        super(AddUser, self).__init__(Source(
-            '#' + session + '/' + command, hidden=False), session, client_id, sender, recipient)
+        super(WhoUser, self).__init__(Source(
+            '#' + session + '/' + command, hidden=False), session, client_id, sender,
+            recipient_client_id, recipient)
 
 
 class DropUser(UserMessage):
-    def __init__(self, session, client_id, sender, recipient=''):
+    def __init__(self, session, client_id, sender, recipient_client_id='', recipient=''):
         """
         Initialize.
         :param session: session id. 
         :param client_id: id of the client of the user.
         :param sender: name of the sender user.
+        :param recipient_client_id: id of the recipient's client; all if ''
         :param recipient: name of the recipient user; all if ''
         """
         command = json.dumps({'client_id': client_id, 'type': 'command', 'content': {'user': 'leave'}})
         super(DropUser, self).__init__(Source(
-            '#' + session + '/' + command, hidden=False), session, client_id, sender, recipient)
+            '#' + session + '/' + command, hidden=False), session, client_id, sender,
+            recipient_client_id, recipient)
