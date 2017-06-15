@@ -133,7 +133,8 @@ class WhoUser(UserMessage):
         :param recipient_client_id: id of the recipient's client; all if ''
         :param recipient: name of the recipient user; all if ''
         """
-        command = json.dumps({'sender_client_id': sender_client_id, 'sender': sender, 'type': 'command',
+        command = json.dumps({'sender_client_id': sender_client_id, 'sender': sender,
+                              'recipient_client_id': recipient_client_id, 'recipient': recipient, 'type': 'command',
                               'content': {'user': 'who'}})
         super(WhoUser, self).__init__(Source(
             '#' + session + '/' + command, hidden=False), session, sender_client_id, sender,

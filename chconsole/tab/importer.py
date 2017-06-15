@@ -173,6 +173,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             # since it is lost occasionally, send twice
             self.please_export.emit(AddUser(msg.session, self.client_id, self.user_name))
             self.please_export.emit(WhoUser(msg.session, self.client_id, self.user_name))
+            # self.please_export.emit(WhoUser(msg.session, self.client_id, self.user_name))
 
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""

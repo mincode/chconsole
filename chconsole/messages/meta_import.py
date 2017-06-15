@@ -58,6 +58,8 @@ def is_user_command(chat_instruction):
     user = chat_instruction['content'].get('user', '')
     if user == 'join':
         res = True
+    elif user == 'who':
+        res = True
     elif user == 'leave':
         res = True
     else:
@@ -76,7 +78,7 @@ def process_command_meta(chat_instruction, session, client_id, username):
     """
     meta = None
     if is_user_command(chat_instruction):
-        sender_client_id = chat_instruction['client_id']
+        sender_client_id = chat_instruction['sender_client_id']
         sender = chat_instruction['sender']
         recipient = chat_instruction['recipient']
         recipient_client_id = chat_instruction['recipient_client_id']
@@ -85,7 +87,8 @@ def process_command_meta(chat_instruction, session, client_id, username):
                     (recipient_client_id == client_id and recipient == username)):
                 meta = UserJoin(sender_client_id, sender)
         elif chat_instruction['content']['user'] == 'who':
-                meta = UserName(session, client_id, username, sender_client_id, sender)
+            meta = UserName(session, client_id, username, sender_client_id, sender)
+            print('meta_import: UserName')
         elif chat_instruction['content']['user'] == 'leave':
             meta = UserLeave(sender_client_id, sender)
     return meta
