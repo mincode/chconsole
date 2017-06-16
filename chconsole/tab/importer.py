@@ -43,8 +43,9 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
     client_id = ''  # unique id string for this client instance
     user_name = ''  # user name
+    chat_secret = ''  # secret id for chat communication
 
-    def __init__(self, parent=None, client_id='', user_name='', **kwargs):
+    def __init__(self, parent=None, chat_secret='', client_id='', user_name='', **kwargs):
         """
         Initialize.
         :param client_id: unique id for this client instance
@@ -54,6 +55,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         """
         QtCore.QObject.__init__(self, parent)
         LoggingConfigurable.__init__(self, **kwargs)
+        self.chat_secret = chat_secret
         self.client_id = client_id
         self.user_name = user_name
         self.target = parent
@@ -69,7 +71,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
     def convert(self, msg):
         show_msg = True  # mainly for debugging to show messages as they arrive
         if show_msg:
-            print('convert: ' + msg.type + ', user: ' + msg.username)
+            print('\nconvert: ' + msg.type + ', user: ' + msg.username)
         if isinstance(msg, ImportItem):
             self.please_process.emit(msg)
         else:  # KernelMessage
@@ -169,10 +171,10 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             self.please_process.emit(History(history_items, username=msg.username))
             # Since the client sends a history request upon connecting, we send an add user for any received history
             # request, to register the user.
-            self.please_export.emit(AddUser(msg.session, self.client_id, self.user_name))
+            self.please_export.emit(AddUser(self.chat_secret, self.client_id, self.user_name))
             # since it is lost occasionally, send twice
-            self.please_export.emit(AddUser(msg.session, self.client_id, self.user_name))
-            self.please_export.emit(WhoUser(msg.session, self.client_id, self.user_name))
+            self.please_export.emit(AddUser(self.chat_secret, self.client_id, self.user_name))
+            self.please_export.emit(WhoUser(self.chat_secret, self.client_id, self.user_name))
             # self.please_export.emit(WhoUser(msg.session, self.client_id, self.user_name))
 
     def _handle_execute_input(self, msg):
@@ -180,11 +182,10 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         content = msg.content
         self.log.debug("execute_input: %s", content)
 
-        chat_instruction = filter_meta(msg.session, content['code'])
-        to_process = None
+        chat_instruction = filter_meta(self.chat_secret, content['code'])
         if is_command_meta(chat_instruction):
             # print("COMMAND META")
-            to_process = process_command_meta(chat_instruction, session=msg.session,
+            to_process = process_command_meta(chat_instruction, chat_secret=self.chat_secret,
                                               client_id=self.client_id, username=self.user_name)
         else:
             to_process = Input(content['code'], execution_count=content['execution_count'],

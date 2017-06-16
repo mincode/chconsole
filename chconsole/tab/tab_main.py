@@ -44,9 +44,6 @@ def _(item, target):
     target.request_restart_kernel()
 
 
-import time
-
-
 @_export.register(Exit)
 def _(item, target):
     target.keep_kernel_on_exit = True if item.keep_kernel else None
@@ -195,6 +192,10 @@ def tab_main_template(edit_class):
         _importer = None  # Importer
         display_banner = Bool(True)  # whether to show a banner on startup
 
+        # Meta commands and chat
+        chat_secret = 'abcdefgh'  # secret string used to identify chat messages or meta commands
+        # if a comment sent starts with '#chat_secret/' then it is a meta command
+
         def __init__(self, parent=None, **kw):
             """
             Initialize the main widget.
@@ -212,7 +213,7 @@ def tab_main_template(edit_class):
 
             # Import and handle kernel messages
             # message_arrived -> Importer -> MainContent
-            self._importer = Importer(self, client_id=self.unique_id)
+            self._importer = Importer(self, chat_secret=self.chat_secret, client_id=self.unique_id)
             self.message_arrived.connect(self._importer.convert)
             self._importer.please_process.connect(self.main_content.post)
             self._importer.please_export.connect(self.export)
@@ -388,7 +389,7 @@ def tab_main_template(edit_class):
             :return:
             """
             print('tab_main: drop_user')
-            self.export(DropUser(session=self.kernel_client.session.session,
+            self.export(DropUser(chat_secret=self.chat_secret,
                                  sender_client_id=self.unique_id, sender=self.user_name))
 
         # traitlets

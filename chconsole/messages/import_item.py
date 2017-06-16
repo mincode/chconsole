@@ -59,22 +59,22 @@ class UserName(ImportItem):
     """
     Name of the current user.
     """
-    session = ''  # current session id
+    chat_secret = ''  # chat secret to identify meta commands
     client_id = ''  # id of the current client which sends its user name
     to_who_client_id = ''  # unique id of the client to who to send the name of the current user
     to_who = ''  # name of the user to who to send the current user name
 
-    def __init__(self, session='', client_id='', username='', to_who_client_id='', to_who=''):
+    def __init__(self, chat_secret='', client_id='', username='', to_who_client_id='', to_who=''):
         """
         Initizlize.
-        :param session: current session id.
+        :param chat_secret: chat secret to identify meta commands.
         :param client_id: id of the client which sends its user name.
         :param username: user name to be sent.
         :param to_who_client_id: id of client to who to send the user name.
         :param to_who: name of user to who to send the user name.
         """
         super(UserName, self).__init__(username=username)
-        self.session = session
+        self.chat_secret = chat_secret
         self.client_id = client_id
         self.to_who_client_id = to_who_client_id
         self.to_who = to_who

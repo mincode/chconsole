@@ -1,17 +1,20 @@
 import sys
 import webbrowser
-import qtconsole.mainwindow
-from qtconsole import mainwindow
+#import qtconsole.mainwindow
+#from qtconsole import mainwindow
 from qtconsole.qt import QtGui, QtCore
 from chconsole.standards import code_active_color, chat_active_color
 from .statusbar import StatusBar
+from .main_window import MainWindow
+from .main_window import background
 
-background = qtconsole.mainwindow.background
+# background = qtconsole.mainwindow.background
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class ExpandedMainWindow(mainwindow.MainWindow):
+# class ExpandedMainWindow(mainwindow.MainWindow):
+class ExpandedMainWindow(MainWindow):
     """
     Expansion of qtconsole.mainwindow.MainWindow
     """
@@ -70,186 +73,6 @@ class ExpandedMainWindow(mainwindow.MainWindow):
         def set_paging():
             self.active_frontend.main_content.pager.location = paging
         return set_paging
-
-    def close_tab(self,current_tab):
-        """ Called when you need to try to close a tab.
-
-        It takes the number of the tab to be closed as argument, or a reference
-        to the widget inside this tab
-        """
-
-        # let's be sure "tab" and "closing widget" are respectively the index
-        # of the tab to close and a reference to the frontend to close
-        if type(current_tab) is not int :
-            current_tab = self.tab_widget.indexOf(current_tab)
-        closing_widget=self.tab_widget.widget(current_tab)
-
-        # when trying to be closed, widget might re-send a request to be
-        # closed again, but will be deleted when event will be processed. So
-        # need to check that widget still exists and skip if not. One example
-        # of this is when 'exit' is sent in a slave tab. 'exit' will be
-        # re-sent by this function on the master widget, which ask all slave
-        # widgets to exit
-        if closing_widget is None:
-            return
-
-        # drop clinet/user from communication system
-        print('CLOSE TAB: drop_user')
-        closing_widget.drop_user()
-
-        #get a list of all slave widgets on the same kernel.
-        slave_tabs = self.find_slave_widgets(closing_widget)
-
-        keepkernel = None #Use the prompt by default
-        if hasattr(closing_widget,'_keep_kernel_on_exit'): #set by exit magic
-            keepkernel = closing_widget._keep_kernel_on_exit
-            # If signal sent by exit magic (_keep_kernel_on_exit, exist and not None)
-            # we set local slave tabs._hidden to True to avoid prompting for kernel
-            # restart when they get the signal. and then "forward" the 'exit'
-            # to the main window
-            if keepkernel is not None:
-                for tab in slave_tabs:
-                    tab._hidden = True
-                if closing_widget in slave_tabs:
-                    try :
-                        self.find_master_tab(closing_widget).execute('exit')
-                    except AttributeError:
-                        self.log.info("Master already closed or not local, closing only current tab")
-                        self.tab_widget.removeTab(current_tab)
-                    self.update_tab_bar_visibility()
-                    return
-
-        kernel_client = closing_widget.kernel_client
-        kernel_manager = closing_widget.kernel_manager
-
-        if keepkernel is None and not closing_widget._confirm_exit:
-            # don't prompt, just terminate the kernel if we own it
-            # or leave it alone if we don't
-            keepkernel = closing_widget._existing
-        if keepkernel is None: #show prompt
-            if kernel_client and kernel_client.channels_running:
-                title = self.window().windowTitle()
-                cancel = QtGui.QMessageBox.Cancel
-                okay = QtGui.QMessageBox.Ok
-                if closing_widget._may_close:
-                    msg = "You are closing the tab : "+'"'+self.tab_widget.tabText(current_tab)+'"'
-                    info = "Would you like to quit the Kernel and close all attached Consoles as well?"
-                    justthis = QtGui.QPushButton("&No, just this Tab", self)
-                    justthis.setShortcut('N')
-                    closeall = QtGui.QPushButton("&Yes, close all", self)
-                    closeall.setShortcut('Y')
-                    # allow ctrl-d ctrl-d exit, like in terminal
-                    closeall.setShortcut('Ctrl+D')
-                    box = QtGui.QMessageBox(QtGui.QMessageBox.Question,
-                                            title, msg)
-                    box.setInformativeText(info)
-                    box.addButton(cancel)
-                    box.addButton(justthis, QtGui.QMessageBox.NoRole)
-                    box.addButton(closeall, QtGui.QMessageBox.YesRole)
-                    box.setDefaultButton(closeall)
-                    box.setEscapeButton(cancel)
-                    pixmap = QtGui.QPixmap(self._app.icon.pixmap(QtCore.QSize(64,64)))
-                    box.setIconPixmap(pixmap)
-                    reply = box.exec_()
-                    if reply == 1: # close All
-                        for slave in slave_tabs:
-                            background(slave.kernel_client.stop_channels)
-                            self.tab_widget.removeTab(self.tab_widget.indexOf(slave))
-                        kernel_manager.shutdown_kernel()
-                        self.tab_widget.removeTab(current_tab)
-                        background(kernel_client.stop_channels)
-                    elif reply == 0: # close Console
-                        if not closing_widget._existing:
-                            # Have kernel: don't quit, just close the tab
-                            closing_widget.execute("exit True")
-                        self.tab_widget.removeTab(current_tab)
-                        background(kernel_client.stop_channels)
-                else:
-                    reply = QtGui.QMessageBox.question(self, title,
-                        "Are you sure you want to close this Console?"+
-                        "\nThe Kernel and other Consoles will remain active.",
-                        okay|cancel,
-                        defaultButton=okay
-                        )
-                    if reply == okay:
-                        self.tab_widget.removeTab(current_tab)
-        elif keepkernel: #close console but leave kernel running (no prompt)
-            self.tab_widget.removeTab(current_tab)
-            background(kernel_client.stop_channels)
-        else: #close console and kernel (no prompt)
-            self.tab_widget.removeTab(current_tab)
-            if kernel_client and kernel_client.channels_running:
-                for slave in slave_tabs:
-                    background(slave.kernel_client.stop_channels)
-                    self.tab_widget.removeTab(self.tab_widget.indexOf(slave))
-                if kernel_manager:
-                    kernel_manager.shutdown_kernel()
-                background(kernel_client.stop_channels)
-
-        self.update_tab_bar_visibility()
-
-    def init_file_menu(self):
-        self.file_menu = self.menuBar().addMenu("&File")
-
-        self.new_kernel_tab_act = QtGui.QAction("New Tab with &New kernel",
-            self,
-            shortcut="Ctrl+T",
-            triggered=self.create_tab_with_new_frontend)
-        self.add_menu_action(self.file_menu, self.new_kernel_tab_act)
-
-        self.slave_kernel_tab_act = QtGui.QAction("New Tab with Sa&me kernel",
-            self,
-            shortcut="Ctrl+Shift+T",
-            triggered=self.create_tab_with_current_kernel)
-        self.add_menu_action(self.file_menu, self.slave_kernel_tab_act)
-
-        self.existing_kernel_tab_act = QtGui.QAction("New Tab with &Existing kernel",
-                                                     self,
-                                                     shortcut="Alt+T",
-                                                     triggered=self.create_tab_with_existing_kernel)
-        self.add_menu_action(self.file_menu, self.existing_kernel_tab_act)
-
-        self.file_menu.addSeparator()
-
-        self.close_action=QtGui.QAction("&Close Tab",
-            self,
-            shortcut=QtGui.QKeySequence.Close,
-            triggered=self.close_active_frontend
-            )
-        self.add_menu_action(self.file_menu, self.close_action)
-
-        self.export_action=QtGui.QAction("&Save to HTML/XHTML",
-            self,
-            shortcut=QtGui.QKeySequence.Save,
-            triggered=self.export_action_active_frontend
-            )
-        self.add_menu_action(self.file_menu, self.export_action, True)
-
-        self.file_menu.addSeparator()
-
-        printkey = QtGui.QKeySequence(QtGui.QKeySequence.Print)
-        if printkey.matches("Ctrl+P") and sys.platform != 'darwin':
-            # Only override the default if there is a collision.
-            # Qt ctrl = cmd on OSX, so the match gets a false positive on OSX.
-            printkey = "Ctrl+Shift+P"
-        self.print_action = QtGui.QAction("&Print",
-            self,
-            shortcut=printkey,
-            triggered=self.print_action_active_frontend)
-        self.add_menu_action(self.file_menu, self.print_action, True)
-
-        if sys.platform != 'darwin':
-            # OSX always has Quit in the Application menu, only add it
-            # to the File menu elsewhere.
-
-            self.file_menu.addSeparator()
-
-            self.quit_action = QtGui.QAction("&Quit",
-                self,
-                shortcut=QtGui.QKeySequence.Quit,
-                triggered=self.close,
-            )
-            self.add_menu_action(self.file_menu, self.quit_action)
 
     def init_edit_menu(self):
         self.edit_menu = self.menuBar().addMenu("&Edit")
@@ -446,118 +269,6 @@ class ExpandedMainWindow(mainwindow.MainWindow):
 
     def redo_active_frontend(self):
         self.active_frontend.main_content.call_focus_method('redo')
-
-    def close_tab(self, current_tab):
-        """ Called when you need to try to close a tab.
-
-        It takes the number of the tab to be closed as argument, or a reference
-        to the widget inside this tab
-        """
-
-        # let's be sure "tab" and "closing widget" are respectively the index
-        # of the tab to close and a reference to the frontend to close
-        if type(current_tab) is not int:
-            current_tab = self.tab_widget.indexOf(current_tab)
-        closing_widget = self.tab_widget.widget(current_tab)
-
-        # when trying to be closed, widget might re-send a request to be
-        # closed again, but will be deleted when event will be processed. So
-        # need to check that widget still exists and skip if not. One example
-        # of this is when 'exit' is sent in a slave tab. 'exit' will be
-        # re-sent by this function on the master widget, which ask all slave
-        # widgets to exit
-        if closing_widget is None:
-            return
-
-        # get a list of all slave widgets on the same kernel.
-        slave_tabs = self.find_slave_widgets(closing_widget)
-
-        keepkernel = None  # Use the prompt by default
-        if hasattr(closing_widget, '_keep_kernel_on_exit'):  # set by exit magic
-            keepkernel = closing_widget._keep_kernel_on_exit
-            # If signal sent by exit magic (_keep_kernel_on_exit, exist and not None)
-            # we set local slave tabs._hidden to True to avoid prompting for kernel
-            # restart when they get the signal. and then "forward" the 'exit'
-            # to the main window
-            if keepkernel is not None:
-                for tab in slave_tabs:
-                    tab._hidden = True
-                if closing_widget in slave_tabs:
-                    try:
-                        self.find_master_tab(closing_widget).execute('exit')
-                    except AttributeError:
-                        self.log.info("Master already closed or not local, closing only current tab")
-                        self.tab_widget.removeTab(current_tab)
-                    self.update_tab_bar_visibility()
-                    return
-
-        kernel_client = closing_widget.kernel_client
-        kernel_manager = closing_widget.kernel_manager
-
-        if keepkernel is None and not closing_widget._confirm_exit:
-            # don't prompt, just terminate the kernel if we own it
-            # or leave it alone if we don't
-            keepkernel = closing_widget._existing
-        if keepkernel is None:  # show prompt
-            if kernel_client and kernel_client.channels_running:
-                title = self.window().windowTitle()
-                cancel = QtGui.QMessageBox.Cancel
-                okay = QtGui.QMessageBox.Ok
-                if closing_widget._may_close:
-                    msg = "You are closing the tab : " + '"' + self.tab_widget.tabText(current_tab) + '"'
-                    info = "Would you like to quit the Kernel and close all attached Consoles as well?"
-                    justthis = QtGui.QPushButton("&No, just this Tab", self)
-                    justthis.setShortcut('N')
-                    closeall = QtGui.QPushButton("&Yes, close all", self)
-                    closeall.setShortcut('Y')
-                    # allow ctrl-d ctrl-d exit, like in terminal
-                    closeall.setShortcut('Ctrl+D')
-                    box = QtGui.QMessageBox(QtGui.QMessageBox.Question,
-                                            title, msg)
-                    box.setInformativeText(info)
-                    box.addButton(cancel)
-                    box.addButton(justthis, QtGui.QMessageBox.NoRole)
-                    box.addButton(closeall, QtGui.QMessageBox.YesRole)
-                    box.setDefaultButton(closeall)
-                    box.setEscapeButton(cancel)
-                    pixmap = QtGui.QPixmap(self._app.icon.pixmap(QtCore.QSize(64, 64)))
-                    box.setIconPixmap(pixmap)
-                    reply = box.exec_()
-                    if reply == 1:  # close All
-                        for slave in slave_tabs:
-                            background(slave.kernel_client.stop_channels)
-                            self.tab_widget.removeTab(self.tab_widget.indexOf(slave))
-                        kernel_manager.shutdown_kernel()
-                        self.tab_widget.removeTab(current_tab)
-                        background(kernel_client.stop_channels)
-                    elif reply == 0:  # close Console
-                        if not closing_widget._existing:
-                            # Have kernel: don't quit, just close the tab
-                            closing_widget.execute("exit True")
-                        self.tab_widget.removeTab(current_tab)
-                        background(kernel_client.stop_channels)
-                else:
-                    reply = QtGui.QMessageBox.question(self, title,
-                                                       "Are you sure you want to close this Console?",
-                                                       okay | cancel,
-                                                       defaultButton=okay
-                                                       )
-                    if reply == okay:
-                        self.tab_widget.removeTab(current_tab)
-        elif keepkernel:  # close console but leave kernel running (no prompt)
-            self.tab_widget.removeTab(current_tab)
-            background(kernel_client.stop_channels)
-        else:  # close console and kernel (no prompt)
-            self.tab_widget.removeTab(current_tab)
-            if kernel_client and kernel_client.channels_running:
-                for slave in slave_tabs:
-                    background(slave.kernel_client.stop_channels)
-                    self.tab_widget.removeTab(self.tab_widget.indexOf(slave))
-                if kernel_manager:
-                    kernel_manager.shutdown_kernel()
-                background(kernel_client.stop_channels)
-
-        self.update_tab_bar_visibility()
 
     def init_help_menu(self):
         # please keep the Help menu in Mac Os even if empty. It will

@@ -78,7 +78,7 @@ def _(item, target):
 
 @_post.register(UserName)
 def _(item, target):
-    target.please_export.emit(AddUser(session=item.session, sender_client_id=item.client_id, sender=item.username,
+    target.please_export.emit(AddUser(chat_secret=item.chat_secret, sender_client_id=item.client_id, sender=item.username,
                                       recipient_client_id=item.to_who_client_id, recipient=item.to_who))
 
 
