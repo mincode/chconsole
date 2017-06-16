@@ -181,14 +181,16 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         self.log.debug("execute_input: %s", content)
 
         chat_instruction = filter_meta(msg.session, content['code'])
+        to_process = None
         if is_command_meta(chat_instruction):
             # print("COMMAND META")
             to_process = process_command_meta(chat_instruction, session=msg.session,
-                                              client_id=self.client_id, username=msg.parent_username)
+                                              client_id=self.client_id, username=self.user_name)
         else:
             to_process = Input(content['code'], execution_count=content['execution_count'],
-                            username=msg.parent_username)
-        self.please_process.emit(to_process)
+                               username=msg.parent_username)
+        if to_process:
+            self.please_process.emit(to_process)
 
     def _handle_display_data(self, msg):
         data = msg.content['data']

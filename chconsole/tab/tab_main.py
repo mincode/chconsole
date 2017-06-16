@@ -44,9 +44,13 @@ def _(item, target):
     target.request_restart_kernel()
 
 
+import time
+
+
 @_export.register(Exit)
 def _(item, target):
     target.keep_kernel_on_exit = True if item.keep_kernel else None
+    target.drop_user()
     target.exit_requested.emit(target)
 
 
@@ -377,6 +381,15 @@ def tab_main_template(edit_class):
             :return:
             """
             _export(item, self)
+
+        def drop_user(self):
+            """
+            Drop the current client/user from the session.
+            :return:
+            """
+            print('tab_main: drop_user')
+            self.export(DropUser(session=self.kernel_client.session.session,
+                                 sender_client_id=self.unique_id, sender=self.user_name))
 
         # traitlets
         def _style_sheet_changed(self):

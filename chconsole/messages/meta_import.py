@@ -74,7 +74,7 @@ def process_command_meta(chat_instruction, session, client_id, username):
     :param session: session of the chat_instruction.
     :param client_id: id of the current client that has received the chat_instruction.
     :param username name of the user who has received the chat_instruction in the current client.
-    :return: Importable object.
+    :return: Importable object; or None if nothing to be done.
     """
     meta = None
     if is_user_command(chat_instruction):
@@ -83,13 +83,12 @@ def process_command_meta(chat_instruction, session, client_id, username):
         recipient = chat_instruction['recipient']
         recipient_client_id = chat_instruction['recipient_client_id']
         if chat_instruction['content']['user'] == 'join':
-            if ((recipient_client_id == '' and recipient == '') or
-                    (recipient_client_id == client_id and recipient == username)):
+            if recipient_client_id == '' and recipient == '':
+                meta = UserJoin(sender_client_id, sender)
+            elif  recipient_client_id == client_id and recipient == username:
                 meta = UserJoin(sender_client_id, sender)
         elif chat_instruction['content']['user'] == 'who':
             meta = UserName(session, client_id, username, sender_client_id, sender)
-            print('meta_import: UserName')
         elif chat_instruction['content']['user'] == 'leave':
             meta = UserLeave(sender_client_id, sender)
     return meta
-
