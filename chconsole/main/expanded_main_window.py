@@ -298,3 +298,26 @@ class ExpandedMainWindow(MainWindow):
     def _go_github(self):
         filename = "https://github.com/mincode/chconsole"
         webbrowser.open(filename, new=1, autoraise=True)
+
+    def toggle_confirm_round_table(self):
+        widget = self.active_frontend
+        widget.main_content.round_table = not widget.main_content.round_table
+        self.round_table_action.setChecked(widget.main_content.round_table)
+
+    def update_round_table_checkbox(self):
+        if self.active_frontend is None:
+            return
+        widget = self.active_frontend
+        self.round_table_action.setChecked(widget.main_content.round_table)
+
+    def init_moderator_menu(self):
+        self.moderator_menu = self.menuBar().addMenu("&Moderator")
+
+        self.round_table_action = QtGui.QAction("&Round Table",
+                                               self,
+                                               checkable=True,
+                                               # checked=self.active_frontend.main_content.round_table,
+                                               triggered=self.toggle_confirm_round_table)
+        self.round_table_action.setChecked(self.active_frontend.main_content.round_table)
+        self.add_menu_action(self.moderator_menu, self.round_table_action)
+        self.tab_widget.currentChanged.connect(self.update_round_table_checkbox)

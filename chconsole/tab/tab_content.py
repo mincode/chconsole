@@ -231,6 +231,7 @@ def tab_content_template(edit_class):
 
         show_users = Bool(False, help='Whether to show the users in command input and output listings')
         user_tracker = None  # UserTracker for tracking users
+        round_table = Bool(False, help='Whether the current user moderates a round table')
 
         def __init__(self, is_complete, editor=default_editor, **kwargs):
             """

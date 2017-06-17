@@ -388,6 +388,7 @@ class MainWindow(QtGui.QMainWindow):
         self.init_edit_menu()
         self.init_view_menu()
         self.init_kernel_menu()
+        self.init_moderator_menu()
         self.init_window_menu()
         self.init_help_menu()
 
