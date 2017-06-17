@@ -229,6 +229,7 @@ def tab_content_template(edit_class):
         line_prompt = None  # LinePrompt for entering input requested by the kernel
         history = None  # History
 
+        # User management
         show_users = Bool(False, help='Whether to show the users in command input and output listings')
         user_tracker = None  # UserTracker for tracking users
         round_table = Bool(False, help='Whether the current user moderates a round table')
