@@ -82,11 +82,12 @@ def process_command_meta(chat_instruction, chat_secret, client_id, username):
         sender = chat_instruction['sender']
         recipient = chat_instruction['recipient']
         recipient_client_id = chat_instruction['recipient_client_id']
+        round_table = chat_instruction['content']['round_table']
         if chat_instruction['content']['user'] == 'join':
             if recipient_client_id == '' and recipient == '':
-                meta = UserJoin(sender_client_id, sender)
-            elif  recipient_client_id == client_id and recipient == username:
-                meta = UserJoin(sender_client_id, sender)
+                meta = UserJoin(chat_secret, sender_client_id, sender, recipient_client_id, recipient, round_table)
+            elif recipient_client_id == client_id and recipient == username:
+                meta = UserJoin(chat_secret, sender_client_id, sender, recipient_client_id, recipient, round_table)
         elif chat_instruction['content']['user'] == 'who':
             meta = UserName(chat_secret, client_id, username, sender_client_id, sender)
         elif chat_instruction['content']['user'] == 'leave':

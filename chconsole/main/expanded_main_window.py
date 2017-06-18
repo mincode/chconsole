@@ -301,14 +301,27 @@ class ExpandedMainWindow(MainWindow):
 
     def toggle_confirm_round_table(self):
         widget = self.active_frontend
-        widget.main_content.round_table = not widget.main_content.round_table
+        if widget.main_content.round_table:
+            widget.main_content.round_table_moderator = ''
+        else:
+            widget.main_content.round_table_moderator = widget.user_name
+
         self.round_table_action.setChecked(widget.main_content.round_table)
+
+        if widget.main_content.round_table_moderator:
+            self.round_table_action.setText('&Round Table (' + widget.main_content.round_table_moderator + ')')
+        else:
+            self.round_table_action.setText('&Round Table')
 
     def update_round_table_checkbox(self):
         if self.active_frontend is None:
             return
         widget = self.active_frontend
         self.round_table_action.setChecked(widget.main_content.round_table)
+        if widget.main_content.round_table_moderator:
+            self.round_table_action.setText('&Round Table (' + widget.main_content.round_table_moderator + ')')
+        else:
+            self.round_table_action.setText('&Round Table')
 
     def init_moderator_menu(self):
         self.moderator_menu = self.menuBar().addMenu("&Moderator")

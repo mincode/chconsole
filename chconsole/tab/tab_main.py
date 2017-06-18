@@ -172,7 +172,7 @@ def tab_main_template(edit_class):
             will be appended to the end of the command.
             """)
 
-        unique_id = ''  # unique id string of this instance
+        client_id = ''  # unique id string of this client instance
 
         main_content = None  # QWidget
 
@@ -206,14 +206,15 @@ def tab_main_template(edit_class):
             QtGui.QWidget.__init__(self, parent)
             LoggingConfigurable.__init__(self, **kw)
 
-            self.unique_id = str(id(self)) + ',' + datetime.isoformat(datetime.utcnow()) + ',' + str(uuid4())
-            self.main_content = tab_content_template(edit_class)(self.is_complete, editor=self.editor)
+            self.client_id = str(id(self)) + ',' + datetime.isoformat(datetime.utcnow()) + ',' + str(uuid4())
+            self.main_content = tab_content_template(edit_class)(self.client_id, self.is_complete,
+                                                                 editor=self.editor)
             self.main_content.please_export.connect(self.export)
             # MainContent -> export
 
             # Import and handle kernel messages
             # message_arrived -> Importer -> MainContent
-            self._importer = Importer(self, chat_secret=self.chat_secret, client_id=self.unique_id)
+            self._importer = Importer(self, chat_secret=self.chat_secret, client_id=self.client_id)
             self.message_arrived.connect(self._importer.convert)
             self._importer.please_process.connect(self.main_content.post)
             self._importer.please_export.connect(self.export)
@@ -242,6 +243,7 @@ def tab_main_template(edit_class):
                         self.kernel_client.session.username = self.user_name
             else:
                 self.kernel_client.session.username = self.user_name
+            self.main_content.user_name = self.user_name
             self._importer.user_name = self.user_name
 
         def _started_channels(self):
@@ -258,8 +260,10 @@ def tab_main_template(edit_class):
             self.kernel_client.history(hist_access_type='tail', n=1000)
             # 4) Register user
             # is done when and through receiving the history request
-            # Does not work, because somehow the session id changes later
             #self.export(AddUser(self.kernel_client.session.session, self.unique_id))
+            self.export(AddUser(self.chat_secret, self.client_id, self.user_name,
+                                round_table=self.main_content.round_table))
+
 
         def _dispatch(self, msg):
             """
@@ -388,9 +392,10 @@ def tab_main_template(edit_class):
             Drop the current client/user from the session.
             :return:
             """
-            print('tab_main: drop_user')
+            # print('tab_main: drop_user')
             self.export(DropUser(chat_secret=self.chat_secret,
-                                 sender_client_id=self.unique_id, sender=self.user_name))
+                                 sender_client_id=self.client_id, sender=self.user_name,
+                                 round_table=self.main_content.round_table))
 
         # traitlets
         def _style_sheet_changed(self):

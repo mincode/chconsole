@@ -79,7 +79,7 @@ class Complete(CodeFragment):
 
 
 # User Management
-def _dump_json_command(command, sender_client_id, sender, recipient_client_id, recipient):
+def _dump_json_command(command, sender_client_id, sender, recipient_client_id, recipient, round_table):
     """
     Dump json command as text.
     :param command: text representing the command.
@@ -87,11 +87,12 @@ def _dump_json_command(command, sender_client_id, sender, recipient_client_id, r
     :param sender: sender name
     :param recipient_client_id: id of the recipient client or '' for all
     :param recipient: recipient name or '' for all
+    :param round_table: True iff the sender thinks it is the round table moderator at sending.
     :return: text version of the json-encoded command.
     """
     json_text = json.dumps({'sender_client_id': sender_client_id, 'sender': sender,
                             'recipient_client_id': recipient_client_id, 'recipient': recipient,
-                            'type': 'command', 'content': {'user': command}})
+                            'type': 'command', 'content': {'user': command, 'round_table': round_table}})
     return json_text
 
 
@@ -111,8 +112,10 @@ class UserMessage(Code):
     sender = ''  # sender name
     recipient_client_id = ''  # id of the recipient client or '' for all
     recipient = ''  # recipient name or '' for all
+    round_table = False  # True iff the sender thinks it is the round table moderator at sending
 
-    def __init__(self, command, chat_secret, sender_client_id, sender, recipient_client_id, recipient):
+    def __init__(self, command, chat_secret, sender_client_id, sender, recipient_client_id, recipient,
+                 round_table):
         """
         Initialize.
         :param command: command text.
@@ -121,22 +124,27 @@ class UserMessage(Code):
         :param sender: name of the sender user.
         :param recipient_client_id: id of the recipient client; all if ''
         :param recipient: name of the recipient user; all if ''
+        :param round_table True iff the sender thinks it is the round table moderator at sending.
         """
         super(UserMessage, self).__init__(_command_source(chat_secret,
                                                           _dump_json_command(command, sender_client_id, sender,
-                                                                             recipient_client_id, recipient)))
+                                                                             recipient_client_id, recipient,
+                                                                             round_table)))
         self.chat_secret = chat_secret
         self.sender_client_id = sender_client_id
         self.sender = sender
         self.recipient_client_id = recipient_client_id
         self.recipient = recipient
+        self.round_table = round_table
 
 
 class AddUser(UserMessage):
     """
     Message object indicating that the sender user is added to the system.
     """
-    def __init__(self, chat_secret, sender_client_id, sender, recipient_client_id='', recipient=''):
+
+    def __init__(self, chat_secret, sender_client_id, sender, recipient_client_id='', recipient='',
+                 round_table=False):
         """
         Initialize.
         :param chat_secret: secret identifying meta commands.
@@ -144,8 +152,10 @@ class AddUser(UserMessage):
         :param sender: name of the sender user.
         :param recipient_client_id: id of the recipient's client; all if ''
         :param recipient: name of the recipient user; all if ''
+        :param round_table True iff the sender thinks it is the round table moderator at sending.
         """
-        super(AddUser, self).__init__('join', chat_secret, sender_client_id, sender, recipient_client_id, recipient)
+        super(AddUser, self).__init__('join', chat_secret, sender_client_id, sender, recipient_client_id, recipient,
+                                      round_table)
 
 
 class WhoUser(UserMessage):
@@ -168,7 +178,8 @@ class DropUser(UserMessage):
     """
     Message object indicating that the sender user is leaving.
     """
-    def __init__(self, chat_secret, sender_client_id, sender, recipient_client_id='', recipient=''):
+    def __init__(self, chat_secret, sender_client_id, sender, recipient_client_id='', recipient='',
+                 round_table=False):
         """
         Initialize.
         :param chat_secret: secrets identifying meta commands.
@@ -176,5 +187,7 @@ class DropUser(UserMessage):
         :param sender: name of the sender user.
         :param recipient_client_id: id of the recipient's client; all if ''
         :param recipient: name of the recipient user; all if ''
+        :param round_table True iff the sender thinks it is the round table moderator at sending.
         """
-        super(DropUser, self).__init__('leave', chat_secret, sender_client_id, sender, recipient_client_id, recipient)
+        super(DropUser, self).__init__('leave', chat_secret, sender_client_id, sender, recipient_client_id,
+                                       recipient, round_table)

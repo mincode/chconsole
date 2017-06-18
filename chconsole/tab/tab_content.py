@@ -72,8 +72,17 @@ def _post(item, target):
 @_post.register(UserJoin)
 def _(item, target):
     # print(item.username + ' joined')
-    target.user_tracker.insert(item.username, item.client_id)
+    target.user_tracker.insert(item.sender, item.sender_client_id)
     # print(target.user_tracker.users)
+    if item.recipient_client_id == '' and item.recipient == '':
+        target.please_export.emit(
+            AddUser(chat_secret=item.chat_secret, sender_client_id=target.client_id, sender=target.user_name,
+                    recipient_client_id=item.sender_client_id, recipient=item.sender,
+                    round_table=target.round_table))
+    # print('item.round_table: ' + str(item.round_table))
+    # print('target.round_table_moderator: ' + target.round_table_moderator)
+    if item.round_table and target.round_table_moderator == '':
+        target.round_table_moderator = item.sender
 
 
 @_post.register(UserName)
@@ -230,13 +239,17 @@ def tab_content_template(edit_class):
         history = None  # History
 
         # User management
+        client_id = ''  # id of current client
+        user_name = ''  # name of current user
         show_users = Bool(False, help='Whether to show the users in command input and output listings')
         user_tracker = None  # UserTracker for tracking users
-        round_table = Bool(False, help='Whether the current user moderates a round table')
+        # round_table = Bool(False, help='Whether the current user moderates a round table')
+        round_table_moderator = Unicode('', help='Name of the round table moderator')
 
-        def __init__(self, is_complete, editor=default_editor, **kwargs):
+        def __init__(self, client_id, is_complete, editor=default_editor, **kwargs):
             """
             Initialize
+            :param client_id: id of current client.
             :param is_complete: function str->(bool, str) that checks whether the input is complete code
             :param kwargs: arguments for LoggingConfigurable
             :return:
@@ -293,11 +306,22 @@ def tab_content_template(edit_class):
             self.line_prompt = LinePrompt()
             self.line_prompt.text_input.connect(self.on_text_input)
 
+            self.client_id = client_id
             self.show_users = self.receiver.text_register.get_visible()
             self.user_tracker = UserTracker()
 
         def _show_users_changed(self):
             self.receiver.text_register.set_visible(self.show_users)
+
+        @property
+        def round_table(self):
+            return self.round_table_moderator == self.user_name
+
+        def _round_table_moderator_changed(self):
+            print('moderator: ' + self.round_table_moderator)
+            # emit the name: please_menu_process.emit()
+            # connected to update_round_table_checkbox
+            pass
 
         def clear_all(self):
             """
@@ -345,9 +369,13 @@ def tab_content_template(edit_class):
             if num > 0:
                 out_text = 'Connected Users<hr><br>'
                 out_text = out_text + names[0]
-                print(out_text)
+                if names[0] == self.user_name:
+                    out_text = out_text + ' (me)'
+                # print(out_text)
                 for i in range(1, num):
                     out_text = out_text + '<br>' + names[i]
+                    if names[i] == self.user_name:
+                        out_text = out_text + ' (me)'
             else:
                 out_text = ''
 

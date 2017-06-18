@@ -388,6 +388,7 @@ class MainWindow(QtGui.QMainWindow):
         self.init_edit_menu()
         self.init_view_menu()
         self.init_kernel_menu()
+        #MM:
         self.init_moderator_menu()
         self.init_window_menu()
         self.init_help_menu()
@@ -395,6 +396,7 @@ class MainWindow(QtGui.QMainWindow):
     def init_file_menu(self):
         self.file_menu = self.menuBar().addMenu("&File")
 
+        #MM:
         # self.new_kernel_tab_act = QtGui.QAction("New Tab with &New kernel",
         #                                         self,
         #                                         shortcut="Ctrl+T",
@@ -407,6 +409,7 @@ class MainWindow(QtGui.QMainWindow):
                                                   triggered=self.create_tab_with_current_kernel)
         self.add_menu_action(self.file_menu, self.slave_kernel_tab_act)
 
+        #MM:
         # self.existing_kernel_tab_act = QtGui.QAction("New Tab with &Existing kernel",
         #                                              self,
         #                                              shortcut="Alt+T",

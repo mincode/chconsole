@@ -171,11 +171,10 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
             self.please_process.emit(History(history_items, username=msg.username))
             # Since the client sends a history request upon connecting, we send an add user for any received history
             # request, to register the user.
-            self.please_export.emit(AddUser(self.chat_secret, self.client_id, self.user_name))
+            # self.please_export.emit(AddUser(self.chat_secret, self.client_id, self.user_name))
             # since it is lost occasionally, send twice
-            self.please_export.emit(AddUser(self.chat_secret, self.client_id, self.user_name))
-            self.please_export.emit(WhoUser(self.chat_secret, self.client_id, self.user_name))
-            # self.please_export.emit(WhoUser(msg.session, self.client_id, self.user_name))
+            # self.please_export.emit(AddUser(self.chat_secret, self.client_id, self.user_name))
+            # self.please_export.emit(WhoUser(self.chat_secret, self.client_id, self.user_name))
 
     def _handle_execute_input(self, msg):
         """Handle an execute_input message"""

@@ -43,16 +43,32 @@ class UserJoin(ImportItem):
     """
     A user joins.
     """
-    client_id = ''  # unique id of joining user client
+    chat_secret = ''  # chat secret to identify meta commands
+    sender_client_id = ''  # unique id of joining user client
+    recipient_client_id = ''  # unique id of recipient client
+    recipient = ''  # name of recipient
+    round_table = False  # True iff joining user thinks it is the moderator at sending
 
-    def __init__(self, client_id='', username=''):
+    def __init__(self, chat_secret, sender_client_id, sender, recipient_client_id='', recipient='',
+                 round_table=False):
         """
         Initialize.
-        :param client_id: id of the client to join.
-        :param username: user name to join.
+        :param chat_secret = '': chat secret to identify meta commands
+        :param sender_client_id: id of the client to join.
+        :param sender: user name to join.
+        :param recipient_client_id: id of recipient client.
+        :param recipient: name of recipient.
         """
-        super(UserJoin, self).__init__(username=username)
-        self.client_id = client_id
+        super(UserJoin, self).__init__(username=sender)
+        self.chat_secret = chat_secret
+        self.sender_client_id = sender_client_id
+        self. recipient_client_id = recipient_client_id
+        self.recipient = recipient
+        self.round_table = round_table
+
+    @property
+    def sender(self):
+        return self.username
 
 
 class UserName(ImportItem):
