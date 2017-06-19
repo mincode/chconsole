@@ -1,5 +1,5 @@
 import json
-from chconsole.messages import UserJoin, UserLeave, UserName
+from chconsole.messages import UserJoin, UserLeave
 
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -83,13 +83,12 @@ def process_command_meta(chat_instruction, chat_secret, client_id, username):
         recipient = chat_instruction['recipient']
         recipient_client_id = chat_instruction['recipient_client_id']
         round_table = chat_instruction['content']['round_table']
+        last_client = chat_instruction['content'].get('round_table', '')
         if chat_instruction['content']['user'] == 'join':
             if recipient_client_id == '' and recipient == '':
                 meta = UserJoin(chat_secret, sender_client_id, sender, recipient_client_id, recipient, round_table)
             elif recipient_client_id == client_id and recipient == username:
                 meta = UserJoin(chat_secret, sender_client_id, sender, recipient_client_id, recipient, round_table)
-        elif chat_instruction['content']['user'] == 'who':
-            meta = UserName(chat_secret, client_id, username, sender_client_id, sender)
         elif chat_instruction['content']['user'] == 'leave':
-            meta = UserLeave(sender_client_id, sender)
+            meta = UserLeave(sender_client_id, sender, round_table, last_client)
     return meta

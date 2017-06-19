@@ -299,29 +299,29 @@ class ExpandedMainWindow(MainWindow):
         filename = "https://github.com/mincode/chconsole"
         webbrowser.open(filename, new=1, autoraise=True)
 
-    def toggle_confirm_round_table(self):
-        widget = self.active_frontend
-        if widget.main_content.round_table:
-            widget.main_content.round_table_moderator = ''
-        else:
-            widget.main_content.round_table_moderator = widget.user_name
-
-        self.round_table_action.setChecked(widget.main_content.round_table)
-
-        if widget.main_content.round_table_moderator:
-            self.round_table_action.setText('&Round Table (' + widget.main_content.round_table_moderator + ')')
-        else:
-            self.round_table_action.setText('&Round Table')
-
     def update_round_table_checkbox(self):
         if self.active_frontend is None:
             return
         widget = self.active_frontend
         self.round_table_action.setChecked(widget.main_content.round_table)
         if widget.main_content.round_table_moderator:
-            self.round_table_action.setText('&Round Table (' + widget.main_content.round_table_moderator + ')')
+            self.round_table_action.setText('&Round Table by ' + widget.main_content.round_table_moderator)
         else:
             self.round_table_action.setText('&Round Table')
+
+    def toggle_confirm_round_table(self):
+        widget = self.active_frontend
+        # toogle check mark. Check mark means that the current user is the moderator.
+        if widget.main_content.round_table:
+            widget.main_content.round_table_moderator = ''
+        else:
+            widget.main_content.round_table_moderator = widget.user_name
+        self.update_round_table_checkbox()
+
+    def update_round_table(self):
+        if self.active_frontend:
+            self.active_frontend.main_content.please_main_process.connect(self.update_round_table_checkbox)
+        self. update_round_table_checkbox()
 
     def init_moderator_menu(self):
         self.moderator_menu = self.menuBar().addMenu("&Moderator")
@@ -333,4 +333,6 @@ class ExpandedMainWindow(MainWindow):
                                                triggered=self.toggle_confirm_round_table)
         self.round_table_action.setChecked(self.active_frontend.main_content.round_table)
         self.add_menu_action(self.moderator_menu, self.round_table_action)
-        self.tab_widget.currentChanged.connect(self.update_round_table_checkbox)
+        if self.active_frontend:
+            self.active_frontend.main_content.please_main_process.connect(self.update_round_table_checkbox)
+        self.tab_widget.currentChanged.connect(self.update_round_table)

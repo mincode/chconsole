@@ -67,3 +67,16 @@ class UserTracker:
                 if not user_client.clients:
                     del self._users[i]
                 break
+
+    def find_user(self, user_name):
+        """
+        Find user.
+        :param user_name: name of the user.
+        :return: UserClient object of the user if found; None otherwise.
+        """
+        found = None
+        for user_client in self._users:
+            if user_name == user_client.name:
+                found = user_client
+                break
+        return found

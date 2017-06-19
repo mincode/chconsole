@@ -3,7 +3,7 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 class UserClient:
     """
-    Stores the user name and list of client ids used by the suer.
+    Stores the user name and list of client ids used by the user.
     """
     name = ''  # user name
     clients = None  # list of client ids

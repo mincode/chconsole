@@ -9,7 +9,7 @@ from chconsole.messages import CompleteItems, PageDoc, EditFile, InText, CallTip
 from chconsole.messages import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput
 from chconsole.messages import SvgXml, Png, Jpeg, LaTeX
 from chconsole.messages import filter_meta, is_command_meta, process_command_meta
-from chconsole.messages import AddUser, WhoUser, DropUser
+from chconsole.messages import AddUser, DropUser
 from chconsole.standards import Importable
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'

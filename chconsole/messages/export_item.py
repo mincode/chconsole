@@ -79,7 +79,8 @@ class Complete(CodeFragment):
 
 
 # User Management
-def _dump_json_command(command, sender_client_id, sender, recipient_client_id, recipient, round_table):
+def _dump_json_command(command, sender_client_id, sender, recipient_client_id, recipient, round_table, last_client,
+                       round_restriction):
     """
     Dump json command as text.
     :param command: text representing the command.
@@ -88,11 +89,16 @@ def _dump_json_command(command, sender_client_id, sender, recipient_client_id, r
     :param recipient_client_id: id of the recipient client or '' for all
     :param recipient: recipient name or '' for all
     :param round_table: True iff the sender thinks it is the round table moderator at sending.
+    :param last_client: Ture, False None: True iff sender client is the last client of the sender user.
     :return: text version of the json-encoded command.
     """
+    content = {'user': command, 'round_table': round_table}
+    if last_client is not None:
+        content['last_client'] = last_client
+
     json_text = json.dumps({'sender_client_id': sender_client_id, 'sender': sender,
                             'recipient_client_id': recipient_client_id, 'recipient': recipient,
-                            'type': 'command', 'content': {'user': command, 'round_table': round_table}})
+                            'type': 'command', 'content': content})
     return json_text
 
 
@@ -113,9 +119,10 @@ class UserMessage(Code):
     recipient_client_id = ''  # id of the recipient client or '' for all
     recipient = ''  # recipient name or '' for all
     round_table = False  # True iff the sender thinks it is the round table moderator at sending
+    last_client = None  # True iff sender client is the last client of the sender user
 
     def __init__(self, command, chat_secret, sender_client_id, sender, recipient_client_id, recipient,
-                 round_table):
+                 round_table, last_client):
         """
         Initialize.
         :param command: command text.
@@ -125,17 +132,19 @@ class UserMessage(Code):
         :param recipient_client_id: id of the recipient client; all if ''
         :param recipient: name of the recipient user; all if ''
         :param round_table True iff the sender thinks it is the round table moderator at sending.
+        :param last_client: True iff client is the last client of the leanving user.
         """
         super(UserMessage, self).__init__(_command_source(chat_secret,
                                                           _dump_json_command(command, sender_client_id, sender,
                                                                              recipient_client_id, recipient,
-                                                                             round_table)))
+                                                                             round_table, last_client)))
         self.chat_secret = chat_secret
         self.sender_client_id = sender_client_id
         self.sender = sender
         self.recipient_client_id = recipient_client_id
         self.recipient = recipient
         self.round_table = round_table
+        self.last_client = last_client
 
 
 class AddUser(UserMessage):
@@ -155,12 +164,32 @@ class AddUser(UserMessage):
         :param round_table True iff the sender thinks it is the round table moderator at sending.
         """
         super(AddUser, self).__init__('join', chat_secret, sender_client_id, sender, recipient_client_id, recipient,
-                                      round_table)
+                                      round_table, last_client=None)
 
 
-class WhoUser(UserMessage):
+class DropUser(UserMessage):
     """
-    Message object indicating that the sender user wants to know from the other users who is there.
+    Message object indicating that the sender user is leaving.
+    """
+    def __init__(self, chat_secret, sender_client_id, sender, recipient_client_id='', recipient='',
+                 round_table=False, last_client=True):
+        """
+        Initialize.
+        :param chat_secret: secrets identifying meta commands.
+        :param sender_client_id: id of the client of the user.
+        :param sender: name of the sender user.
+        :param recipient_client_id: id of the recipient's client; all if ''
+        :param recipient: name of the recipient user; all if ''
+        :param round_table True iff the sender thinks it is the round table moderator at sending.
+        :param last_client: True iff client is the last client of the leanving user.
+        """
+        super(DropUser, self).__init__('leave', chat_secret, sender_client_id, sender, recipient_client_id,
+                                       recipient, round_table, last_client)
+
+
+class StopRoundTable(UserMessage):
+    """
+    Message object indicating that the sender stops its round table.
     """
     def __init__(self, chat_secret, sender_client_id, sender, recipient_client_id='', recipient=''):
         """
@@ -171,15 +200,16 @@ class WhoUser(UserMessage):
         :param recipient_client_id: id of the recipient's client; all if ''
         :param recipient: name of the recipient user; all if ''
         """
-        super(WhoUser, self).__init__('who', chat_secret, sender_client_id, sender, recipient_client_id, recipient)
+        super(StopRoundTable, self).__init__('stop_round_table', chat_secret, sender_client_id, sender,
+                                             recipient_client_id, recipient, round_table=True)
 
 
-class DropUser(UserMessage):
+class StartRoundTable(UserMessage):
     """
-    Message object indicating that the sender user is leaving.
+    Message object indicating that the sender starts a round table.
     """
     def __init__(self, chat_secret, sender_client_id, sender, recipient_client_id='', recipient='',
-                 round_table=False):
+                 round_restriction=1):
         """
         Initialize.
         :param chat_secret: secrets identifying meta commands.
@@ -187,7 +217,10 @@ class DropUser(UserMessage):
         :param sender: name of the sender user.
         :param recipient_client_id: id of the recipient's client; all if ''
         :param recipient: name of the recipient user; all if ''
-        :param round_table True iff the sender thinks it is the round table moderator at sending.
+        :param round_restriction: the number of responses each round table participant is allowed.
         """
-        super(DropUser, self).__init__('leave', chat_secret, sender_client_id, sender, recipient_client_id,
-                                       recipient, round_table)
+        super(StartRoundTable, self).__init__('stop_round_table', chat_secret, sender_client_id, sender,
+                                             recipient_client_id, recipient, round_table=True, last_client=False,
+                                             round_restriction=round_restriction)
+
+

@@ -12,7 +12,7 @@ from chconsole.messages import Exit, Execute, ClearAll, History, KernelMessage, 
 from chconsole.messages import ExportItem, UserInput, AddUser
 from chconsole.messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
 from chconsole.messages import Stderr, Stdout
-from chconsole.messages import UserJoin, UserLeave, UserName
+from chconsole.messages import UserJoin, UserLeave
 from chconsole.pager import pager_template
 from chconsole.receiver import receiver_template
 from chconsole.standards import NoDefaultEditor, CommandError
@@ -85,18 +85,13 @@ def _(item, target):
         target.round_table_moderator = item.sender
 
 
-@_post.register(UserName)
-def _(item, target):
-    target.please_export.emit(AddUser(chat_secret=item.chat_secret, sender_client_id=item.client_id, sender=item.username,
-                                      recipient_client_id=item.to_who_client_id, recipient=item.to_who))
-
-
 @_post.register(UserLeave)
 def _(item, target):
     # print(item.username + ' left')
     target.user_tracker.remove(item.username, item.client_id)
     # print(target.user_tracker.users)
-
+    if item.round_table and item.last_client and item.sender == target.round_table_moderator:
+        target.round_table_moderator = ''
 
 # Pager
 @_post.register(PageDoc)
@@ -234,6 +229,7 @@ def tab_content_template(edit_class):
             """)
 
         please_export = QtCore.Signal(ExportItem)  # tasks for the kernel
+        please_main_process = QtCore.Signal()  # tasks for the main window process
 
         line_prompt = None  # LinePrompt for entering input requested by the kernel
         history = None  # History
@@ -318,10 +314,9 @@ def tab_content_template(edit_class):
             return self.round_table_moderator == self.user_name
 
         def _round_table_moderator_changed(self):
-            print('moderator: ' + self.round_table_moderator)
-            # emit the name: please_menu_process.emit()
+            print('moderator changed to: ' + self.round_table_moderator)
+            self.please_main_process.emit()
             # connected to update_round_table_checkbox
-            pass
 
         def clear_all(self):
             """
@@ -359,6 +354,18 @@ def tab_content_template(edit_class):
                 return focus_method()
             else:
                 return None
+
+        @property
+        def last_client(self):
+            """
+            Determine whether this is the user's last client.
+            :return: True iff this is the only client of the current user.
+            """
+            connected = self.user_tracker.find_user(self.user_name)
+            if connected and len(connected.clients) > 0:
+                return len(connected.clients) == 1
+            else:
+                return False
 
         def list_users(self):
             """

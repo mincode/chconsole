@@ -13,7 +13,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from chconsole.media import default_editor
 from chconsole.messages import Exit, Execute, Inspect, Complete, Restart, Interrupt, ClearAll, KernelMessage, \
     TailHistory
-from chconsole.messages import Stderr, UserInput, AddUser, WhoUser, DropUser
+from chconsole.messages import Stderr, UserInput, AddUser, DropUser
 from chconsole.standards import Importable
 from chconsole.tab import tab_content_template
 from . import Importer
@@ -115,11 +115,6 @@ def _(item, target):
 
 
 @_export.register(AddUser)
-def _(item, target):
-    target.kernel_client.execute(item.source.code, silent=item.source.hidden, store_history=False)
-
-
-@_export.register(WhoUser)
 def _(item, target):
     target.kernel_client.execute(item.source.code, silent=item.source.hidden, store_history=False)
 
@@ -395,7 +390,8 @@ def tab_main_template(edit_class):
             # print('tab_main: drop_user')
             self.export(DropUser(chat_secret=self.chat_secret,
                                  sender_client_id=self.client_id, sender=self.user_name,
-                                 round_table=self.main_content.round_table))
+                                 round_table=self.main_content.round_table,
+                                 last_client=self.main_content.last_client))
 
         # traitlets
         def _style_sheet_changed(self):

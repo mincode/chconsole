@@ -71,45 +71,30 @@ class UserJoin(ImportItem):
         return self.username
 
 
-class UserName(ImportItem):
-    """
-    Name of the current user.
-    """
-    chat_secret = ''  # chat secret to identify meta commands
-    client_id = ''  # id of the current client which sends its user name
-    to_who_client_id = ''  # unique id of the client to who to send the name of the current user
-    to_who = ''  # name of the user to who to send the current user name
-
-    def __init__(self, chat_secret='', client_id='', username='', to_who_client_id='', to_who=''):
-        """
-        Initizlize.
-        :param chat_secret: chat secret to identify meta commands.
-        :param client_id: id of the client which sends its user name.
-        :param username: user name to be sent.
-        :param to_who_client_id: id of client to who to send the user name.
-        :param to_who: name of user to who to send the user name.
-        """
-        super(UserName, self).__init__(username=username)
-        self.chat_secret = chat_secret
-        self.client_id = client_id
-        self.to_who_client_id = to_who_client_id
-        self.to_who = to_who
-
-
 class UserLeave(ImportItem):
     """
     A user leaves.
     """
     client_id = ''  # unique id of this client
+    last_client = True  # True iff this is the last client of user_name
+    round_table = False  # indicates if leaving client thinks it is running the round table.
 
-    def __init__(self, client_id='', username=''):
+    def __init__(self, client_id='', user_name='', round_table=False, last_client=True):
         """
         Initialize.
         :param client_id: id of the client to leave.
-        :param username: user name to leave.
+        :param user_name: user name to leave.
+        :param round_table: True iff leaving user thinks it is running the round table.
+        :param last_client: True iff leaving client is the last client of the user_name.
         """
-        super(UserLeave, self).__init__(username=username)
+        super(UserLeave, self).__init__(username=user_name)
         self.client_id = client_id
+        self.round_table = round_table
+        self.last_client = last_client
+
+    @property
+    def sender(self):
+        return self.username
 
 
 ################################################################################################
