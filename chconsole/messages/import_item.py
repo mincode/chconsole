@@ -26,6 +26,9 @@ def _split_lines(num_lines, text):
 
 
 class ImportItem(Importable):
+    """
+    Importable object associated with a user name.
+    """
     username = ''
 
     def __init__(self, username=''):
@@ -35,66 +38,6 @@ class ImportItem(Importable):
     @property
     def type(self):
         return type(self).__name__
-
-
-################################################################################################
-# Meta in TabContent
-class UserJoin(ImportItem):
-    """
-    A user joins.
-    """
-    chat_secret = ''  # chat secret to identify meta commands
-    sender_client_id = ''  # unique id of joining user client
-    recipient_client_id = ''  # unique id of recipient client
-    recipient = ''  # name of recipient
-    round_table = False  # True iff joining user thinks it is the moderator at sending
-
-    def __init__(self, chat_secret, sender_client_id, sender, recipient_client_id='', recipient='',
-                 round_table=False):
-        """
-        Initialize.
-        :param chat_secret = '': chat secret to identify meta commands
-        :param sender_client_id: id of the client to join.
-        :param sender: user name to join.
-        :param recipient_client_id: id of recipient client.
-        :param recipient: name of recipient.
-        """
-        super(UserJoin, self).__init__(username=sender)
-        self.chat_secret = chat_secret
-        self.sender_client_id = sender_client_id
-        self. recipient_client_id = recipient_client_id
-        self.recipient = recipient
-        self.round_table = round_table
-
-    @property
-    def sender(self):
-        return self.username
-
-
-class UserLeave(ImportItem):
-    """
-    A user leaves.
-    """
-    client_id = ''  # unique id of this client
-    last_client = True  # True iff this is the last client of user_name
-    round_table = False  # indicates if leaving client thinks it is running the round table.
-
-    def __init__(self, client_id='', user_name='', round_table=False, last_client=True):
-        """
-        Initialize.
-        :param client_id: id of the client to leave.
-        :param user_name: user name to leave.
-        :param round_table: True iff leaving user thinks it is running the round table.
-        :param last_client: True iff leaving client is the last client of the user_name.
-        """
-        super(UserLeave, self).__init__(username=user_name)
-        self.client_id = client_id
-        self.round_table = round_table
-        self.last_client = last_client
-
-    @property
-    def sender(self):
-        return self.username
 
 
 ################################################################################################

@@ -9,10 +9,9 @@ from traitlets.config.configurable import LoggingConfigurable
 from chconsole.entry import entry_template, LinePrompt
 from chconsole.media import default_editor
 from chconsole.messages import Exit, Execute, ClearAll, History, KernelMessage, ClearCurrentEntry
-from chconsole.messages import ExportItem, UserInput, AddUser
+from chconsole.messages import ExportItem, UserInput
 from chconsole.messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
-from chconsole.messages import Stderr, Stdout
-from chconsole.messages import UserJoin, UserLeave
+from chconsole.messages import Stderr, Stdout, AddUser, DropUser
 from chconsole.pager import pager_template
 from chconsole.receiver import receiver_template
 from chconsole.standards import NoDefaultEditor, CommandError
@@ -69,7 +68,7 @@ def _post(item, target):
 
 
 # User
-@_post.register(UserJoin)
+@_post.register(AddUser)
 def _(item, target):
     # print(item.username + ' joined')
     target.user_tracker.insert(item.sender, item.sender_client_id)
@@ -81,17 +80,19 @@ def _(item, target):
                     round_table=target.round_table))
     # print('item.round_table: ' + str(item.round_table))
     # print('target.round_table_moderator: ' + target.round_table_moderator)
-    if item.round_table and target.round_table_moderator == '':
+    if item.parameters['round_table'] and target.round_table_moderator == '':
         target.round_table_moderator = item.sender
 
 
-@_post.register(UserLeave)
+@_post.register(DropUser)
 def _(item, target):
     # print(item.username + ' left')
-    target.user_tracker.remove(item.username, item.client_id)
+    target.user_tracker.remove(item.sender, item.sender_client_id)
     # print(target.user_tracker.users)
-    if item.round_table and item.last_client and item.sender == target.round_table_moderator:
+    if item.parameters['round_table'] and \
+            item.parameters['last_client'] and item.sender == target.round_table_moderator:
         target.round_table_moderator = ''
+
 
 # Pager
 @_post.register(PageDoc)

@@ -1,6 +1,6 @@
 import unittest
 
-from chconsole.messages import filter_meta, process_command_meta, is_command_meta
+from chconsole.messages import filter_meta_command, process_command_meta, is_command_meta
 from chconsole.messages import UserJoin, UserLeave
 
 __author__ = 'minimair'
@@ -17,7 +17,7 @@ class Tester(unittest.TestCase):
         pass
 
     def test_filter0(self):
-        instruction = filter_meta('abc', self.s)
+        instruction = filter_meta_command('abc', self.s)
         # print('instruction: ', instruction)
         # res = is_command_meta(instruction)
         processed = process_command_meta(instruction, 'fred')
@@ -27,13 +27,13 @@ class Tester(unittest.TestCase):
         self.assertEqual(res, True)
 
     def test_filter1(self):
-        instruction = filter_meta('abc', self.t)
+        instruction = filter_meta_command('abc', self.t)
         processed = process_command_meta(instruction, 'fred')
         res = isinstance(processed, UserLeave) and processed.username == 'fred'
         self.assertEqual(res, True)
 
     def test_filter2(self):
-        instruction = filter_meta('abc', self.u)
+        instruction = filter_meta_command('abc', self.u)
         processed = process_command_meta(instruction, 'fred')
         res = processed == None
         self.assertEqual(res, True)

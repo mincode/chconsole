@@ -255,10 +255,8 @@ def tab_main_template(edit_class):
             self.kernel_client.history(hist_access_type='tail', n=1000)
             # 4) Register user
             # is done when and through receiving the history request
-            #self.export(AddUser(self.kernel_client.session.session, self.unique_id))
             self.export(AddUser(self.chat_secret, self.client_id, self.user_name,
                                 round_table=self.main_content.round_table))
-
 
         def _dispatch(self, msg):
             """

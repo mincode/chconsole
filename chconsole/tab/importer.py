@@ -8,8 +8,7 @@ from traitlets.config.configurable import LoggingConfigurable
 from chconsole.messages import CompleteItems, PageDoc, EditFile, InText, CallTip, InputRequest, ExportItem, TailHistory, History
 from chconsole.messages import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput
 from chconsole.messages import SvgXml, Png, Jpeg, LaTeX
-from chconsole.messages import filter_meta, is_command_meta, process_command_meta
-from chconsole.messages import AddUser, DropUser
+from chconsole.messages import filter_meta_command, AddUser
 from chconsole.standards import Importable
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -181,11 +180,14 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
         content = msg.content
         self.log.debug("execute_input: %s", content)
 
-        chat_instruction = filter_meta(self.chat_secret, content['code'])
-        if is_command_meta(chat_instruction):
+        meta_command = filter_meta_command(self.chat_secret, content['code'])
+        if meta_command:
             # print("COMMAND META")
-            to_process = process_command_meta(chat_instruction, chat_secret=self.chat_secret,
-                                              client_id=self.client_id, username=self.user_name)
+            # Use AddUser only if it goes to the current client
+            if not isinstance(meta_command, AddUser) or meta_command.to(self.client_id, self.user_name):
+                to_process = meta_command
+            else:
+                to_process = None
         else:
             to_process = Input(content['code'], execution_count=content['execution_count'],
                                username=msg.parent_username)
