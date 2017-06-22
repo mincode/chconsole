@@ -188,6 +188,7 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
                 to_process = meta_command
             else:
                 to_process = None
+            to_process = meta_command
         else:
             to_process = Input(content['code'], execution_count=content['execution_count'],
                                username=msg.parent_username)

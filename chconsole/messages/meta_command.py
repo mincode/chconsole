@@ -74,6 +74,13 @@ class MetaCommand(ExportItem, ImportItem):
         """
         return Source(self._code, hidden=False)
 
+    def to_all_clients(self):
+        """
+        Determine if the message is going to all clients
+        :return: True if the message goes to all clients.
+        """
+        return self.recipient_client_id == ''
+
     def to(self, client_id, user_name):
         """
         Determine if the message is going to client_id and user_name

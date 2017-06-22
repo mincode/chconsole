@@ -70,18 +70,22 @@ def _post(item, target):
 # User
 @_post.register(AddUser)
 def _(item, target):
-    # print(item.username + ' joined')
-    target.user_tracker.insert(item.sender, item.sender_client_id)
-    # print(target.user_tracker.users)
-    if item.recipient_client_id == '' and item.recipient == '':
-        target.please_export.emit(
-            AddUser(chat_secret=item.chat_secret, sender_client_id=target.client_id, sender=target.user_name,
-                    recipient_client_id=item.sender_client_id, recipient=item.sender,
-                    round_table=target.round_table))
-    # print('item.round_table: ' + str(item.round_table))
-    # print('target.round_table_moderator: ' + target.round_table_moderator)
-    if item.parameters['round_table'] and target.round_table_moderator == '':
-        target.round_table_moderator = item.sender
+    # Use AddUser only if it goes to the current client
+    if item.to(target.client_id, target.user_name):
+        # print(item.username + ' joined')
+        target.user_tracker.insert(item.sender, item.sender_client_id)
+        # print(target.user_tracker.users)
+        # If item goes to all clients by a wildcard, send an AddUser reply to the sender to notify that
+        # the current receiver client exists.
+        if item.to_all_clients():
+            target.please_export.emit(
+                AddUser(chat_secret=item.chat_secret, sender_client_id=target.client_id, sender=target.user_name,
+                        recipient_client_id=item.sender_client_id, recipient=item.sender,
+                        round_table=target.round_table))
+        # print('item.round_table: ' + str(item.round_table))
+        # print('target.round_table_moderator: ' + target.round_table_moderator)
+        if item.parameters['round_table'] and target.round_table_moderator == '':
+            target.round_table_moderator = item.sender
 
 
 @_post.register(DropUser)
