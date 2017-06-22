@@ -101,12 +101,15 @@ def _(item, target):
 @_post.register(StartRoundTable)
 def _(item, target):
     target.round_table_moderator = item.sender
+    if target.round_table_moderator != target.user_name:
+        target.round_table_restriction = item.parameters['restriction']
 
 
 @_post.register(StopRoundTable)
 def _(item, target):
     if target.round_table_moderator == item.sender:
         target.round_table_moderator = ''
+        target.round_table_restriction = -1
 
 
 # Pager
@@ -257,10 +260,12 @@ def tab_content_template(edit_class):
         show_users = Bool(False, help='Whether to show the users in command input and output listings')
         user_tracker = None  # UserTracker for tracking users
         round_table_moderator = Unicode('', help='Name of the round table moderator')
-        round_table_restriction = Integer(3, config=True,
+        default_round_table_restriction = Integer(3, config=True,
                 help="""
-                Number of posts per user per round table.
+                Number of posts per user per round table. Negative number means no restriction.
                 """)
+        round_table_restriction = -1  # Number of posts per user per round table;
+        # negative number means no restriction.
 
         def __init__(self, chat_secret, client_id, is_complete, editor=default_editor, **kwargs):
             """
