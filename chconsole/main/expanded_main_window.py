@@ -313,9 +313,9 @@ class ExpandedMainWindow(MainWindow):
         widget = self.active_frontend
         # toogle check mark. Check mark means that the current user is the moderator.
         if widget.main_content.round_table:
-            widget.main_content.round_table_moderator = ''
+            widget.main_content.set_round_table_moderator('')
         else:
-            widget.main_content.round_table_moderator = widget.user_name
+            widget.main_content.set_round_table_moderator(widget.user_name)
         self.update_round_table_checkbox()
 
     def update_round_table(self):

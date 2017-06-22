@@ -202,18 +202,19 @@ def _get_meta_command(chat_secret, instruction):
         meta = StopRoundTable(chat_secret, sender_client_id, sender, recipient_client_id, recipient)
     elif command == 'StartRoundTable':
         restriction = parameters['restriction']
-        meta = StopRoundTable(chat_secret, sender_client_id, sender, recipient_client_id, recipient, restriction)
+        meta = StartRoundTable(chat_secret, sender_client_id, sender, recipient_client_id, recipient, restriction)
 
     return meta
 
 
-def filter_meta_command(chat_secret, code):
+def json_meta_command(chat_secret, code):
     """
     Determine if code represents a meta instruction for the chat system of the
     form: whitespaces #chat_secret/json-string
     :param chat_secret: secret string identifying session.
     :param code: code sent through the system.
-    :return: dict representing the meta instruction or None if none; session parameter must match session_id in code.
+    :return: json representing the meta instruction or None if none;
+    session parameter must match session_id in code.
     """
     stripped = code.lstrip()
     instruction = None
@@ -240,6 +241,18 @@ def filter_meta_command(chat_secret, code):
                     instruction = None
                 elif 'parameters' not in instruction:
                     instruction = None
+    return instruction
+
+
+def filter_meta_command(chat_secret, code):
+    """
+    Determine if code represents a meta instruction for the chat system of the
+    form: whitespaces #chat_secret/json-string
+    :param chat_secret: secret string identifying session.
+    :param code: code sent through the system.
+    :return: dict representing the meta instruction or None if none; session parameter must match session_id in code.
+    """
+    instruction = json_meta_command(chat_secret, code)
     if instruction:
         meta_command = _get_meta_command(chat_secret, instruction)
     else:

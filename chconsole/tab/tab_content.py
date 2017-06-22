@@ -11,7 +11,7 @@ from chconsole.media import default_editor
 from chconsole.messages import Exit, Execute, ClearAll, History, KernelMessage, ClearCurrentEntry
 from chconsole.messages import ExportItem, UserInput
 from chconsole.messages import PageDoc, InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
-from chconsole.messages import Stderr, Stdout, AddUser, DropUser
+from chconsole.messages import Stderr, Stdout, AddUser, DropUser, StartRoundTable, StopRoundTable
 from chconsole.pager import pager_template
 from chconsole.receiver import receiver_template
 from chconsole.standards import NoDefaultEditor, CommandError
@@ -95,6 +95,17 @@ def _(item, target):
     # print(target.user_tracker.users)
     if item.parameters['round_table'] and \
             item.parameters['last_client'] and item.sender == target.round_table_moderator:
+        target.round_table_moderator = ''
+
+
+@_post.register(StartRoundTable)
+def _(item, target):
+    target.round_table_moderator = item.sender
+
+
+@_post.register(StopRoundTable)
+def _(item, target):
+    if target.round_table_moderator == item.sender:
         target.round_table_moderator = ''
 
 
@@ -240,16 +251,21 @@ def tab_content_template(edit_class):
         history = None  # History
 
         # User management
+        chat_secret = ''  # secret to identify meta commands
         client_id = ''  # id of current client
         user_name = ''  # name of current user
         show_users = Bool(False, help='Whether to show the users in command input and output listings')
         user_tracker = None  # UserTracker for tracking users
-        # round_table = Bool(False, help='Whether the current user moderates a round table')
         round_table_moderator = Unicode('', help='Name of the round table moderator')
+        round_table_restriction = Integer(3, config=True,
+                help="""
+                Number of posts per user per round table.
+                """)
 
-        def __init__(self, client_id, is_complete, editor=default_editor, **kwargs):
+        def __init__(self, chat_secret, client_id, is_complete, editor=default_editor, **kwargs):
             """
             Initialize
+            :param chat_secret: secret to identify meta commands
             :param client_id: id of current client.
             :param is_complete: function str->(bool, str) that checks whether the input is complete code
             :param kwargs: arguments for LoggingConfigurable
@@ -307,6 +323,7 @@ def tab_content_template(edit_class):
             self.line_prompt = LinePrompt()
             self.line_prompt.text_input.connect(self.on_text_input)
 
+            self.chat_secret = chat_secret
             self.client_id = client_id
             self.show_users = self.receiver.text_register.get_visible()
             self.user_tracker = UserTracker()
@@ -318,8 +335,22 @@ def tab_content_template(edit_class):
         def round_table(self):
             return self.round_table_moderator == self.user_name
 
+        def set_round_table_moderator(self, moderator=''):
+            """
+            Set the round table moderator.
+            :param moderator: user name of moderator.
+            :return:
+            """
+            self.round_table_moderator = moderator
+            if moderator==self.user_name:
+                self.please_export.emit(StartRoundTable(self.chat_secret, self.client_id, self.user_name,
+                                                        restriction=self.round_table_restriction))
+            elif moderator=='':
+                self.please_export.emit(StopRoundTable(self.chat_secret, self.client_id, self.user_name))
+            # otherwise do not send anything
+
         def _round_table_moderator_changed(self):
-            print('moderator changed to: ' + self.round_table_moderator)
+            # print('moderator changed to: ' + self.round_table_moderator)
             self.please_main_process.emit()
             # connected to update_round_table_checkbox
 
