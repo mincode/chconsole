@@ -86,6 +86,7 @@ def _(item, target):
         # print('target.round_table_moderator: ' + target.round_table_moderator)
         if item.parameters['round_table'] and target.round_table_moderator == '':
             target.round_table_moderator = item.sender
+            target.post(Stdout('\nRound table run by ' + target.round_table_moderator))
 
 
 @_post.register(DropUser)
@@ -93,14 +94,20 @@ def _(item, target):
     # print(item.username + ' left')
     target.user_tracker.remove(item.sender, item.sender_client_id)
     # print(target.user_tracker.users)
+    # print('round_table: ', item.parameters['round_table'])
+    # print('last_client: ', item.parameters['last_client'])
+    # print('sender: ', item.sender)
+    # print('target.round_table_moderator: ', target.round_table_moderator)
     if item.parameters['round_table'] and \
             item.parameters['last_client'] and item.sender == target.round_table_moderator:
         target.round_table_moderator = ''
+        target.post(Stdout('\nRound table stopped by ' + target.round_table_moderator))
 
 
 @_post.register(StartRoundTable)
 def _(item, target):
     target.round_table_moderator = item.sender
+    target.post(Stdout('\nRound table started by ' + target.round_table_moderator))
     if target.round_table_moderator != target.user_name:
         target.round_table_restriction = item.parameters['restriction']
 
@@ -110,6 +117,7 @@ def _(item, target):
     if target.round_table_moderator == item.sender:
         target.round_table_moderator = ''
         target.round_table_restriction = -1
+        target.post(Stdout('\nRound table stopped by ' + item.sender))
 
 
 # Pager
