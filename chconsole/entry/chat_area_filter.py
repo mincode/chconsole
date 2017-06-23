@@ -55,6 +55,7 @@ class ChatAreaFilter(BaseEventFilter):
                     self.target.ensureCursorVisible()
                 else:
                     # force execute source
+                    # execute only if allowed by potential round table
                     self.target.please_export.emit(Execute(self.target.source))
                     self.target.clear()
 

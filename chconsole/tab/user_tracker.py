@@ -80,3 +80,38 @@ class UserTracker:
                 found = user_client
                 break
         return found
+
+    @property
+    def last_client(self, user_name):
+        """
+        Determine whether this is the user's last client.
+        :param user_name: name of the user
+        :return: True iff this is the only client of the current user.
+        """
+        connected = self.find_user(user_name)
+        answer = False
+        if connected and len(connected.clients) > 0:
+            answer = len(connected.clients) == 1
+        return answer
+
+    def html_user_list(self, user_name):
+        """
+        List all users connected to the tab.
+        :param user_name: name of the current user.
+        :return: html text listing all users; current user indicated with (me); empty string if no users.
+        """
+        names = self.names
+        num = len(names)
+        if num > 0:
+            out_text = 'Connected Users<hr><br>'
+            out_text = out_text + names[0]
+            if names[0] == user_name:
+                out_text = out_text + ' (me)'
+            # print(out_text)
+            for i in range(1, num):
+                out_text = out_text + '<br>' + names[i]
+                if names[i] == user_name:
+                    out_text = out_text + ' (me)'
+        else:
+            out_text = ''
+        return out_text

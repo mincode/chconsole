@@ -58,6 +58,7 @@ class CodeAreaFilter(BaseEventFilter):
                     self.target.ensureCursorVisible()
                 elif shift_down:
                     # force execute source
+                    # execute only if allowed by potential round table
                     self.target.please_export.emit(Execute(self.target.source))
                     self.target.history.store(self.target.source)
                     self.target.clear()
@@ -67,6 +68,7 @@ class CodeAreaFilter(BaseEventFilter):
                     # The \n does not seem to be needed for executint code.
                     complete, indent = self.target.is_complete(self.target.source.code + '\n')
                     if complete:
+                        # execute only if allowed by potential round table
                         self.target.please_export.emit(Execute(self.target.source))
                         self.target.history.store(self.target.source)
                         self.target.clear()

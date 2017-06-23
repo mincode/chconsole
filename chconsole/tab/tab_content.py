@@ -16,6 +16,7 @@ from chconsole.pager import pager_template
 from chconsole.receiver import receiver_template
 from chconsole.standards import NoDefaultEditor, CommandError
 from .user_tracker import UserTracker
+from .round_table import RoundTable
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -81,12 +82,11 @@ def _(item, target):
             target.please_export.emit(
                 AddUser(chat_secret=item.chat_secret, sender_client_id=target.client_id, sender=target.user_name,
                         recipient_client_id=item.sender_client_id, recipient=item.sender,
-                        round_table=target.round_table))
+                        round_table=target.round_table, restriction=target.round_table_restriction))
         # print('item.round_table: ' + str(item.round_table))
         # print('target.round_table_moderator: ' + target.round_table_moderator)
-        if item.parameters['round_table'] and target.round_table_moderator == '':
-            target.round_table_moderator = item.sender
-            target.post(Stdout('\nRound table run by ' + target.round_table_moderator))
+        target.round_table.update_moderator(item.parameters['round_table'], item.sender,
+                                            item.parameters['restriction'])
 
 
 @_post.register(DropUser)
@@ -98,26 +98,17 @@ def _(item, target):
     # print('last_client: ', item.parameters['last_client'])
     # print('sender: ', item.sender)
     # print('target.round_table_moderator: ', target.round_table_moderator)
-    if item.parameters['round_table'] and \
-            item.parameters['last_client'] and item.sender == target.round_table_moderator:
-        target.round_table_moderator = ''
-        target.post(Stdout('\nRound table stopped by ' + target.round_table_moderator))
+    target.round_table.stop_on_exit(item.parameters['round_table'], item.sender, item.parameters['last_client'])
 
 
 @_post.register(StartRoundTable)
 def _(item, target):
-    target.round_table_moderator = item.sender
-    target.post(Stdout('\nRound table started by ' + target.round_table_moderator))
-    if target.round_table_moderator != target.user_name:
-        target.round_table_restriction = item.parameters['restriction']
+    target.round_table.start(item.sender, item.parameters['restriction'])
 
 
 @_post.register(StopRoundTable)
 def _(item, target):
-    if target.round_table_moderator == item.sender:
-        target.round_table_moderator = ''
-        target.round_table_restriction = -1
-        target.post(Stdout('\nRound table stopped by ' + item.sender))
+    target.round_table.stop(item.sender)
 
 
 # Pager
@@ -256,7 +247,6 @@ def tab_content_template(edit_class):
             """)
 
         please_export = QtCore.Signal(ExportItem)  # tasks for the kernel
-        please_main_process = QtCore.Signal()  # tasks for the main window process
 
         line_prompt = None  # LinePrompt for entering input requested by the kernel
         history = None  # History
@@ -267,13 +257,7 @@ def tab_content_template(edit_class):
         user_name = ''  # name of current user
         show_users = Bool(False, help='Whether to show the users in command input and output listings')
         user_tracker = None  # UserTracker for tracking users
-        round_table_moderator = Unicode('', help='Name of the round table moderator')
-        default_round_table_restriction = Integer(3, config=True,
-                help="""
-                Number of posts per user per round table. Negative number means no restriction.
-                """)
-        round_table_restriction = -1  # Number of posts per user per round table;
-        # negative number means no restriction.
+        round_table = None  # RoundTable
 
         def __init__(self, chat_secret, client_id, is_complete, editor=default_editor, **kwargs):
             """
@@ -340,32 +324,12 @@ def tab_content_template(edit_class):
             self.client_id = client_id
             self.show_users = self.receiver.text_register.get_visible()
             self.user_tracker = UserTracker()
+            self.round_table = RoundTable(self.chat_secret, self.client_id, self.user_name)
+            self.round_table.please_export.connect(self.please_export)
+            self.round_table.please_process.connect(self.post)
 
         def _show_users_changed(self):
             self.receiver.text_register.set_visible(self.show_users)
-
-        @property
-        def round_table(self):
-            return self.round_table_moderator == self.user_name
-
-        def set_round_table_moderator(self, moderator=''):
-            """
-            Set the round table moderator.
-            :param moderator: user name of moderator.
-            :return:
-            """
-            self.round_table_moderator = moderator
-            if moderator==self.user_name:
-                self.please_export.emit(StartRoundTable(self.chat_secret, self.client_id, self.user_name,
-                                                        restriction=self.round_table_restriction))
-            elif moderator=='':
-                self.please_export.emit(StopRoundTable(self.chat_secret, self.client_id, self.user_name))
-            # otherwise do not send anything
-
-        def _round_table_moderator_changed(self):
-            # print('moderator changed to: ' + self.round_table_moderator)
-            self.please_main_process.emit()
-            # connected to update_round_table_checkbox
 
         def clear_all(self):
             """
@@ -410,31 +374,13 @@ def tab_content_template(edit_class):
             Determine whether this is the user's last client.
             :return: True iff this is the only client of the current user.
             """
-            connected = self.user_tracker.find_user(self.user_name)
-            if connected and len(connected.clients) > 0:
-                return len(connected.clients) == 1
-            else:
-                return False
+            return self.user_tracker.last_client(self.user_name)
 
         def list_users(self):
             """
             List all users connected to the tab.
             """
-            names = self.user_tracker.names
-            num = len(names)
-            if num > 0:
-                out_text = 'Connected Users<hr><br>'
-                out_text = out_text + names[0]
-                if names[0] == self.user_name:
-                    out_text = out_text + ' (me)'
-                # print(out_text)
-                for i in range(1, num):
-                    out_text = out_text + '<br>' + names[i]
-                    if names[i] == self.user_name:
-                        out_text = out_text + ' (me)'
-            else:
-                out_text = ''
-
+            out_text = self.user_tracker.html_user_list(self.user_name)
             out = PageDoc(html=out_text)
             self.pager.post(out)
 
@@ -499,9 +445,11 @@ def tab_content_template(edit_class):
             After the user clicks enter, emit the source to be executed.
             :return:
             """
-            source = self.entry.source
-            self.post(ClearCurrentEntry())
-            self.please_export.emit(Execute(source))
+            # execute only if allowed by potential round table
+            if self.round_table.allow_input():
+                source = self.entry.source
+                self.post(ClearCurrentEntry())
+                self.please_export.emit(Execute(source))
 
         @QtCore.Slot()
         def on_frontend_clicked(self):

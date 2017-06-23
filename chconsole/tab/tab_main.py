@@ -266,7 +266,8 @@ def tab_main_template(edit_class):
             # 4) Register user
             # is done when and through receiving the history request
             self.export(AddUser(self.chat_secret, self.client_id, self.user_name,
-                                round_table=self.main_content.round_table))
+                                round_table=self.main_content.round_table.user_is_moderator,
+                                restriction=self.main_content.round_table.restriction))
 
         def _dispatch(self, msg):
             """
@@ -398,7 +399,7 @@ def tab_main_template(edit_class):
             # print('tab_main: drop_user')
             self.export(DropUser(chat_secret=self.chat_secret,
                                  sender_client_id=self.client_id, sender=self.user_name,
-                                 round_table=self.main_content.round_table,
+                                 round_table=self.main_content.round_table.user_is_moderator,
                                  last_client=self.main_content.last_client))
 
         # traitlets

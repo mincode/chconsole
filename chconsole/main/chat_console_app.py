@@ -12,7 +12,6 @@ A Qt- and Jupyter-based console application.
 import os
 import signal
 import sys
-import socket
 from chconsole.storage import JSONStorage, FileChooser, chconsole_data_dir, get_home_dir, DefaultNames
 
 

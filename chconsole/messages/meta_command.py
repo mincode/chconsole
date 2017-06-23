@@ -106,7 +106,7 @@ class AddUser(MetaCommand):
     """
 
     def __init__(self, chat_secret, sender_client_id, sender, recipient_client_id='', recipient='',
-                 round_table=False):
+                 round_table=False, restriction=-1):
         """
         Initialize.
         :param chat_secret: secret identifying meta commands.
@@ -115,9 +115,10 @@ class AddUser(MetaCommand):
         :param recipient_client_id: id of the recipient's client; all if ''
         :param recipient: name of the recipient user; all if ''
         :param round_table True iff the sender thinks it is the round table moderator at sending.
+        :param restriction: the number of responses each round table participant is allowed.
         """
         super(AddUser, self).__init__(chat_secret, sender_client_id, sender, recipient_client_id, recipient)
-        self.parameters = {'round_table': round_table}
+        self.parameters = {'round_table': round_table, 'restriction': restriction}
 
 
 class DropUser(MetaCommand):
@@ -192,7 +193,9 @@ def _get_meta_command(chat_secret, instruction):
     parameters = instruction['parameters']
     if command == 'AddUser':
         round_table = parameters['round_table']
-        meta = AddUser(chat_secret, sender_client_id, sender, recipient_client_id, recipient, round_table)
+        restriction = parameters['restriction']
+        meta = AddUser(chat_secret, sender_client_id, sender, recipient_client_id, recipient,
+                       round_table, restriction)
     elif command == 'DropUser':
         round_table = parameters['round_table']
         last_client = parameters['last_client']
