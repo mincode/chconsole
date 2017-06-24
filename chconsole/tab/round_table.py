@@ -1,11 +1,13 @@
 from traitlets import Integer, Unicode
+from traitlets.config.configurable import LoggingConfigurable
+from qtconsole.util import MetaQObjectHasTraits
 from qtconsole.qt import QtCore, QtGui
 from chconsole.messages import Stdout, StartRoundTable, StopRoundTable, ExportItem, ImportItem
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
-class RoundTable:
+class RoundTable(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject), {})):
     """
     Information to organize a round table of users with restrictions on the number of inputs.
     """
@@ -24,13 +26,17 @@ class RoundTable:
 
     moderator = Unicode('', help='Name of the round table moderator')
 
-    def __init__(self, chat_secret, client_id, user_name):
+    def __init__(self, chat_secret, client_id, user_name, parent=None, **kwargs):
         """
         Initialize.
         :param chat_secret: secret for chat communication.
         :param client_id: id of current user client.
         :param user_name: name of current user.
+        :param parent: parent QObject; default None.
         """
+        QtCore.QObject.__init__(self, parent)
+        LoggingConfigurable.__init__(self, **kwargs)
+
         self.chat_secret = chat_secret
         self.client_id = client_id
         self.user_name = user_name
@@ -68,7 +74,7 @@ class RoundTable:
         if other_round_table and self.no_moderator:
             self.moderator = other_moderator
             self.restriction = other_restriction
-            self.please_process(Stdout('\nRound table run by ' + self.moderator))
+            self.please_process.emit(Stdout('\nRound table run by ' + self.moderator))
 
     def set_moderator(self, moderator=''):
         """
@@ -97,7 +103,7 @@ class RoundTable:
         # print('restr: {0}'.format(self.restriction))
         if not self.user_is_moderator and self.moderator:
             if self.restriction == 0:
-                warning = QtGui.QMessageBox(self)
+                warning = QtGui.QMessageBox(self.parent)
                 warning.setIcon(QtGui.QMessageBox.Information)
                 warning.setText('No more inputs allowed!')
                 warning.setWindowTitle('Round Table')

@@ -303,11 +303,11 @@ class ExpandedMainWindow(MainWindow):
         if self.active_frontend is None:
             return
         widget = self.active_frontend
-        self.round_table_action.setChecked(widget.main_content.round_table.users_is_moderator)
+        self.round_table_action.setChecked(widget.main_content.round_table.user_is_moderator)
         if widget.main_content.round_table.moderator:
             self.round_table_action.setText('&Round Table by ' + widget.main_content.round_table.moderator)
             if widget.main_content.round_table.restriction >= 0:
-                if widget.main_content.round_table.users_is_moderator:
+                if widget.main_content.round_table.user_is_moderator:
                     self.restriction_info.setText('Number of inputs per user: {0}'.format(
                                                   widget.main_content.round_table.restriction))
                 else:
@@ -321,7 +321,7 @@ class ExpandedMainWindow(MainWindow):
     def toggle_confirm_round_table(self):
         widget = self.active_frontend
         # toogle check mark. Check mark means that the current user is the moderator.
-        if widget.main_content.round_table.users_is_moderator:
+        if widget.main_content.round_table.user_is_moderator:
             widget.main_content.round_table.set_moderator('')
         else:
             widget.main_content.round_table.set_moderator(widget.user_name)
@@ -338,12 +338,15 @@ class ExpandedMainWindow(MainWindow):
         self.round_table_action = QtGui.QAction("&Round Table",
                                                self,
                                                checkable=True,
-                                               # checked=self.active_frontend.main_content.round_table,
+                                               # checked=
+                                               # self.active_frontend.main_content.round_table.user_is_moderator,
                                                triggered=self.toggle_confirm_round_table)
-        self.round_table_action.setChecked(self.active_frontend.main_content.round_table.user_is_moderator)
+        widget = self.active_frontend
+        self.round_table_action.setChecked(widget.main_content.round_table.user_is_moderator)
         self.add_menu_action(self.moderator_menu, self.round_table_action)
-        if self.active_frontend:
-            self.active_frontend.main_content.round_table.update_view.connect(self.update_round_table_checkbox)
+        # menu may be created without first creating the needed objects
+        # if widget and widget.main_content and widget.main_content.round_table:
+        widget.main_content.round_table.update_view.connect(self.update_round_table_checkbox)
         self.tab_widget.currentChanged.connect(self.set_round_table_view)
 
         self.restriction_info = QtGui.QAction("Number of inputs", self, checkable=False)

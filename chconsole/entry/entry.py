@@ -46,17 +46,22 @@ def entry_template(edit_class):
         chat_area = None  # ChatArea
         _frame_color = None  # dict: name -> color, frame color of widget
 
-        def __init__(self, is_complete, use_ansi, parent=None, **kwargs):
+        round_table = None  # RoundTable
+
+        def __init__(self, round_table, is_complete, use_ansi, parent=None, **kwargs):
             QtGui.QWidget.__init__(self, parent)
             LoggingConfigurable.__init__(self, **kwargs)
             self._layout = NamedStackedLayout(self)
             self._layout.currentChanged.connect(self._on_current_changed)
 
+            self.round_table = round_table
+
             self._frame_color = dict()
 
             name = 'Code'
             self._frame_color[name] = code_active_color
-            self.code_area = code_area_template(edit_class)(is_complete=is_complete, use_ansi=use_ansi,
+            self.code_area = code_area_template(edit_class)(round_table=round_table, is_complete=is_complete,
+                                                            use_ansi=use_ansi,
                                                             comment_prefix=self.comment_prefix)
             self.code_area.to_next.connect(self.move)
             self.code_area.please_export.connect(self.please_export)
@@ -66,7 +71,8 @@ def entry_template(edit_class):
 
             name = 'Chat'
             self._frame_color[name] = chat_active_color
-            self.chat_area = chat_area_template(edit_class)(comment_prefix=self.comment_prefix)
+            self.chat_area = chat_area_template(edit_class)(round_table=round_table,
+                                                            comment_prefix=self.comment_prefix)
             self.chat_area.to_next.connect(self.move)
             self.chat_area.please_export.connect(self.please_export)
             self.chat_area.release_focus.connect(self.release_focus)

@@ -268,6 +268,8 @@ def tab_main_template(edit_class):
             self.export(AddUser(self.chat_secret, self.client_id, self.user_name,
                                 round_table=self.main_content.round_table.user_is_moderator,
                                 restriction=self.main_content.round_table.restriction))
+                                # round_table=False,
+                                # restriction=3))
 
         def _dispatch(self, msg):
             """

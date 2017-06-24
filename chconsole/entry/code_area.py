@@ -93,10 +93,13 @@ def code_area_template(edit_class):
 
         _comment_prefix = '#'  # prefix for line comments
 
-        def __init__(self, is_complete=None, text='', use_ansi=True, comment_prefix='#',
+        round_table = None  # RoundTable
+
+        def __init__(self, round_table, is_complete=None, text='', use_ansi=True, comment_prefix='#',
                      parent=None, **kwargs):
             """
             Initialize.
+            :param round_table: RoundTable
             :param is_complete: function str->(bool, str) that checks whether the input is complete code
             :param code: True if object should initially expect code to be executed; otherwise arbitrary text.
             :param text: initial text.
@@ -106,6 +109,8 @@ def code_area_template(edit_class):
             """
             edit_class.__init__(self, text, parent)
             DocumentConfig.__init__(self, **kwargs)
+
+            self.round_table = round_table
 
             self.use_ansi = use_ansi
             self.highlighter.enable()

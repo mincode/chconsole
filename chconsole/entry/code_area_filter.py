@@ -59,9 +59,10 @@ class CodeAreaFilter(BaseEventFilter):
                 elif shift_down:
                     # force execute source
                     # execute only if allowed by potential round table
-                    self.target.please_export.emit(Execute(self.target.source))
-                    self.target.history.store(self.target.source)
-                    self.target.clear()
+                    if self.target.round_table.allow_input():
+                        self.target.please_export.emit(Execute(self.target.source))
+                        self.target.history.store(self.target.source)
+                        self.target.clear()
                 elif self.target.execute_on_complete_input and (at_end or single_line):
                     # Python seems to expect \n at the end of multi-line code to properly decide
                     # that it is complete. For single-line code the terminating \n is irrelevant.
@@ -69,9 +70,10 @@ class CodeAreaFilter(BaseEventFilter):
                     complete, indent = self.target.is_complete(self.target.source.code + '\n')
                     if complete:
                         # execute only if allowed by potential round table
-                        self.target.please_export.emit(Execute(self.target.source))
-                        self.target.history.store(self.target.source)
-                        self.target.clear()
+                        if self.target.round_table.allow_input():
+                            self.target.please_export.emit(Execute(self.target.source))
+                            self.target.history.store(self.target.source)
+                            self.target.clear()
                     else:
                         self.target.insertPlainText('\n')
                         self.target.insertPlainText(indent)

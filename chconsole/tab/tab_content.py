@@ -82,7 +82,7 @@ def _(item, target):
             target.please_export.emit(
                 AddUser(chat_secret=item.chat_secret, sender_client_id=target.client_id, sender=target.user_name,
                         recipient_client_id=item.sender_client_id, recipient=item.sender,
-                        round_table=target.round_table, restriction=target.round_table_restriction))
+                        round_table=target.round_table.user_is_moderator, restriction=target.round_table.restriction))
         # print('item.round_table: ' + str(item.round_table))
         # print('target.round_table_moderator: ' + target.round_table_moderator)
         target.round_table.update_moderator(item.parameters['round_table'], item.sender,
@@ -254,7 +254,7 @@ def tab_content_template(edit_class):
         # User management
         chat_secret = ''  # secret to identify meta commands
         client_id = ''  # id of current client
-        user_name = ''  # name of current user
+        user_name = Unicode('', help='Name of current user')
         show_users = Bool(False, help='Whether to show the users in command input and output listings')
         user_tracker = None  # UserTracker for tracking users
         round_table = None  # RoundTable
@@ -286,12 +286,21 @@ def tab_content_template(edit_class):
             self._console_area = QtGui.QSplitter(QtCore.Qt.Vertical)
             self._console_stack_layout.addWidget(self._console_area)
 
-            self.entry = entry_template(edit_class)(is_complete=is_complete, use_ansi=self.ansi_codes)
+            self.chat_secret = chat_secret
+            self.client_id = client_id
+            self.user_tracker = UserTracker()
+            self.round_table = RoundTable(self.chat_secret, self.client_id, self.user_name, parent=self)
+            self.round_table.please_export.connect(self.please_export)
+            self.round_table.please_process.connect(self.post)
+
+            self.entry = entry_template(edit_class)(round_table=self.round_table, is_complete=is_complete,
+                                                    use_ansi=self.ansi_codes)
             self.entry.please_export.connect(self.please_export)
             self.history = self.entry.history
 
             self.receiver = receiver_template(edit_class)(use_ansi=self.ansi_codes, show_users=self.show_users)
             self.receiver.please_export.connect(self.please_export)
+            self.show_users = self.receiver.text_register.get_visible()
 
             self._console_area.addWidget(self.receiver)
             self._console_area.addWidget(self.entry)
@@ -320,13 +329,9 @@ def tab_content_template(edit_class):
             self.line_prompt = LinePrompt()
             self.line_prompt.text_input.connect(self.on_text_input)
 
-            self.chat_secret = chat_secret
-            self.client_id = client_id
-            self.show_users = self.receiver.text_register.get_visible()
-            self.user_tracker = UserTracker()
-            self.round_table = RoundTable(self.chat_secret, self.client_id, self.user_name)
-            self.round_table.please_export.connect(self.please_export)
-            self.round_table.please_process.connect(self.post)
+        def _user_name_changed(self):
+            if self.round_table:
+                self.round_table.user_name = self.user_name
 
         def _show_users_changed(self):
             self.receiver.text_register.set_visible(self.show_users)

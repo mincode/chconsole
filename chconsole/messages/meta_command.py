@@ -9,6 +9,28 @@ __author__ = 'Manfred Minimair <manfred@minimair.org>'
 class MetaCommand(ExportItem, ImportItem):
     """
     Meta command sent through chat.
+    Format:
+    #chat_secret/meta_command
+
+    meta_command format: json of a dict:
+    {'sender_client_id': sender_client_id, 'sender': sender,
+    'recipient_client_id': recipient_client_id, 'recipient': recipient,
+    'command': {'AddUser:, 'DropUser', 'NewRoundTable', 'StopRoundTable'},
+    'parameters': parameters}
+
+    AddUser: command == AddUser
+    {'round_table': {True, False}, 'restriction': Int}
+
+    DropUser: command == DropUser
+    {'round_table': {True, False}, 'last_client': {True, False}}
+
+    StopRoundTable: command == StopRoundTable
+    sender claims not to be the moderator of the round table anymore
+    {}
+
+    NewRoundTable: command == StartRoundTable
+    sender starts a new round table; sends number of communications allowed
+    {'restriction': Int}
     """
     chat_secret = ''  # secret identifying meta commands
     sender_client_id = ''  # client id of the sender user
@@ -56,6 +78,7 @@ class MetaCommand(ExportItem, ImportItem):
         json representing the command.
         :return: json representing the command.
         """
+        # print('ABOUT TO JSON DUMP: ', self._command_dict)
         return json.dumps(self._command_dict)
 
     @property

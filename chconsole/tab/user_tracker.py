@@ -81,7 +81,6 @@ class UserTracker:
                 break
         return found
 
-    @property
     def last_client(self, user_name):
         """
         Determine whether this is the user's last client.

@@ -35,9 +35,12 @@ def chat_area_template(edit_class):
 
         _comment_prefix = '#'  # prefix for line comments
 
-        def __init__(self, text='', comment_prefix='#', parent=None, **kwargs):
+        round_table = None  # RoundTable
+
+        def __init__(self, round_table, text='', comment_prefix='#', parent=None, **kwargs):
             """
             Initialize.
+            :param round_table: RoundTable.
             :param text: initial text.
             :param parent: parent widget.
             :param kwargs: arguments for LoggingConfigurable
@@ -45,6 +48,8 @@ def chat_area_template(edit_class):
             """
             edit_class.__init__(self, text, parent)
             DocumentConfig.__init__(self, **kwargs)
+
+            self.round_table = round_table
 
             self.setFrameStyle(QtGui.QFrame.NoFrame)
 

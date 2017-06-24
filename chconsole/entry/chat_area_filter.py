@@ -56,8 +56,9 @@ class ChatAreaFilter(BaseEventFilter):
                 else:
                     # force execute source
                     # execute only if allowed by potential round table
-                    self.target.please_export.emit(Execute(self.target.source))
-                    self.target.clear()
+                    if self.target.round_table.allow_input():
+                        self.target.please_export.emit(Execute(self.target.source))
+                        self.target.clear()
 
             elif alt_down:
                 if key == QtCore.Qt.Key_Greater:
