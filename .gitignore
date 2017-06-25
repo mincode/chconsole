@@ -116,3 +116,5 @@ __pycache__
 .DS_Store
 \#*#
 .#*
+main/
+media/
