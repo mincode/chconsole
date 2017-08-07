@@ -197,9 +197,25 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
     def _handle_display_data(self, msg):
         data = msg.content['data']
-        # metadata = msg.content['metadata']
-        if 'text/plain' in data:
+        metadata = msg.content.get('metadata', None)
+        if 'image/svg+xml' in data:
+            self.please_process.emit(SvgXml(data['image/svg+xml'], username=msg.username))
+        elif 'image/png' in data:
+            img = decodebytes(data['image/png'].encode('ascii'))
+            self.please_process.emit(Png(img, metadata=metadata.get('image/png', None), username=msg.username))
+        elif 'image/jpeg' in data:
+            img = decodebytes(data['image/jpeg'].encode('ascii'))
+            self.please_process.emit(Jpeg(img, metadata=metadata.get('image/jpeg', None), username=msg.username))
+        elif 'text/latex' in data:
+            self.please_process.emit(LaTeX(data['text/latex'], username=msg.username))
+        elif 'text/plain' in data:
             self.please_process.emit(Stdout(data['text/plain'], username=msg.username))
+
+        # to test:
+        # import matplotlib.pyplot as plt
+        # plt.plot([1, 2, 3, 4])
+        # plt.ylabel('some nums')
+        # plt.show()
 
     def _handle_execute_result(self, msg):
         """Handle an execute_result message"""

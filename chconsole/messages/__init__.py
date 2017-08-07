@@ -3,7 +3,7 @@ from .meta_command import AddUser, DropUser, filter_meta_command, StartRoundTabl
 from .import_item import AtomicText, SplitText, ImportItem, ClearAll, History, ClearCurrentEntry
 from .import_item import InText, CompleteItems, CallTip, ExitRequested, InputRequest, EditFile, SplitItem
 from .import_item import Stderr, Stdout, HtmlText, PageDoc, Banner, Input, Result, ClearOutput
-from .import_item import SvgXml, Png, Jpeg, LaTeX, to_qimage
+from .import_item import SvgXml, Png, Jpeg, LaTeX, Image, to_qimage
 from .kernel_message import KernelMessage
 from .source import Source
 

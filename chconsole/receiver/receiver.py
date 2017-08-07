@@ -8,7 +8,7 @@ from traitlets import Integer, Unicode
 
 from chconsole._version import __version__
 from chconsole.media import register_qimage, is_comment, de_comment, TextRegister
-from chconsole.messages import ExportItem, AtomicText, SvgXml, Jpeg, Png, SplitText, LaTeX, to_qimage
+from chconsole.messages import ExportItem, AtomicText, Image, SvgXml, Jpeg, Png, SplitText, LaTeX, to_qimage
 from chconsole.messages import Stderr, Stdout, HtmlText, PageDoc, Banner, Input, Result, ClearOutput, SplitItem
 from chconsole.standards import DocumentConfig
 from chconsole.standards import ViewportFilter, TextAreaFilter
@@ -175,6 +175,21 @@ def _(item, target):
     if "\n" in item.content.text and not target.output_sep.endswith("\n"):
         cursor.insertText('\n')
     _insert_stream_content(target, item, cursor)
+    cursor.insertText(target.output_sep2)
+
+
+@_receive.register(Image)
+def _(item, target):
+    cursor = target.end_cursor
+    target.clear_cursor = None
+    cursor.insertText(target.output_sep)
+    target.text_register.append(cursor.position())
+    # do not show prompt, since there is none for images; otherwise same as regular Result display
+
+    result = Result()
+    result.content.append(item)
+
+    _insert_stream_content(target, result, cursor)
     cursor.insertText(target.output_sep2)
 
 
