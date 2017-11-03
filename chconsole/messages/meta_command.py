@@ -244,7 +244,7 @@ def json_meta_command(chat_secret, code):
     """
     stripped = code.lstrip()
     instruction = None
-    if stripped[0] == '#':
+    if stripped and stripped[0] == '#':
         session_end = len(chat_secret) + 1
         if stripped[1:session_end] == chat_secret:
             if stripped[session_end] == '/':
