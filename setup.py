@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# Copyright 2016 (C) Manfred Minimair
+# Copyright 2017 (C) Manfred Minimair
 # Distributed under the terms of the Modified BSD License.
 # Based on setup.py from qtconsole
 # Copyright (c) Jupyter Development Team.
@@ -86,6 +86,7 @@ install_requires = setuptools_args['install_requires'] = [
     'jupyter_client>=4.1',
     'qtconsole>=4.1'
     'pygments',
+    'paramiko',
     'ipykernel>=4.1', # not a real dependency, but require the reference kernel
 ]
 
@@ -101,9 +102,10 @@ if 'setuptools' in sys.modules:
         'console_scripts': [
             'jupyter-chconsole = chconsole.main.launch_app:main',
             'chconsole = chconsole.main.launch_app:main',
+            'chrun-session = chrun.run_kernel.run_remote:start_remote',
         ],
         'gui_scripts': [
-            'chc-python = chconsole.run_kernel.chc_python:main',
+            'chc-python = chconsole.run_kernel.chc_python:start_local',
         ]
     }
     setup_args.pop('scripts')

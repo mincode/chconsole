@@ -95,7 +95,7 @@ class AppMain(QtGui.QMainWindow, DefaultNames):
             sys.exit(app.quit())
 
 
-def main():
+def start_local():
     app = QtGui.QApplication(sys.argv)
     app_main = AppMain()
     app_main.launch(app)
@@ -103,4 +103,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    start_local()

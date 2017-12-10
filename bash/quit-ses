@@ -1,0 +1,8 @@
+#!/bin/bash
+
+ssh ec2-user@ses.chgate.net test ~/$1.json
+if [ $? = 0 ]; then
+  jupyter console --existing /var/www/html/$1.json
+  rm -f /var/www/html/$1.json
+fi
+
