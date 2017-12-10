@@ -103,9 +103,14 @@ if 'setuptools' in sys.modules:
             'jupyter-chconsole = chconsole.main.launch_app:main',
             'chconsole = chconsole.main.launch_app:main',
             'chrun-session = chconsole.run_kernel.run_remote:start_remote',
+            'chconnect-get = chconsole.launch.main:get',
+            'chlaunch-chconsole = chconsole.launch.main:chconsole',
+            'chlaunch-console = chconsole.launch.main:console',
+            'chlaunch-qtconsole = chconsole.launch.main:qtconsole',
         ],
         'gui_scripts': [
             'chc-python = chconsole.run_kernel.chc_python:start_local',
+            'guilaunch-chconsole = chconsole.launch.gui_main:gui_chconsole'
         ]
     }
     setup_args.pop('scripts')
