@@ -2,7 +2,7 @@ import time
 import sys
 from paramiko.client import SSHClient, AutoAddPolicy
 import os
-from chrun.storage import JSONStorage, DefaultNames
+from chconsole.storage import JSONStorage, DefaultNames
 import random
 import string
 
