@@ -402,7 +402,7 @@ class ChatConsoleApp(JupyterApp, JupyterConsoleApp, DefaultNames):
         self.init_signal()
 
     def start(self):
-        # print('chatconsole before uper start')
+        # print('chatconsole before super start')
         super(ChatConsoleApp, self).start()
         # print('chat cons after super start')
         # draw the window
