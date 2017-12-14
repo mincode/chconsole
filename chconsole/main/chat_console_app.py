@@ -12,7 +12,10 @@ A Qt- and Jupyter-based console application.
 import os
 import signal
 import sys
-from chconsole.storage import JSONStorage, FileChooser, chconsole_data_dir, get_home_dir, DefaultNames
+from chconsole.storage import (
+    JSONStorage, FileChooser,
+    chconsole_data_dir, get_home_dir, DefaultNames
+)
 
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -65,7 +68,8 @@ if os.name == 'nt':
 from qtconsole.qt import QtCore, QtGui
 from traitlets.config.application import boolean_flag
 from traitlets.config.application import catch_config_error
-from qtconsole import styles, __version__
+from qtconsole import styles
+from chconsole import __version__
 from qtconsole.client import QtKernelClient
 from qtconsole.manager import QtKernelManager
 from traitlets import (
@@ -168,7 +172,6 @@ class ChatConsoleApp(JupyterApp, JupyterConsoleApp, DefaultNames):
     )
 
     local_kernel = CBool(False, config=True, help='Whether to launch a local kernel automatically on start.')
-
 
     storage = None  # JSONStorage
     chooser = None  # FileChooser  # traitlets handler

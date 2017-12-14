@@ -13,16 +13,19 @@ class DefaultNames:
     # located in the jupyter_core.paths.jupyter_config_dir() directory
     #
     # chrun:
-    host = 'ses.chgate.net'  # host to run kernel sessions
+    chrun_config_file = 'jupyter_chrun_config.py'
     kernel_user = 'ch_kernel'
-    # default kernel user name
-    gate = 'in.chgate.net'  # ssh server that can see host
-    gate_user = 'chconnect'  # ssh user name
-    gate_pem = os.path.normcase(
-        '/home/ec2-user/chrun_data/chconnect.pem')
-    # private ssh key for ssh user
-    local_conn_dir = os.path.normpath('/var/www/html')
-    # path to the local location of the connection file
-    remote_conn_dir = '~'  # path to the remote location of the connection file
     data_key = 'ch_tunnel'
     # key for storing data in addition to connection file keys
+
+    # host = 'ses.chgate.net'  # host to run kernel sessions; configurable
+    # default kernel user name
+    # gate = 'in.chgate.net'  # ssh server that can see host; configurable
+    # gate_user = 'chconnect'  # ssh user name; configurable
+    # gate_pem = os.path.normcase(
+    #     '/home/ec2-user/chrun_data/chconnect.pem')  # configurable
+    # private ssh key for ssh user
+    # local_conn_dir = os.path.normpath('/var/www/html')  # configurable
+    # path to the local location of the connection file
+    # remote_conn_dir = '~'  # path to the remote location of the connection file
+    # configurable
