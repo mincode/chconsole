@@ -103,9 +103,12 @@ class Launch:
         cmd = [what, sshkey_param+self.remote.abs_key_file,
                '--ssh='+self.remote.ssh_target,
                '--existing='+self.remote.abs_conn_file,
-               '--Session.username='+self._user_name]
+               '--user='+self._user_name]
+        # '--Session.username='+self._user_name]
+        # This username option does not work in Windows.
+        # Therefore use the newly defined options
+        # '--user', or equivalently
+        # '--username'
         cmd.extend(other)
         # print(cmd)
-        # '--user', self._user_name]
-        # '--username', self._user_name]
         subprocess.run(cmd)
