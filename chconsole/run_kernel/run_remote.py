@@ -6,14 +6,12 @@ from chconsole.storage import JSONStorage, DefaultNames
 import random
 import string
 # config file
-from waiting import wait
 from jupyter_core.paths import jupyter_config_dir
 from chconsole import __version__
 from traitlets.config.application import catch_config_error
-from traitlets import (
-    Dict, Unicode,
-)
-from jupyter_core.application import JupyterApp, base_flags, base_aliases
+from traitlets import Unicode
+from jupyter_core.application import JupyterApp
+# from jupyter_core.application import base_flags, base_aliases
 
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
@@ -26,8 +24,8 @@ jupyter chrun [session]                      # start a jupyter kernel with sessi
 # start with copy of base jupyter flags and aliases
 # Aliases registered here are available from the command line, e.g.
 # --username <Name>
-flags = dict(base_flags)
-aliases = dict(base_aliases)
+# flags = dict(base_flags)
+# aliases = dict(base_aliases)
 
 
 class ChRunApp(JupyterApp, DefaultNames):
@@ -42,14 +40,18 @@ class ChRunApp(JupyterApp, DefaultNames):
     """
     examples = _examples
 
-    classes = []  # additional classes with configurable optitions
-    flags = Dict(flags)
-    aliases = Dict(aliases)
+    classes = []  # additional classes with configurable options
+    # flags = Dict(flags)
+    # aliases = Dict(aliases)
 
     kernel_host = Unicode('ses.chgate.net', config=True,
                           help='host to run kernel sessions')
     kernel_gate = Unicode('in.chgage.net', config=True,
                           help='gate ssh server that can see host and from which to start kernel sessions; gate and host must have idential user names and matching ssh keys to log in for starting the kernel')
+    kernel_init_path = Unicode('', config=True,
+                               help='path to kernel init file')
+    kernel_init_file = Unicode('kernel_config.py', config=True,
+                               help='file to run after kernel starts')
     gate_tunnel_user = Unicode('chconnect', config=True,
                                help='ssh user name on gate for tunnel to kernel')
     gate_tunnel_pem = Unicode(os.path.normcase(
@@ -85,9 +87,16 @@ class ChRunApp(JupyterApp, DefaultNames):
 
         conn_file = conn_key + '.json'
 
+        if self.kernel_init_path:
+            kernel_startup = os.path.normcase(self.kernel_init_path + '/' +
+                                              self.kernel_init_file)
+        else:
+            kernel_startup = self.kernel_init_file
+
         cmd = 'screen -dm ipython kernel' + \
               ' -f ' + self.host_conn_dir + '/' + conn_file + \
-              '  --ip=0.0.0.0' + ' --user ' + DefaultNames.kernel_user
+              '  --ip=0.0.0.0' + ' --user=' + DefaultNames.kernel_user + \
+              ' --IPKernelApp.file_to_run=' + kernel_startup
         print(cmd)
 
         client = SSHClient()

@@ -1,5 +1,7 @@
 import sys
-from chconsole.launch import Launch, start_console, start_chconsole, start_qtconsole
+from chconsole.launch import (
+    Launch, start_console, start_chconsole, start_qtconsole
+)
 from chconsole.connect import RemoteConnector, Curie
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
