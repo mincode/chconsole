@@ -5,6 +5,7 @@ from jupyter_core.paths import jupyter_config_dir
 from chconsole.connect import RemoteConnector, Curie
 from chconsole.storage import DefaultNames
 
+
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
@@ -32,7 +33,7 @@ def _gen_chconsole_config():
     :return:
     """
     config_location = os.path.join(jupyter_config_dir(),
-                                   DefaultNames.config_file)
+                                   DefaultNames.chconsole_config_file)
     if not os.path.exists(config_location):
         cmd = ['jupyter-chconsole', '--generate-config']
         subprocess.run(cmd)
@@ -59,13 +60,22 @@ class Launch:
 
     remote = None  # RemoteConnector
 
-    def __init__(self, curie, user_name=''):
+    def __init__(self, kernel_gate, gate_tunnel_user,
+                 curie, user_name='', **kw):
         """
         Init.
+        :param kernel_gate: ip of gate to kernel
+        :param gate_tunnel_user: user name for tunneling to
+        kernel through gate
         :param curie: curie string for remote connection.
         :param user_name: user name to be used for the application.
         """
-        self.remote = RemoteConnector(Curie(curie))
+
+        self.kernel_gate = kernel_gate
+        self.gate_tunnel_user = gate_tunnel_user
+
+        self.remote = RemoteConnector(kernel_gate, gate_tunnel_user,
+                                      Curie(curie))
         self.default_user_name = user_name
 
     @property

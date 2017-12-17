@@ -25,8 +25,10 @@ class AppMain(QtGui.QMainWindow, DefaultNames):
         super(AppMain, self).__init__()
 
         self.storage = JSONStorage(chconsole_data_dir(), self.default_file)
-        self.chooser = FileChooser(self.storage, self.storage_key, get_home_dir(), self.default_file,
-                                   parent=None, caption='Choose Connection File or Enter New File Name',
+        self.chooser = FileChooser(self.storage, self.storage_key,
+                                   get_home_dir(), self.default_file,
+                                   parent=None,
+                                   caption='Choose Connection File or Enter New File Name',
                                    file_filter='*.json',
                                    default_ext='json')
 

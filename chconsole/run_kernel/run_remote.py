@@ -95,7 +95,7 @@ class ChRunApp(JupyterApp, DefaultNames):
 
         cmd = 'screen -dm ipython kernel' + \
               ' -f ' + self.host_conn_dir + '/' + conn_file + \
-              '  --ip=0.0.0.0' + ' --user=' + DefaultNames.kernel_user + \
+              '  --ip=0.0.0.0' + ' --user=' + self.kernel_user + \
               ' --IPKernelApp.file_to_run=' + kernel_startup
         print(cmd)
 
@@ -145,7 +145,7 @@ class ChRunApp(JupyterApp, DefaultNames):
                 except FileNotFoundError:
                     chat_tunnel['ssh_key'] = ''
 
-                data.set(DefaultNames.data_key, chat_tunnel)
+                data.set(self.data_key, chat_tunnel)
                 data.dump()
 
                 if os.path.exists(loc_file):

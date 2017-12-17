@@ -93,7 +93,6 @@ jupyter chconsole                      # start the chat console
 #-----------------------------------------------------------------------------
 
 # FIXME: workaround bug in jupyter_client < 4.1 excluding base_flags,aliases
-# Flags allow command line uses such as --plain
 # Flags from boolean_flog allow uses such as --banner, -no-banner
 flags = dict(base_flags)
 qt_flags = {

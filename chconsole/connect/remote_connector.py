@@ -4,6 +4,7 @@ import stat
 from chconsole.storage import chconsole_data_dir, JSONStorage, DefaultNames
 from chconsole.standards import NoRemoteConnection, ChangeModFailed
 
+
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
 
@@ -40,7 +41,8 @@ def _write_conn_info(path, conn_file, info):
 
 class RemoteConnector:
     """
-    Configuration information needed to connect to a remote session via ssh tunnels.
+    Configuration information needed to connect to a remote session
+    via ssh tunnels.
     """
     _machine = ''  # machine name to ssh into
     _key = ''  # session key for connection file
@@ -48,11 +50,16 @@ class RemoteConnector:
 
     info = None  # dict with json of the remote connection file
 
-    def __init__(self, curie):
+    def __init__(self, kernel_gate, gate_tunnel_user, curie, **kw):
         """
         Init.
-        @param: curie: specifying the remote connection
+        :param kernel_gate: ip of gate to kernel
+        :param gate_tunnel_user: user name for tunneling to kernel through gate
+        :param: curie: specifying the remote connection
         """
+        self.kernel_gate = kernel_gate
+        self.gate_tunnel_user = gate_tunnel_user
+
         self._machine = curie.machine
         self._key = curie.key
 
@@ -60,12 +67,14 @@ class RemoteConnector:
         if self._response.status_code == 200:
             self.info = self._response.json()
         else:
-            raise NoRemoteConnection(self._response, self._response.status_code)
+            raise NoRemoteConnection(self._response,
+                                     self._response.status_code)
 
         if self.storage_dir:
             os.makedirs(self.storage_dir, exist_ok=True)
 
-        _write_ssh_key(self.storage_dir, self.key_file, self.info[DefaultNames.data_key]['ssh_key'])
+        _write_ssh_key(self.storage_dir, self.key_file,
+                       self.info[DefaultNames.data_key]['ssh_key'])
         self.info.pop(DefaultNames.data_key, None)
         _write_conn_info(self.storage_dir, self.conn_file, self.info)
 
@@ -107,7 +116,7 @@ class RemoteConnector:
         SSH user@machine
         :return: string with user@machine.
         """
-        return DefaultNames.gate_user + '@' + DefaultNames.gate
+        return self.gate_tunnel_user + '@' + self.kernel_gate
 
     @property
     def conn_file(self):
