@@ -18,21 +18,8 @@ class DefaultNames:
     data_key = 'ch_tunnel'
     # key for storing data in addition to connection file keys
 
-    # to remove
-    # host = 'ses.chgate.net'  # host to run kernel sessions; configurable
-    #
-    # still in remote_connector.py and gui_main.py
-    # gate = 'in.chgate.net'  # ssh server that can see host; configurable
-    # gate_user = 'chconnect'  # ssh user name; configurable
-    #
-    # gate_pem = os.path.normcase(
-    #     '/home/ec2-user/chrun_data/chconnect.pem')  # configurable
-    # private ssh key for ssh user
-    # local_conn_dir = os.path.normpath('/var/www/html')  # configurable
-    # path to the local location of the connection file
-    # remote_conn_dir = '~'
-    # path to the remote location of the connection file
-    # configurable
-
     # chlaunch:
     chgui_launch_config_file = 'jupyter_chgui_launch_config.py'
+
+    # chjoin:
+    chjoin_config_file = 'jupyter_chjoin.py'

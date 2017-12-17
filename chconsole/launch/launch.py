@@ -74,7 +74,8 @@ class Launch:
         self.kernel_gate = kernel_gate
         self.gate_tunnel_user = gate_tunnel_user
 
-        self.remote = RemoteConnector(kernel_gate, gate_tunnel_user,
+        print('Launch: before RemoteConnector: kernel_gate: {}, gate_tunnel_user: {}'.format(self.kernel_gate, self.gate_tunnel_user))
+        self.remote = RemoteConnector(self.kernel_gate, self.gate_tunnel_user,
                                       Curie(curie))
         self.default_user_name = user_name
 
