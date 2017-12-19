@@ -60,22 +60,17 @@ class Launch:
 
     remote = None  # RemoteConnector
 
-    def __init__(self, kernel_gate, gate_tunnel_user,
-                 curie, user_name='', **kw):
+    def __init__(self, gate_tunnel_user,
+                 curie, user_name=''):
         """
         Init.
-        :param kernel_gate: ip of gate to kernel
         :param gate_tunnel_user: user name for tunneling to
         kernel through gate
         :param curie: curie string for remote connection.
         :param user_name: user name to be used for the application.
         """
 
-        self.kernel_gate = kernel_gate
-        self.gate_tunnel_user = gate_tunnel_user
-
-        print('Launch: before RemoteConnector: kernel_gate: {}, gate_tunnel_user: {}'.format(self.kernel_gate, self.gate_tunnel_user))
-        self.remote = RemoteConnector(self.kernel_gate, self.gate_tunnel_user,
+        self.remote = RemoteConnector(gate_tunnel_user,
                                       Curie(curie))
         self.default_user_name = user_name
 

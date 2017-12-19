@@ -46,7 +46,7 @@ class ChRunApp(JupyterApp, DefaultNames):
 
     kernel_host = Unicode('ses.chgate.net', config=True,
                           help='host to run kernel sessions')
-    kernel_gate = Unicode('in.chgage.net', config=True,
+    kernel_gate = Unicode('in.chgate.net', config=True,
                           help='gate ssh server that can see host and from which to start kernel sessions; gate and host must have idential user names and matching ssh keys to log in for starting the kernel')
     kernel_init_path = Unicode('', config=True,
                                help='path to kernel init file')

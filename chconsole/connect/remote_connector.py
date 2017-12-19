@@ -44,21 +44,20 @@ class RemoteConnector:
     Configuration information needed to connect to a remote session
     via ssh tunnels.
     """
-    _machine = ''  # machine name to ssh into
+    _machine = ''  # machine name to ssh into / gate
+    _gate_tunnel_user = ''  # user name for _machine
     _key = ''  # session key for connection file
     _response = None  # requests.Response for the connection
 
     info = None  # dict with json of the remote connection file
 
-    def __init__(self, kernel_gate, gate_tunnel_user, curie, **kw):
+    def __init__(self, gate_tunnel_user, curie):
         """
         Init.
-        :param kernel_gate: ip of gate to kernel
         :param gate_tunnel_user: user name for tunneling to kernel through gate
         :param: curie: specifying the remote connection
         """
-        self.kernel_gate = kernel_gate
-        self.gate_tunnel_user = gate_tunnel_user
+        self._gate_tunnel_user = gate_tunnel_user
 
         self._machine = curie.machine
         self._key = curie.key
@@ -66,6 +65,7 @@ class RemoteConnector:
         self._response = requests.get(self.remote_file_url, verify=False)
         if self._response.status_code == 200:
             self.info = self._response.json()
+            print('response: {}'.format(self.info))
         else:
             raise NoRemoteConnection(self._response,
                                      self._response.status_code)
@@ -116,7 +116,7 @@ class RemoteConnector:
         SSH user@machine
         :return: string with user@machine.
         """
-        return self.gate_tunnel_user + '@' + self.kernel_gate
+        return self._gate_tunnel_user + '@' + self._machine
 
     @property
     def conn_file(self):

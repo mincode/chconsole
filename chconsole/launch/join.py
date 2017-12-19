@@ -8,7 +8,8 @@ from traitlets.config.application import catch_config_error
 from traitlets import Dict, CBool, UseEnum, Unicode
 from jupyter_core.application import JupyterApp, base_flags, base_aliases
 from traitlets.config.application import boolean_flag
-from chconsole.launch import Launch, start_chconsole, start_console, start_qtconsole
+from chconsole.launch import (
+    Launch, start_chconsole, start_console, start_qtconsole)
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -32,7 +33,9 @@ flags.update(boolean_flag(
 
 aliases = dict(base_aliases)
 new_aliases = dict(
-    keye='JoinApp.key'
+    key='JoinApp.key',
+    curie='JoinApp.curie',
+    console='JoinApp.console_type'
 )
 aliases.update(new_aliases)
 
@@ -64,12 +67,15 @@ class JoinApp(JupyterApp):
                 help="Whether to launch through gui; only launches chat console through gui")
 
     require_username = CBool(True, config=True,
-                             help="Whether to require input of username\
-                             in gui")
+                             help="Whether to require input of username in gui")
 
-    console_type = UseEnum(ConsoleType, default_value=ConsoleType.chat)
+    console_type = UseEnum(ConsoleType, default_value=ConsoleType.qt,
+                           config=True,
+                           help='type of console to use: 1 = chat, 2 = qt, 3 = text')
 
     key = Unicode('', config=True, help='Session identifier to connect to.')
+    curie = Unicode('', config=True,
+                    help='Curie consisting of ip address and Session identifier to connect to.')
 
     launch_config = None  # LaunchConfig
 
@@ -86,9 +92,15 @@ class JoinApp(JupyterApp):
         if self.gui:
             print('gui: {}'.format(self.gui))
         else:
-            launch = Launch(self.launch_config.kernel_gate,
-                            self.launch_config.gate_tunnel_user,
-                            self.key)
+            if self.curie:
+                curie = self.curie
+            elif self.key:
+                curie = self.launch_config.kernel_gate + '/' + self.key
+            else:  # no key to connect
+                print('Provide --key or --curie parameter.')
+                return
+            launch = Launch(self.launch_config.gate_tunnel_user,
+                            curie)
             if self.console_type == ConsoleType.chat:
                 start_chconsole(launch)
 

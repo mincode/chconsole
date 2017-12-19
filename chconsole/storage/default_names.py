@@ -22,4 +22,4 @@ class DefaultNames:
     chgui_launch_config_file = 'jupyter_chgui_launch_config.py'
 
     # chjoin:
-    chjoin_config_file = 'jupyter_chjoin.py'
+    chjoin_config_file = 'jupyter_chjoin_config.py'
