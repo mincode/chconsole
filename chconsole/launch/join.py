@@ -1,6 +1,9 @@
 import os
 import enum
+import sys
+from qtconsole.qt import QtGui
 from chconsole.launch.launch_config import LaunchConfig
+from chconsole.launch.launch_widget import LaunchWidget
 from chconsole.storage import DefaultNames
 from jupyter_core.paths import jupyter_config_dir
 from chconsole import __version__
@@ -69,7 +72,7 @@ class JoinApp(JupyterApp):
     require_username = CBool(True, config=True,
                              help="Whether to require input of username in gui")
 
-    console_type = UseEnum(ConsoleType, default_value=ConsoleType.qt,
+    console_type = UseEnum(ConsoleType, default_value=ConsoleType.chat,
                            config=True,
                            help='type of console to use: 1 = chat, 2 = qt, 3 = text')
 
@@ -90,7 +93,12 @@ class JoinApp(JupyterApp):
     def start(self):
         super(JoinApp, self).start()
         if self.gui:
-            print('gui: {}'.format(self.gui))
+            app = QtGui.QApplication(sys.argv)
+            self.widget = LaunchWidget(self.launch_config.kernel_gate,
+                                       self.launch_config.gate_tunnel_user,
+                                       self.require_username)
+            self.widget.show()
+            sys.exit(app.exec_())
         else:
             if self.curie:
                 curie = self.curie

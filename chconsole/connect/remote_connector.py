@@ -65,7 +65,6 @@ class RemoteConnector:
         self._response = requests.get(self.remote_file_url, verify=False)
         if self._response.status_code == 200:
             self.info = self._response.json()
-            print('response: {}'.format(self.info))
         else:
             raise NoRemoteConnection(self._response,
                                      self._response.status_code)
