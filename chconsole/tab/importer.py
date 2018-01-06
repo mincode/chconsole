@@ -5,11 +5,17 @@ from qtconsole.qt import QtCore
 from qtconsole.util import MetaQObjectHasTraits
 from traitlets.config.configurable import LoggingConfigurable
 
-from chconsole.messages import CompleteItems, PageDoc, EditFile, InText, CallTip, InputRequest, ExportItem, TailHistory, History
-from chconsole.messages import ImportItem, Stderr, Stdout, Banner, HtmlText, ExitRequested, Input, Result, ClearOutput
+from chconsole.messages import (CompleteItems, PageDoc,
+                                EditFile, InText, CallTip,
+                                InputRequest, ExportItem,
+                                TailHistory, History)
+from chconsole.messages import (ImportItem, Stderr, Stdout,
+                                Banner, HtmlText, ExitRequested,
+                                Input, Result, ClearOutput)
 from chconsole.messages import SvgXml, Png, Jpeg, LaTeX
 from chconsole.messages import filter_meta_command, AddUser
 from chconsole.standards import Importable
+from traitlets import Bool
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -43,8 +49,11 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
     client_id = ''  # unique id string for this client instance
     user_name = ''  # user name
     chat_secret = ''  # secret id for chat communication
+    show_arriving_msg = Bool(False, config=True,
+                    help='whether to show messages as they arrive; for debugging')
 
-    def __init__(self, parent=None, chat_secret='', client_id='', user_name='', **kwargs):
+    def __init__(self, parent=None, chat_secret='',
+                 client_id='', user_name='', **kwargs):
         """
         Initialize.
         :param client_id: unique id for this client instance
@@ -68,13 +77,12 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObj
 
     @QtCore.Slot(Importable)
     def convert(self, msg):
-        show_msg = True  # mainly for debugging to show messages as they arrive
-        if show_msg:
+        if self.show_arriving_msg:
             print('\nconvert: ' + msg.type + ', user: ' + msg.username)
         if isinstance(msg, ImportItem):
             self.please_process.emit(msg)
         else:  # KernelMessage
-            if show_msg:
+            if self.show_arriving_msg:
                 print(msg.raw)
             handler = getattr(self, '_handle_' + msg.type, None)
             if handler and _show_msg(msg, self.target.show_other):

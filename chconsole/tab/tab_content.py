@@ -255,16 +255,21 @@ def tab_content_template(edit_class):
         chat_secret = ''  # secret to identify meta commands
         client_id = ''  # id of current client
         user_name = Unicode('', help='Name of current user')
-        show_users = Bool(False, help='Whether to show the users in command input and output listings')
+        show_users = True  # Whether to show the users in
+        # command input and output listings
         user_tracker = None  # UserTracker for tracking users
         round_table = None  # RoundTable
 
-        def __init__(self, chat_secret, client_id, is_complete, editor=default_editor, **kwargs):
+        def __init__(self, chat_secret, client_id, is_complete, show_users, editor=default_editor, **kwargs):
             """
             Initialize
             :param chat_secret: secret to identify meta commands
             :param client_id: id of current client.
-            :param is_complete: function str->(bool, str) that checks whether the input is complete code
+            :param is_complete: function str->(bool, str)
+            that checks whether the input is complete code.
+            :param show_users: Whether to show the users in
+            command input and output listings.
+            :param editor: editor to be used.
             :param kwargs: arguments for LoggingConfigurable
             :return:
             """
@@ -276,6 +281,7 @@ def tab_content_template(edit_class):
             #           | pager_inside
             # entry     |
 
+            self.show_users = show_users
             self.editor = editor
 
             self._console_stack = QtGui.QWidget()

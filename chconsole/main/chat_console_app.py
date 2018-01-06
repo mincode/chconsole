@@ -81,7 +81,7 @@ from jupyter_client.consoleapp import (
     )
 from jupyter_client.localinterfaces import is_local_ip
 from .expanded_main_window import ExpandedMainWindow
-from chconsole.tab import RichTabMain, PlainTabMain
+from chconsole.tab import RichTabMain, PlainTabMain, Importer
 
 
 _examples = """
@@ -146,7 +146,7 @@ class ChatConsoleApp(JupyterApp, JupyterConsoleApp, DefaultNames):
     """
     examples = _examples
 
-    classes = [RichTabMain] + JupyterConsoleApp.classes
+    classes = [RichTabMain, Importer] + JupyterConsoleApp.classes
     flags = Dict(flags)
     aliases = Dict(aliases)
     frontend_flags = Any(qt_flags)

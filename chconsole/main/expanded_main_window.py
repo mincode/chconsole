@@ -1,7 +1,7 @@
 import sys
 import webbrowser
-#import qtconsole.mainwindow
-#from qtconsole import mainwindow
+# import qtconsole.mainwindow
+# from qtconsole import mainwindow
 from qtconsole.qt import QtGui, QtCore
 from chconsole.standards import code_active_color, chat_active_color
 from .statusbar import StatusBar

@@ -11,9 +11,11 @@ from traitlets import Bool, Float, Any, Unicode
 from traitlets.config.configurable import LoggingConfigurable
 
 from chconsole.media import default_editor
-from chconsole.messages import Exit, Execute, Inspect, Complete, Restart, Interrupt, ClearAll, KernelMessage, \
-    TailHistory
-from chconsole.messages import Stderr, UserInput, AddUser, DropUser, StartRoundTable, StopRoundTable
+from chconsole.messages import (Exit, Execute, Inspect, Complete,
+                                Restart, Interrupt, ClearAll,
+                                KernelMessage, TailHistory,
+                                Stderr, UserInput, AddUser, DropUser,
+                                StartRoundTable, StopRoundTable)
 from chconsole.standards import Importable
 from chconsole.tab import tab_content_template
 from . import Importer
@@ -196,6 +198,8 @@ def tab_main_template(edit_class):
         show_other = Bool(True, config=True, help='True if messages from other clients are to be included.')
         _importer = None  # Importer
         display_banner = Bool(True)  # whether to show a banner on startup
+        show_users = Bool(True, config=True,
+                          help='Whether to show the users in command input and output listings')
 
         # Meta commands and chat
         chat_secret = 'abcdefgh'  # secret string used to identify chat messages or meta commands
@@ -213,7 +217,7 @@ def tab_main_template(edit_class):
 
             self.client_id = str(id(self)) + ',' + datetime.isoformat(datetime.utcnow()) + ',' + str(uuid4())
             self.main_content = tab_content_template(edit_class)(self.chat_secret, self.client_id, self.is_complete,
-                                                                 editor=self.editor)
+                                                                 self.show_users, editor=self.editor)
             self.main_content.please_export.connect(self.export)
             # MainContent -> export
 
@@ -432,6 +436,7 @@ def tab_main_template(edit_class):
                 self.main_content.receiver.show_banner.tryAcquire()
 
     return TabMain
+
 
 RichTabMain = tab_main_template(QtGui.QTextEdit)
 PlainTabMain = tab_main_template(QtGui.QPlainTextEdit)
