@@ -329,7 +329,7 @@ class ExpandedMainWindow(MainWindow):
 
     def set_round_table_view(self):
         if self.active_frontend:
-            self.active_frontend.main_content.update_round_table.connect(self.update_round_table_checkbox)
+            self.active_frontend.main_content.round_table.update_view.connect(self.update_round_table_checkbox)
         self. update_round_table_checkbox()
 
     def init_moderator_menu(self):

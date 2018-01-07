@@ -102,7 +102,7 @@ class UserTracker:
         names = self.names
         num = len(names)
         if num > 0:
-            out_text = 'Connected Users<hr><br>'
+            out_text = 'Connected Users (Press Esc button to exit view)<hr><br>'
             out_text = out_text + names[0]
             if names[0] == user_name:
                 out_text = out_text + ' (me)'
