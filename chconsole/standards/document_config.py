@@ -406,6 +406,15 @@ class DocumentConfig(LoggingConfigurable):
         insert_qimage_format(cursor, image_format)
 
     # RichJupyterWidget
+    # orig: _get_image, _get_image_tag
+    def get_image(self, name):
+        """ Returns the QImage stored as the ImageResource with 'name'.
+        """
+        document = self.document()
+        image = document.resource(QtGui.QTextDocument.ImageResource,
+                                  QtCore.QUrl(name))
+        return image
+
     def get_image_tag(self, match, path = None, format = "png"):
         """ Return (X)HTML mark-up for the image-tag given by match.
 

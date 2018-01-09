@@ -1,6 +1,7 @@
 from functools import singledispatch
 
-from chconsole.media import svg_to_qimage, jpg_to_qimage, png_to_qimage, latex_to_qimage
+from chconsole.media import (svg_to_qimage, jpg_to_qimage,
+                             png_to_qimage, latex_to_qimage)
 from chconsole.standards import Importable
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'

@@ -30,7 +30,8 @@ def _show_msg(msg, show_other):
     return msg.from_here or show_other
 
 
-class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable, QtCore.QObject), {})):
+class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable,
+                                                QtCore.QObject), {})):
     """
     Import messages into objects handled by the ui.
     """
