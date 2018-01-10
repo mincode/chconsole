@@ -7,9 +7,12 @@ from qtconsole.util import MetaQObjectHasTraits
 from traitlets import Integer, Unicode
 
 from chconsole._version import __version__
-from chconsole.media import register_qimage, is_comment, de_comment, TextRegister
-from chconsole.messages import ExportItem, AtomicText, Image, SvgXml, Jpeg, Png, SplitText, LaTeX, to_qimage
-from chconsole.messages import Stderr, Stdout, HtmlText, PageDoc, Banner, Input, Result, ClearOutput, SplitItem
+from chconsole.media import (register_qimage, is_comment, de_comment,
+                             TextRegister)
+from chconsole.messages import (ExportItem, AtomicText, Image, SvgXml,
+                                Jpeg, Png, SplitText, LaTeX, to_qimage,
+                                Stderr, Stdout, HtmlText, PageDoc, Banner,
+                                Input, Result, ClearOutput, SplitItem)
 from chconsole.standards import DocumentConfig
 from chconsole.standards import ViewportFilter, TextAreaFilter
 from .outbuffer import OutBuffer
@@ -209,7 +212,8 @@ def receiver_template(edit_class):
     :return: Instantiated class.
     """
 
-    class Receiver(MetaQObjectHasTraits('NewBase', (DocumentConfig, edit_class), {})):
+    class Receiver(MetaQObjectHasTraits('NewBase',
+                                        (DocumentConfig, edit_class), {})):
         """
         Text edit that shows input and output.
         """
@@ -258,7 +262,8 @@ def receiver_template(edit_class):
 
         please_export = QtCore.Signal(ExportItem)  # signal items to be handled by the kernel
 
-        def __init__(self, text='', use_ansi=True, show_users=False, parent=None, **kwargs):
+        def __init__(self, text='', use_ansi=True, show_users=False,
+                     parent=None, **kwargs):
             """
             Initialize.
             :param text: initial text.

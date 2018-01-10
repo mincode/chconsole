@@ -255,7 +255,7 @@ def tab_content_template(edit_class):
         chat_secret = ''  # secret to identify meta commands
         client_id = ''  # id of current client
         user_name = Unicode('', help='Name of current user')
-        show_users = True  # Whether to show the users in
+        show_users = Bool(True)  # Whether to show the users in
         # command input and output listings
         user_tracker = None  # UserTracker for tracking users
         round_table = None  # RoundTable

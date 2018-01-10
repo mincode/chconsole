@@ -14,7 +14,8 @@ from qtconsole.util import get_font
 from traitlets import Integer, Unicode, DottedObjectName, Any, Float, Instance
 from traitlets.config.configurable import LoggingConfigurable
 
-from chconsole.media import set_top_cursor, insert_qimage_format, is_letter_or_number
+from chconsole.media import (set_top_cursor, insert_qimage_format,
+                             is_letter_or_number)
 from chconsole.menus import TextContextMenu, ImageContextMenu
 from .selective_highlighter import SelectiveHighlighter
 
