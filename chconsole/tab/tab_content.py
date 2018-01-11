@@ -340,7 +340,8 @@ def tab_content_template(edit_class):
                 self.round_table.user_name = self.user_name
 
         def _show_users_changed(self):
-            self.receiver.text_register.set_visible(self.show_users)
+            if self.receiver:
+                self.receiver.text_register.set_visible(self.show_users)
 
         def clear_all(self):
             """

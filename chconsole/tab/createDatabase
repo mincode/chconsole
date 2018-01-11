@@ -1,0 +1,1 @@
+createdb messages 'chconsole messages' -e -h db0.chgate.net -U dbuser

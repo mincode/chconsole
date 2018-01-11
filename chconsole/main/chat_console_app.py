@@ -146,7 +146,7 @@ class ChatConsoleApp(JupyterApp, JupyterConsoleApp, DefaultNames):
     """
     examples = _examples
 
-    classes = [RichTabMain, Importer] + JupyterConsoleApp.classes
+    classes = [RichTabMain] + JupyterConsoleApp.classes
     flags = Dict(flags)
     aliases = Dict(aliases)
     frontend_flags = Any(qt_flags)

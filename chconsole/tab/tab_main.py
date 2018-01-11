@@ -205,6 +205,19 @@ def tab_main_template(edit_class):
         chat_secret = 'abcdefgh'  # secret string used to identify chat messages or meta commands
         # if a comment sent starts with '#chat_secret/' then it is a meta command
 
+        show_arriving_msg = Bool(False, config=True,
+                                 help='whether to show messages as they arrive; for debugging')
+
+        save_messages = Bool(True, config=True,
+                             help='whether to save arriving messages')
+        db_host = Unicode('db0.chgate.net', config=True,
+                          help='database host where to save messages received')
+        db_user = Unicode('analyzer', config=True,
+                          help='data base user for the database host')
+        db_name = Unicode('messages', config=True,
+                          help='name of the database on the database host')
+
+
         def __init__(self, parent=None, **kw):
             """
             Initialize the main widget.
@@ -223,7 +236,13 @@ def tab_main_template(edit_class):
 
             # Import and handle kernel messages
             # message_arrived -> Importer -> MainContent
-            self._importer = Importer(self, chat_secret=self.chat_secret, client_id=self.client_id)
+            self._importer = Importer(self, chat_secret=self.chat_secret,
+                                      client_id=self.client_id,
+                                      show_arriving_msg=self.show_arriving_msg,
+                                      save_messages=self.save_messages,
+                                      db_host=self.db_host,
+                                      db_user=self.db_user,
+                                      db_name=self.db_name)
             self.message_arrived.connect(self._importer.convert)
             self._importer.please_process.connect(self.main_content.post)
             self._importer.please_export.connect(self.export)
@@ -234,6 +253,8 @@ def tab_main_template(edit_class):
 
             # Set flag for whether we are connected via localhost.
             self.local_kernel = kw.get('local_kernel', TabMain.local_kernel)
+
+            # print('show_users: {}'.format(self.show_users))
 
         def _assign_user_name(self):
             """
@@ -281,7 +302,11 @@ def tab_main_template(edit_class):
             :param msg: Incoming message.
             :return:
             """
-            self.message_arrived.emit(KernelMessage(msg, from_here=self.from_here(msg), local_kernel=self.local_kernel))
+            self.message_arrived.emit(
+                KernelMessage(
+                    msg,
+                    from_here=self.from_here(msg),
+                    local_kernel=self.local_kernel))
 
         # FrontendWidget
         def _restart_kernel(self, message, now=False):

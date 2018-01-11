@@ -1,4 +1,8 @@
 import time
+import json
+import datetime
+import psycopg2
+import psycopg2.extras
 from base64 import decodebytes
 
 from qtconsole.qt import QtCore
@@ -8,14 +12,14 @@ from traitlets.config.configurable import LoggingConfigurable
 from chconsole.messages import (CompleteItems, PageDoc,
                                 EditFile, InText, CallTip,
                                 InputRequest, ExportItem,
-                                TailHistory, History)
-from chconsole.messages import (ImportItem, Stderr, Stdout,
+                                TailHistory, History,
+                                ImportItem, Stderr, Stdout,
                                 Banner, HtmlText, ExitRequested,
-                                Input, Result, ClearOutput)
-from chconsole.messages import SvgXml, Png, Jpeg, LaTeX
-from chconsole.messages import filter_meta_command, AddUser
+                                Input, Result, ClearOutput,
+                                SvgXml, Png, Jpeg, LaTeX,
+                                filter_meta_command, AddUser)
 from chconsole.standards import Importable
-from traitlets import Bool
+from traitlets import Bool, Unicode
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -28,6 +32,24 @@ def _show_msg(msg, show_other):
     :return: whether the message should be shown.
     """
     return msg.from_here or show_other
+
+
+class _DateTimeEncoder(json.JSONEncoder):
+    """ To encode datetime.datetime ocrring in kernel message dicts."""
+    def default(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return str(obj.timestamp())
+        else:
+            json.JSONEncoder.default(self. obj)
+
+
+def _extended_dumps(obj, *args, **kwargs):
+    """
+    Extend dumps with DateTimeEncoder.
+    :param: obj to be encoded as json.
+    :return: json.
+    """
+    return json.dumps(obj, *args, cls=_DateTimeEncoder, **kwargs)
 
 
 class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable,
@@ -45,19 +67,36 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable,
 
     target = None  # parent object
 
-    _retry_history = None  # QSemaphore(1) allows one retry of a history request
+    _retry_history = None
+    # QSemaphore(1) allows one retry of a history request
 
     client_id = ''  # unique id string for this client instance
     user_name = ''  # user name
     chat_secret = ''  # secret id for chat communication
-    show_arriving_msg = Bool(False, config=True,
-                    help='whether to show messages as they arrive; for debugging')
+
+    show_arriving_msg = False
+    # whether to show messages as they arrive; for debugging
+
+    save_messages = False
+    # whether to save arriving messages
+    db_host = ''
+    # database host where to save messages received
+    db_user = ''
+    # data base user for the database host
+    db_name = ''
+    # name of the database on the database host
+    _conn = None  # database connection
+    _cur = None  # database cursor
 
     def __init__(self, parent=None, chat_secret='',
-                 client_id='', user_name='', **kwargs):
+                 client_id='', user_name='',
+                 show_arriving_msg=False,
+                 save_messages=False, db_host='', db_user='', db_name='',
+                 **kwargs):
         """
         Initialize.
         :param client_id: unique id for this client instance
+        :param user_name: user name for this client instance
         :param parent: parent object, requires data member show_other.
         :param kwargs:
         :return:
@@ -68,6 +107,13 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable,
         self.client_id = client_id
         self.user_name = user_name
         self.target = parent
+
+        self.show_arriving_msg = show_arriving_msg
+        self.save_messages = save_messages
+        self.db_host = db_host
+        self.db_user = db_user
+        self.db_name = db_name
+
         self._retry_history = QtCore.QSemaphore(1)
 
         self._payload_handlers = {
@@ -76,15 +122,50 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable,
             self._payload_source_page: self._handle_payload_page,
             self._payload_source_next_input: self._handle_payload_next_input}
 
+        if self.save_messages:
+            self._conn = psycopg2.connect('host={} user={} dbname={}'.format(
+                self.db_host, self.db_user, self.db_name))
+            self._conn.set_session(autocommit=True)
+            self._cur = self._conn.cursor()
+
+    def __del__(self):
+        """
+        Finalizer.
+        """
+        if self.save_messages:
+            # autocommit
+            # if self._conn:
+            #    self._conn.commit()
+            if self._cur:
+                self._cur.close()
+            if self._conn:
+                self._conn.close()
+        if hasattr(super(Importer, self), '__del__'):
+            super(Importer, self).__del__()
+
     @QtCore.Slot(Importable)
     def convert(self, msg):
+        # print('show_arriving_msg: {}'.format(self.show_arriving_msg))
         if self.show_arriving_msg:
             print('\nconvert: ' + msg.type + ', user: ' + msg.username)
         if isinstance(msg, ImportItem):
             self.please_process.emit(msg)
         else:  # KernelMessage
+            # print(msg.raw)
             if self.show_arriving_msg:
                 print(msg.raw)
+            if self.save_messages:
+                self._cur.execute('insert into importer \
+                            (client_id, user_name, chat_secret, msg_raw)\
+                            values (%s, %s, %s, %s);',
+                                  (self.client_id, self.user_name,
+                                   self.chat_secret,
+                                   psycopg2.extras.Json(msg.raw,
+                                                        dumps=_extended_dumps)))
+                # autocommit
+                # self._conn.commit()
+                pass
+
             handler = getattr(self, '_handle_' + msg.type, None)
             if handler and _show_msg(msg, self.target.show_other):
                 handler(msg)

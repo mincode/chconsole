@@ -1,0 +1,11 @@
+drop table if exists importer;
+create table importer (
+  id bigserial primary key,
+  client_id varchar(160),
+  user_name varchar(160),
+  chat_secret varchar(160),
+  msg_raw jsonb
+);
+grant all privileges on importer to analyzer;
+grant all privileges on importer_id_seq to analyzer;
+

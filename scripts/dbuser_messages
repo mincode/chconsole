@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ $# -eq 0 ]; then
+  psql -h db0.chgate.net -U dbuser messages
+else
+  psql -h db0.chgate.net -U dbuser messages -f $1
+fi
+
