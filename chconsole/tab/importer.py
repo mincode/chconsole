@@ -19,7 +19,6 @@ from chconsole.messages import (CompleteItems, PageDoc,
                                 SvgXml, Png, Jpeg, LaTeX,
                                 filter_meta_command, AddUser)
 from chconsole.standards import Importable
-from traitlets import Bool, Unicode
 
 __author__ = 'Manfred Minimair <manfred@minimair.org>'
 
@@ -155,16 +154,19 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable,
             if self.show_arriving_msg:
                 print(msg.raw)
             if self.save_messages:
-                self._cur.execute('insert into importer \
-                            (client_id, user_name, chat_secret, msg_raw)\
-                            values (%s, %s, %s, %s);',
-                                  (self.client_id, self.user_name,
-                                   self.chat_secret,
-                                   psycopg2.extras.Json(msg.raw,
-                                                        dumps=_extended_dumps)))
-                # autocommit
-                # self._conn.commit()
-                pass
+                try:
+                    self._cur.execute('insert into importer \
+                                      (client_id, user_name, chat_secret, msg_raw)\
+                                      values (%s, %s, %s, %s);',
+                                      (self.client_id, self.user_name,
+                                       self.chat_secret,
+                                       psycopg2.extras.Json(msg.raw,
+                                                            dumps=_extended_dumps)))
+                    # autocommit
+                    # self._conn.commit()
+                except TypeError:
+                    pass
+                    # drop it
 
             handler = getattr(self, '_handle_' + msg.type, None)
             if handler and _show_msg(msg, self.target.show_other):
