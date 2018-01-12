@@ -80,17 +80,23 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable,
     # whether to save arriving messages
     db_host = ''
     # database host where to save messages received
-    db_user = ''
-    # data base user for the database host
+    db_port = 5432
+    # port on the database host
     db_name = ''
     # name of the database on the database host
+    db_user = ''
+    # data base user for the database host
+    db_password = ''
+    # password for the database
+
     _conn = None  # database connection
     _cur = None  # database cursor
 
     def __init__(self, parent=None, chat_secret='',
                  client_id='', user_name='',
                  show_arriving_msg=False,
-                 save_messages=False, db_host='', db_user='', db_name='',
+                 save_messages=False, db_host='', db_port=5432,
+                 db_name='', db_user='', db_password='',
                  **kwargs):
         """
         Initialize.
@@ -110,8 +116,10 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable,
         self.show_arriving_msg = show_arriving_msg
         self.save_messages = save_messages
         self.db_host = db_host
-        self.db_user = db_user
+        self.db_port = db_port
         self.db_name = db_name
+        self.db_user = db_user
+        self.db_password = db_password
 
         self._retry_history = QtCore.QSemaphore(1)
 
@@ -122,8 +130,9 @@ class Importer(MetaQObjectHasTraits('NewBase', (LoggingConfigurable,
             self._payload_source_next_input: self._handle_payload_next_input}
 
         if self.save_messages:
-            self._conn = psycopg2.connect('host={} user={} dbname={}'.format(
-                self.db_host, self.db_user, self.db_name))
+            self._conn = psycopg2.connect(
+                host=self.db_host, port=self.db_port, dbname=self.db_name,
+                user=self.db_user, password=self.db_password)
             self._conn.set_session(autocommit=True)
             self._cur = self._conn.cursor()
 

@@ -7,7 +7,7 @@ from uuid import uuid4
 from qtconsole.base_frontend_mixin import BaseFrontendMixin
 from qtconsole.qt import QtGui, QtCore
 from qtconsole.util import MetaQObjectHasTraits
-from traitlets import Bool, Float, Any, Unicode
+from traitlets import Bool, Float, Any, Unicode, Integer
 from traitlets.config.configurable import LoggingConfigurable
 
 from chconsole.media import default_editor
@@ -212,11 +212,14 @@ def tab_main_template(edit_class):
                              help='whether to save arriving messages')
         db_host = Unicode('db0.chgate.net', config=True,
                           help='database host where to save messages received')
-        db_user = Unicode('analyzer', config=True,
-                          help='data base user for the database host')
+        db_port = Integer(5432, config=True,
+                          help='port on the database host')
         db_name = Unicode('messages', config=True,
                           help='name of the database on the database host')
-
+        db_user = Unicode('analyzer', config=True,
+                          help='data base user for the database host')
+        db_password = Unicode('This_is_4analyzer!', config=True,
+                              help='password for the database')
 
         def __init__(self, parent=None, **kw):
             """
@@ -241,8 +244,10 @@ def tab_main_template(edit_class):
                                       show_arriving_msg=self.show_arriving_msg,
                                       save_messages=self.save_messages,
                                       db_host=self.db_host,
+                                      db_port=self.db_port,
+                                      db_name=self.db_name,
                                       db_user=self.db_user,
-                                      db_name=self.db_name)
+                                      db_password=self.db_password)
             self.message_arrived.connect(self._importer.convert)
             self._importer.please_process.connect(self.main_content.post)
             self._importer.please_export.connect(self.export)
