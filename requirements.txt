@@ -4,4 +4,5 @@
 -e git+https://github.com/ipython/ipykernel.git#egg=ipykernel
 -e git+https://github.com/ipython/traitlets.git#egg=traitlets
 -e git+https://github.com/paramiko/paramiko.git#egg=paramiko
+-e git+https://github.com/psycopg/psycopg2.git#egg=psycopg2
 -e git+https://github.com/kennethreitz/requests.git#egg=requests
