@@ -87,6 +87,7 @@ install_requires = setuptools_args['install_requires'] = [
     'qtconsole>=4.1'
     'pygments',
     'paramiko',
+    'requests',
     'psycopg2',
     'ipykernel>=4.1', # not a real dependency, but require the reference kernel
 ]
