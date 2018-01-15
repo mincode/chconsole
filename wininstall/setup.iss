@@ -7,7 +7,7 @@
 #define MyAppPublisher "Manfred Minimair"
 #define MyAppURL "https://github.com/mincode/chconsole"
 #define MyAppExeName "chconsole.exe"
-#define ConnectExeName "guilaunch-chconsole.exe"
+#define ConnectExeName "chjoin.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -105,7 +105,7 @@ procedure AllInstall;
 var
   ResultCode: Integer;
 begin
-  if ShellInstall('Installing local Python environment. Please, wait ...', CondaInstaller,
+  if ShellInstall('Installing local Python environment. Please, wait ... Installing takes about 3 minutes to complete.', CondaInstaller,
     '/InstallationType=1 /AddToPath=0 /RegisterPython=0 /NoRegistry=1 /S /D=' + CondaHome(''), ResultCode) then begin
     if ShellInstall('Updating Python.', LocalConda, 'update --yes --all', ResultCode) then begin
       if ShellInstall('Installing pyqt. Please, wait ...', LocalConda, 'install pyqt --yes', ResultCode) then begin  
