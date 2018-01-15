@@ -51,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Chat Console'
-copyright = '2016, Manfred Minimair'
+copyright = '2016-present, Manfred Minimair'
 author = 'Manfred Minimair'
 
 # The version info for the project you're documenting, acts as replacement for
