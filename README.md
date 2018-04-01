@@ -1,4 +1,4 @@
-# Chat Console
+# Chat Console [MathChat System]
 
 [![Build Status](https://travis-ci.org/jupyter/qtconsole.svg?branch=master)](https://travis-ci.org/jupyter/qtconsole)
 [![Documentation Status](https://readthedocs.org/projects/chconsole/badge/?version=stable)](http://chconsole.readthedocs.org/en/stable/)
