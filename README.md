@@ -58,4 +58,4 @@ independent Ipython kernel is included:
   * [stable version](http://chconsole.readthedocs.org/en/stable/)
   [[PDF](https://media.readthedocs.org/pdf/chconsole/stable/chconsole.pdf)]
 - [Project Jupyter website](https://jupyter.org)
-- [Issues](https://github.com/jupyter/chconsole/issues)
+
