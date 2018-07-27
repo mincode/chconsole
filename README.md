@@ -59,3 +59,7 @@ independent Ipython kernel is included:
   [[PDF](https://media.readthedocs.org/pdf/chconsole/stable/chconsole.pdf)]
 - [Project Jupyter website](https://jupyter.org)
 
+## Acknowledgments
+
+- Comcast Innovation Fund
+- Seton Hall University
